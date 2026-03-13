@@ -341,6 +341,7 @@
 - INDEX idx_category_id (category_id)
 - INDEX idx_status (status)
 - INDEX idx_book_name (book_name)
+- INDEX idx_isbn (isbn)  # 普通索引，允许重复（不同版本可相同）
 
 **关系：**
 - 多本图书属于一个分类（N:1）
@@ -751,7 +752,8 @@
 #### 4.6.1 分页查询图书列表（后台）
 - **路径：** GET /api/admin/books
 - **认证：** 需要管理员 Token
-- **查询参数：** 同前台，但返回所有状态的图书
+- **查询参数：** 同前台，但返回所有状态的图书，`pageSize` 默认为 20，最大 100
+- **说明：** 后台列表与前台使用一致的分页规则，方便管理端开发和调试
 
 #### 4.6.2 添加图书
 - **路径：** POST /api/admin/books
@@ -975,7 +977,7 @@
 - **路径：** GET /api/admin/orders
 - **认证：** 需要管理员 Token
 - **查询参数：**
-  - page, pageSize, status（同前台）
+  - page, pageSize, status（同前台，pageSize 默认 10，最大 100）
   - orderNo: string（订单号，可选）
   - userId: long（用户 ID，可选）
 
@@ -1016,6 +1018,7 @@
 #### 4.12.1 获取轮播图列表（前台）
 - **路径：** GET /api/front/banners
 - **认证：** 无需认证
+- **说明：** 只返回启用状态的前 5 张轮播图，按 `sort_order` 升序排序；查询时使用 `LIMIT 5` 限制返回数量
 - **响应：**
 ```json
 {

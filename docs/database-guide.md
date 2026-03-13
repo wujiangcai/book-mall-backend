@@ -267,6 +267,8 @@ role: 0
 | author | VARCHAR(100) | NULL | NULL | 作者 |
 | publisher | VARCHAR(100) | NULL | NULL | 出版社 |
 | isbn | VARCHAR(20) | NULL | NULL | ISBN编号 |
+
+**说明**：ISBN 字段为普通索引，不强制唯一。考虑到同一本书可能存在多个版本，或某些图书没有ISBN，在应用层添加图书时若出现重复应提示管理员确认版本差异。
 | category_id | BIGINT | NOT NULL, FK | - | 分类ID，外键关联category.id |
 | price | DECIMAL(10,2) | NOT NULL | - | 价格，必须大于0 |
 | stock | INT | NOT NULL | 0 | 库存数量，不能为负数 |
@@ -281,6 +283,7 @@ role: 0
 - INDEX idx_category_id (category_id)
 - INDEX idx_status (status)
 - INDEX idx_book_name (book_name(100))
+- INDEX idx_isbn (isbn)   -- 普通索引，允许重复，适用于不同版本/空值
 - INDEX idx_create_time (create_time)
 
 **外键**：
@@ -539,6 +542,7 @@ role: 0
 | idx_username | 用户登录、用户名唯一性校验 |
 | idx_phone | 手机号查询、手机号唯一性校验 |
 | idx_category_id | 按分类查询图书 |
+| idx_isbn | 按 ISBN 查询图书，允许重复（普通索引） |
 | idx_status | 查询上架/下架图书、启用/禁用用户 |
 | idx_user_book | 查询购物车、防止重复添加 |
 | idx_order_no | 按订单号查询订单 |

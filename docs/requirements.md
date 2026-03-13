@@ -82,6 +82,7 @@
 3. WHEN 管理员添加图书，THE System SHALL 验证库存数量不能为负数
 4. WHEN 管理员添加图书，THE System SHALL 验证图书必须关联有效的分类
 5. WHEN 管理员添加图书，THE System SHALL 验证封面图片格式（jpg、png、webp）
+6. WHEN 管理员添加图书，THE System SHALL 将 ISBN 作为普通索引处理，允许重复；如果输入的 ISBN 已存在，THEN THE System SHALL 提示管理员确认是否为不同版本（例如平装/精装）。
 6. WHEN 管理员更新图书信息，THE System SHALL 记录更新时间
 7. WHEN 管理员上架图书，THE System SHALL 设置图书状态为上架（1）
 8. WHEN 管理员下架图书，THE System SHALL 设置图书状态为下架（0）

@@ -69,7 +69,7 @@ CREATE TABLE `book` (
   `create_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `update_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
   PRIMARY KEY (`id`),
-  UNIQUE KEY `idx_isbn` (`isbn`),
+  KEY `idx_isbn` (`isbn`),  -- 普通索引，允许重复
   KEY `idx_category_id` (`category_id`),
   KEY `idx_status` (`status`),
   KEY `idx_book_name` (`book_name`(100)),

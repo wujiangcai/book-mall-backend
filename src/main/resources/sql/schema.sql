@@ -126,7 +126,7 @@ CREATE TABLE `order` (
   `order_no` VARCHAR(50) NOT NULL COMMENT '订单编号，格式：时间戳+用户ID+随机数',
   `user_id` BIGINT NOT NULL COMMENT '用户ID',
   `total_amount` DECIMAL(10,2) NOT NULL COMMENT '订单总金额',
-  `status` TINYINT NOT NULL DEFAULT 0 COMMENT '订单状态：0-待支付，1-已支付，3-已发货，4-已完成，5-已取消',
+  `status` TINYINT NOT NULL DEFAULT 0 COMMENT '订单状态：0-待支付，1-已支付，2-待发货，3-已发货，4-已完成，5-已取消',
   `address_id` BIGINT NOT NULL COMMENT '收货地址ID',
   `create_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `update_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',

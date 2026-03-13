@@ -441,7 +441,7 @@ role: 0
 - 订单编号格式：时间戳(14位) + 用户ID(4位) + 随机数(4位)
 - 订单总金额 = Σ(商品价格 × 数量)
 - 只有待支付状态的订单可以支付
-- 只有已支付状态的订单可以发货
+- 只有待发货状态的订单可以发货
 - 已取消、已完成的订单不能修改状态
 
 ---
@@ -820,7 +820,7 @@ WHERE o.id = 1;
 SELECT * FROM order_item WHERE order_id = 1;
 
 -- 查询待发货订单
-SELECT * FROM `order` WHERE status = 1 ORDER BY pay_time;
+SELECT * FROM `order` WHERE status = 2 ORDER BY pay_time;
 
 -- 查询某时间段的订单
 SELECT * FROM `order`
@@ -831,7 +831,7 @@ SELECT
     COUNT(*) AS order_count,
     SUM(total_amount) AS total_sales
 FROM `order`
-WHERE status IN (1, 3, 4);
+WHERE status IN (2, 3, 4);
 ```
 
 ### 8.6 统计分析查询
@@ -862,7 +862,7 @@ SELECT
 FROM book b
 INNER JOIN order_item oi ON b.id = oi.book_id
 INNER JOIN `order` o ON oi.order_id = o.id
-WHERE o.status IN (1, 3, 4)
+WHERE o.status IN (2, 3, 4)
 GROUP BY b.id, b.book_name
 ORDER BY total_sold DESC
 LIMIT 10;

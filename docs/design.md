@@ -784,6 +784,7 @@
 - **路径：** DELETE /api/admin/books/{id}
 - **认证：** 需要管理员 Token
 - **路径参数：** id（图书 ID）
+- **说明：** 默认执行软删除（status = -1）；仅在确认未被订单引用时允许物理删除
 
 #### 4.6.5 上架/下架图书
 - **路径：** PUT /api/admin/books/{id}/status
@@ -1384,19 +1385,11 @@ book-mall-frontend/
    - 插入 order_item 表
    - 字段：order_id, book_id, book_name, price, quantity, total_price
    
-   Step 8: 扣减库存
-   - 遍历购物车商品
-   - 更新 book 表：stock = stock - quantity
-   - 使用乐观锁：WHERE id = ? AND stock >= ?
-   
-   Step 9: 清空购物车
+   Step 8: 清空购物车
    - 删除已下单的购物车记录
-   
-   Step 10: 提交事务
-   - 如果任何步骤失败，回滚所有操作
 
-5. 返回订单信息（orderId, orderNo, totalAmount）
-6. 前端跳转到订单详情页
+   Step 9: 提交事务
+   - 如果任何步骤失败，回滚所有操作
 ```
 
 ### 6.5 订单支付流程
@@ -1409,14 +1402,15 @@ book-mall-frontend/
    - 查询订单信息
    - 验证订单归属权限（order.userId == 当前用户ID）
    - 验证订单状态为待支付（status == 0）
-   - 如果状态不对，抛出 InvalidOrderStatusException
-   - 更新订单状态为已支付（status = 1）
-   - 记录支付时间（pay_time = NOW()）
+   - 再次校验库存是否充足
+   - 使用乐观锁扣减库存：UPDATE book SET stock = stock - ? WHERE id = ? AND stock >= ?
+   - 库存不足则返回错误，订单保持待支付
+   - 更新订单状态为已支付（status = 1）并记录支付时间
    - 立即更新订单状态为待发货（status = 2）
 4. 返回支付成功响应
 5. 前端更新订单状态显示
 
-**说明**：支付成功后在同一事务中完成两次状态更新（已支付→待发货），确保状态流转的原子性。
+**说明**：库存扣减在支付时执行，支付成功后在同一事务中完成两次状态更新（已支付→待发货）。
 ```
 
 ### 6.6 订单发货流程
@@ -1727,12 +1721,26 @@ public PageResult<Book> getBooksByPage(int page, int pageSize) {
     if (page < 1) page = 1;
     if (pageSize < 1) pageSize = 20;
     if (pageSize > 100) pageSize = 100;
-    
+
     int offset = (page - 1) * pageSize;
-    
+
     List<Book> list = bookMapper.selectBooksByPage(offset, pageSize, ...);
     long total = bookMapper.countBooks(...);
-    
+
+    return new PageResult<>(total, list);
+}
+
+public PageResult<Order> getOrdersByPage(int page, int pageSize) {
+    // 限制页码和每页数量
+    if (page < 1) page = 1;
+    if (pageSize < 1) pageSize = 10;
+    if (pageSize > 100) pageSize = 100;
+
+    int offset = (page - 1) * pageSize;
+
+    List<Order> list = orderMapper.selectOrdersByPage(offset, pageSize, ...);
+    long total = orderMapper.countOrders(...);
+
     return new PageResult<>(total, list);
 }
 ```
@@ -1771,8 +1779,7 @@ public class OrderServiceImpl implements OrderService {
         // 1. 校验库存
         // 2. 创建订单
         // 3. 创建订单详情
-        // 4. 扣减库存
-        // 5. 清空购物车
+        // 4. 清空购物车
         // 任何步骤失败都会回滚
     }
     
@@ -1780,7 +1787,7 @@ public class OrderServiceImpl implements OrderService {
     @Transactional(rollbackFor = Exception.class)
     public void cancelOrder(Long orderId) {
         // 1. 更新订单状态
-        // 2. 恢复库存
+        // 2. 若订单已支付，则恢复库存
     }
     
     // 查询操作不需要事务

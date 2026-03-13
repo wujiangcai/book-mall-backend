@@ -83,11 +83,12 @@
 4. WHEN 管理员添加图书，THE System SHALL 验证图书必须关联有效的分类
 5. WHEN 管理员添加图书，THE System SHALL 验证封面图片格式（jpg、png、webp）
 6. WHEN 管理员添加图书，THE System SHALL 将 ISBN 作为普通索引处理，允许重复；如果输入的 ISBN 已存在，THEN THE System SHALL 提示管理员确认是否为不同版本（例如平装/精装）。
-6. WHEN 管理员更新图书信息，THE System SHALL 记录更新时间
-7. WHEN 管理员上架图书，THE System SHALL 设置图书状态为上架（1）
-8. WHEN 管理员下架图书，THE System SHALL 设置图书状态为下架（0）
-9. WHEN 管理员删除图书，THE System SHALL 验证该图书未在待处理订单中
-10. THE System SHALL 支持按书名、作者、出版社、分类查询图书
+7. WHEN 管理员更新图书信息，THE System SHALL 记录更新时间
+8. WHEN 管理员上架图书，THE System SHALL 设置图书状态为上架（1）
+9. WHEN 管理员下架图书，THE System SHALL 设置图书状态为下架（0）
+10. WHEN 管理员删除图书，THE System SHALL 默认使用软删除方式标记图书状态（status = -1）
+11. IF 图书已被订单引用，THEN THE System SHALL 禁止物理删除
+12. THE System SHALL 支持按书名、作者、出版社、分类查询图书
 
 ### 需求 6: 前台图书浏览与检索
 
@@ -130,15 +131,17 @@
 5. WHEN 用户创建订单，THE System SHALL 生成唯一订单编号（时间戳 + 用户 ID + 随机数）
 6. WHEN 用户创建订单，THE System SHALL 计算订单总金额（Σ 商品价格 × 数量）
 7. WHEN 用户创建订单，THE System SHALL 创建订单主记录和订单详情记录
-8. WHEN 用户创建订单，THE System SHALL 扣减图书库存
-9. WHEN 用户创建订单，THE System SHALL 清空已下单的购物车商品
-10. WHEN 用户创建订单，THE System SHALL 设置订单状态为待支付（0）
-11. WHEN 用户支付订单，THE System SHALL 验证订单状态为待支付
-12. WHEN 用户支付订单，THE System SHALL 更新订单状态为已支付（1）并记录支付时间
-13. IF 订单状态不是待支付，THEN THE System SHALL 返回订单状态异常错误
-14. THE System SHALL 使用事务确保订单创建的原子性
-15. WHEN 用户支付订单成功，THE System SHALL 自动更新订单状态为待发货（2）
-16. THE System SHALL 在支付成功后立即执行状态变更，无需人工干预
+8. WHEN 用户创建订单，THE System SHALL 清空已下单的购物车商品
+9. WHEN 用户创建订单，THE System SHALL 设置订单状态为待支付（0）
+10. WHEN 用户支付订单，THE System SHALL 验证订单状态为待支付
+11. WHEN 用户支付订单，THE System SHALL 再次校验库存充足性
+12. WHEN 用户支付订单，THE System SHALL 扣减图书库存
+13. IF 支付时库存不足，THEN THE System SHALL 返回库存不足错误，订单保持待支付状态
+14. WHEN 用户支付订单，THE System SHALL 更新订单状态为已支付（1）并记录支付时间
+15. IF 订单状态不是待支付，THEN THE System SHALL 返回订单状态异常错误
+16. THE System SHALL 使用事务确保订单创建的原子性
+17. WHEN 用户支付订单成功，THE System SHALL 自动更新订单状态为待发货（2）
+18. THE System SHALL 在支付成功后立即执行状态变更，无需人工干预
 
 ### 需求 9: 订单查询与跟踪
 
@@ -162,7 +165,7 @@
 1. WHEN 用户取消订单，THE System SHALL 验证订单状态为待支付
 2. IF 订单状态不是待支付，THEN THE System SHALL 返回订单状态异常错误
 3. WHEN 用户取消订单，THE System SHALL 更新订单状态为已取消（5）
-4. WHEN 用户取消订单，THE System SHALL 恢复图书库存数量
+4. WHEN 用户取消订单且订单已支付，THE System SHALL 恢复图书库存数量
 5. THE System SHALL 使用事务确保取消操作的原子性
 
 ### 需求 11: 后台订单管理
@@ -205,7 +208,7 @@
 3. WHEN 管理员添加轮播图，THE System SHALL 设置默认排序值
 4. WHEN 管理员更新轮播图排序，THE System SHALL 更新排序字段值
 5. WHEN 管理员删除轮播图，THE System SHALL 移除该轮播图记录
-6. WHEN 前台用户请求轮播图，THE System SHALL 按排序字段升序返回启用状态的轮播图
+6. WHEN 前台用户请求轮播图，THE System SHALL 按排序字段升序返回启用状态的轮播图，并限制返回前 5 张
 7. THE System SHALL 限制轮播图最多显示 5 张
 
 ### 需求 14: 管理员认证与权限控制

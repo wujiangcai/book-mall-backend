@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mysql -h localhost -P 3306 -u root -e \"USE book_mall; SHOW CREATE TABLE \\\\`user\\\\`;\")",
+      "Bash(mysql -h localhost -P 3306 -u root -e \"USE book_mall; SHOW COLUMNS FROM \\\\`user\\\\`;\")",
+      "Bash(mysql -h localhost -P 3306 -u root -e \"SELECT LENGTH\\('系统管理员'\\) AS len, CHAR_LENGTH\\('系统管理员'\\) AS char_len;\")",
+      "Bash(mysql -h localhost -P 3306 -u root -e \"USE book_mall; INSERT INTO \\\\`user\\\\` \\(\\\\`username\\\\`, \\\\`password\\\\`, \\\\`nickname\\\\`, \\\\`phone\\\\`, \\\\`email\\\\`, \\\\`role\\\\`, \\\\`status\\\\`\\) VALUES \\('admin', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKLU.yvC', '系统管理员', '13800138000', 'admin@bookmall.com', 1, 1\\);\")",
+      "Bash(mysql -h localhost -P 3306 -u root -e \"USE book_mall; SHOW TABLES;\")",
+      "Bash(mysql -h localhost -P 3306 -u root -e \"USE book_mall; SELECT username, nickname, role, status FROM \\\\`user\\\\` ORDER BY id;\")",
+      "Bash(mysql --default-character-set=utf8mb4 -h localhost -P 3306 -u root -e 'USE book_mall; UPDATE `user` SET nickname=\"系统管理员\" WHERE username=\"admin\"; UPDATE `user` SET nickname=\"测试用户\" WHERE username=\"testuser\";')",
+      "Bash(mysql --default-character-set=utf8mb4 -h localhost -P 3306 -u root -e 'USE book_mall; SELECT username, nickname, role, status FROM `user` ORDER BY id;')",
+      "Bash(mvn -q -DskipTests package && mvn spring-boot:run)"
+    ]
+  }
+}

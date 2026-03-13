@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="top.wjc.bookmallbackend.mapper.UserMapper">
+
+    <resultMap id="BaseResultMap" type="top.wjc.bookmallbackend.entity.User">
+        <id property="id" column="id"/>
+        <result property="username" column="username"/>
+        <result property="password" column="password"/>
+        <result property="nickname" column="nickname"/>
+        <result property="phone" column="phone"/>
+        <result property="email" column="email"/>
+        <result property="role" column="role"/>
+        <result property="status" column="status"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, username, password, nickname, phone, email, role, status, create_time, update_time
+    </sql>
+
+    <select id="findByUsername" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM user
+        WHERE username = #{username}
+    </select>
+
+    <select id="findById" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM user
+        WHERE id = #{id}
+    </select>
+
+    <select id="countByUsername" resultType="int">
+        SELECT COUNT(1)
+        FROM user
+        WHERE username = #{username}
+    </select>
+
+    <select id="countByPhone" resultType="int">
+        SELECT COUNT(1)
+        FROM user
+        WHERE phone = #{phone}
+    </select>
+
+    <insert id="insert" parameterType="top.wjc.bookmallbackend.entity.User">
+        INSERT INTO user (username, password, nickname, phone, email, role, status)
+        VALUES (#{username}, #{password}, #{nickname}, #{phone}, #{email}, #{role}, #{status})
+    </insert>
+
+    <update id="updateProfile" parameterType="top.wjc.bookmallbackend.entity.User">
+        UPDATE user
+        SET nickname = #{nickname},
+            phone = #{phone},
+            email = #{email}
+        WHERE id = #{id}
+    </update>
+
+</mapper>

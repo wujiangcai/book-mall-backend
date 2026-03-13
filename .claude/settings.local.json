@@ -9,7 +9,11 @@
       "Bash(mysql -h localhost -P 3306 -u root -e \"USE book_mall; SELECT username, nickname, role, status FROM \\\\`user\\\\` ORDER BY id;\")",
       "Bash(mysql --default-character-set=utf8mb4 -h localhost -P 3306 -u root -e 'USE book_mall; UPDATE `user` SET nickname=\"系统管理员\" WHERE username=\"admin\"; UPDATE `user` SET nickname=\"测试用户\" WHERE username=\"testuser\";')",
       "Bash(mysql --default-character-set=utf8mb4 -h localhost -P 3306 -u root -e 'USE book_mall; SELECT username, nickname, role, status FROM `user` ORDER BY id;')",
-      "Bash(mvn -q -DskipTests package && mvn spring-boot:run)"
+      "Bash(mvn -q -DskipTests package && mvn spring-boot:run)",
+      "Bash(mvn -DskipTests dependency:tree -Dincludes=org.springdoc)",
+      "Bash(mysql -h localhost -P 3306 -u root -e \"USE book_mall; SELECT id, username, password, role, status FROM \\\\`user\\\\` WHERE username='admin';\")",
+      "Bash(mysql -h localhost -P 3306 -u root -e 'USE book_mall; SELECT id, username, password, role, status FROM `user` WHERE username=\"admin\";')",
+      "Bash(javac -encoding UTF-8 -cp \"C:\\\\Users\\\\caiwujiang\\\\.m2\\\\repository\\\\org\\\\springframework\\\\security\\\\spring-security-crypto\\\\7.0.3\\\\spring-security-crypto-7.0.3.jar;C:\\\\Users\\\\caiwujiang\\\\.m2\\\\repository\\\\commons-logging\\\\commons-logging\\\\1.3.5\\\\commons-logging-1.3.5.jar\" \"C:\\\\Users\\\\caiwujiang\\\\Desktop\\\\book-mall-backend\\\\PasswordGenerator.java\" && java -cp \"C:\\\\Users\\\\caiwujiang\\\\Desktop\\\\book-mall-backend;C:\\\\Users\\\\caiwujiang\\\\.m2\\\\repository\\\\org\\\\springframework\\\\security\\\\spring-security-crypto\\\\7.0.3\\\\spring-security-crypto-7.0.3.jar;C:\\\\Users\\\\caiwujiang\\\\.m2\\\\repository\\\\commons-logging\\\\commons-logging\\\\1.3.5\\\\commons-logging-1.3.5.jar\" PasswordGenerator)"
     ]
   }
 }

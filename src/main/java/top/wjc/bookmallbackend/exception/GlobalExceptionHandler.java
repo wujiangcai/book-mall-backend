@@ -1,5 +1,7 @@
 package top.wjc.bookmallbackend.exception;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.BindException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -12,6 +14,8 @@ import java.util.stream.Collectors;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     @ExceptionHandler(BusinessException.class)
     public Result<Void> handleBusinessException(BusinessException exception) {
@@ -57,6 +61,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public Result<Void> handleException(Exception exception) {
+        log.error("Unhandled exception", exception);
         return Result.fail(HttpStatus.INTERNAL_SERVER_ERROR.value(), "服务器内部错误");
     }
 }

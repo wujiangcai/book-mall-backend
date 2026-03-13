@@ -62,6 +62,15 @@
 - 登录返回 JWT，禁用用户不可登录
 - 返回数据不含 password
 
+**完成记录（2026-03-14）**：
+- 新增实体：`entity/User`。
+- 新增 DTO：`RegisterRequest`、`LoginRequest`、`UpdateUserRequest`。
+- 新增 VO：`AuthResponse`、`UserInfoResponse`。
+- 新增 Mapper：`mapper/UserMapper`（按字段查询/插入/更新）。
+- 新增 Service：`service/UserService` + `service/impl/UserServiceImpl`。
+- 新增 Controller：`FrontAuthController`、`AdminAuthController`、`UserController`。
+- 已更新 admin/testuser 密码哈希并完成登录验证。
+
 ## Phase 3：分类与图书管理（前台+后台）
 **目标**：分类树、图书 CRUD、上下架、前台检索。
 - 实体/Mapper：`Category`、`Book`

@@ -90,6 +90,7 @@
 
 ### 7) docs 目录索引
 
+- `docs/毕设需求.md`：项目背景与前后端需求范围
 - `docs/design.md`：总体设计与接口设计说明
 - `docs/requirements.md`：需求与错误码约定
 - `docs/database-guide.md`：数据库结构/字段/枚举
@@ -101,6 +102,8 @@
 - `docs/phase8-alignment.md`：非功能质量对齐
 - `docs/frontend-api.md`：前台接口清单
 - `docs/admin-api.md`：后台接口清单
+- `docs/frontend-guideline.md`：前端开发规范（前台+后台）
+- `docs/frontend-implementation-plan.md`：前端开发执行计划
 
 ---
 

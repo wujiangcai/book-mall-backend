@@ -1,31 +1,35 @@
 <template>
-  <a-card :bordered="false" v-if="book">
-    <a-grid :cols="2" :col-gap="24">
-      <a-grid-item>
-        <img :src="book.coverImage" alt="cover" class="detail-cover" />
-      </a-grid-item>
-      <a-grid-item>
-        <a-space direction="vertical" fill>
-          <h2>{{ book.bookName }}</h2>
-          <div>作者：{{ book.author || '-' }}</div>
-          <div>出版社：{{ book.publisher || '-' }}</div>
-          <div>ISBN：{{ book.isbn || '-' }}</div>
-          <div class="price">¥{{ book.price }}</div>
-          <a-space>
-            <a-input-number v-model="quantity" :min="1" :max="book.stock" />
-            <a-button type="primary" @click="addToCart">加入购物车</a-button>
+  <a-card :bordered="false">
+    <template v-if="book">
+      <a-grid :cols="2" :col-gap="24">
+        <a-grid-item>
+          <img :src="book.coverImage" alt="cover" class="detail-cover" />
+        </a-grid-item>
+        <a-grid-item>
+          <a-space direction="vertical" fill>
+            <h2>{{ book.bookName }}</h2>
+            <div>作者：{{ book.author || '-' }}</div>
+            <div>出版社：{{ book.publisher || '-' }}</div>
+            <div>ISBN：{{ book.isbn || '-' }}</div>
+            <div class="price">¥{{ book.price }}</div>
+            <a-space>
+              <a-input-number v-model="quantity" :min="1" :max="book.stock" />
+              <a-button type="primary" @click="addToCart">加入购物车</a-button>
+            </a-space>
           </a-space>
-        </a-space>
-      </a-grid-item>
-    </a-grid>
-    <a-divider />
-    <div>{{ book.description || '暂无描述' }}</div>
+        </a-grid-item>
+      </a-grid>
+      <a-divider />
+      <div>{{ book.description || '暂无描述' }}</div>
+    </template>
+    <a-empty v-else description="暂无图书信息" />
   </a-card>
 </template>
 
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
+import { Message } from '@arco-design/web-vue'
 import frontBookApi from '../../api/front/book'
 import frontCartApi from '../../api/front/cart'
 import type { BookDetail } from '../../types/api'
@@ -43,6 +47,7 @@ const load = async () => {
 const addToCart = async () => {
   if (!book.value) return
   await frontCartApi.add({ bookId: book.value.id, quantity: quantity.value })
+  Message.success('已加入购物车')
 }
 
 onMounted(load)

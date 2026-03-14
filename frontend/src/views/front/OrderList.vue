@@ -21,6 +21,7 @@
         </a-table-column>
       </template>
     </a-table>
+    <a-empty v-if="list.length === 0" description="暂无订单" />
     <div class="pager">
       <a-pagination
         :current="query.page"
@@ -39,6 +40,7 @@
 <script setup lang="ts">
 import { onMounted, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { Message } from '@arco-design/web-vue'
 import frontOrderApi from '../../api/front/order'
 import { OrderStatus } from '../../types/enums'
 import type { OrderListItem } from '../../types/api'
@@ -97,11 +99,13 @@ const goDetail = (id: number) => {
 
 const pay = async (id: number) => {
   await frontOrderApi.pay(id)
+  Message.success('支付成功')
   await load()
 }
 
 const cancel = async (id: number) => {
   await frontOrderApi.cancel(id)
+  Message.success('订单已取消')
   await load()
 }
 

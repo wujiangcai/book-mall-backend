@@ -46,6 +46,7 @@
           </a-table-column>
         </template>
       </a-table>
+      <a-empty v-if="list.length === 0" description="暂无分类" />
     </a-card>
 
     <a-modal v-model:visible="visible" :title="editing ? '编辑分类' : '新增分类'" @ok="submit">
@@ -66,6 +67,7 @@
 
 <script setup lang="ts">
 import { onMounted, reactive, ref } from 'vue'
+import { Message } from '@arco-design/web-vue'
 import adminCategoryApi from '../../api/admin/category'
 import type { CategoryAdminItem } from '../../types/api'
 
@@ -114,8 +116,10 @@ const openEdit = (record: CategoryAdminItem) => {
 const submit = async () => {
   if (editing.value && editingId.value) {
     await adminCategoryApi.update(editingId.value, { ...form })
+    Message.success('分类已更新')
   } else {
     await adminCategoryApi.create({ ...form })
+    Message.success('分类已创建')
   }
   visible.value = false
   await load()
@@ -123,22 +127,26 @@ const submit = async () => {
 
 const updateStatus = async (id: number, status: number) => {
   await adminCategoryApi.updateStatus(id, { status })
+  Message.success('状态已更新')
   await load()
 }
 
 const remove = async (id: number) => {
   await adminCategoryApi.remove(id)
+  Message.success('分类已删除')
   await load()
 }
 
 const batchUpdateStatus = async (status: number) => {
   await Promise.all(selectedRowKeys.value.map((id) => adminCategoryApi.updateStatus(id, { status })))
+  Message.success('批量状态已更新')
   selectedRowKeys.value = []
   await load()
 }
 
 const batchRemove = async () => {
   await Promise.all(selectedRowKeys.value.map((id) => adminCategoryApi.remove(id)))
+  Message.success('批量删除完成')
   selectedRowKeys.value = []
   await load()
 }

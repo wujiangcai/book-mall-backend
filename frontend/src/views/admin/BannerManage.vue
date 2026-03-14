@@ -43,6 +43,7 @@
           </a-table-column>
         </template>
       </a-table>
+      <a-empty v-if="list.length === 0" description="暂无轮播" />
     </a-card>
 
     <a-modal v-model:visible="visible" :title="editing ? '编辑轮播' : '新增轮播'" @ok="submit">
@@ -69,6 +70,7 @@
 
 <script setup lang="ts">
 import { onMounted, reactive, ref } from 'vue'
+import { Message } from '@arco-design/web-vue'
 import adminBannerApi from '../../api/admin/banner'
 import type { Banner } from '../../types/api'
 
@@ -120,8 +122,10 @@ const openEdit = (record: Banner) => {
 const submit = async () => {
   if (editing.value && editingId.value) {
     await adminBannerApi.update(editingId.value, { ...form })
+    Message.success('轮播已更新')
   } else {
     await adminBannerApi.create({ ...form })
+    Message.success('轮播已创建')
   }
   visible.value = false
   await load()
@@ -134,21 +138,25 @@ const updateStatus = async (record: Banner, status: number) => {
     sortOrder: record.sortOrder,
     status,
   })
+  Message.success('状态已更新')
   await load()
 }
 
 const updateSort = async (record: Banner) => {
   await adminBannerApi.updateSort(record.id, { sortOrder: record.sortOrder })
+  Message.success('排序已更新')
   await load()
 }
 
 const remove = async (id: number) => {
   await adminBannerApi.remove(id)
+  Message.success('轮播已删除')
   await load()
 }
 
 const batchRemove = async () => {
   await Promise.all(selectedRowKeys.value.map((id) => adminBannerApi.remove(id)))
+  Message.success('批量删除完成')
   selectedRowKeys.value = []
   await load()
 }

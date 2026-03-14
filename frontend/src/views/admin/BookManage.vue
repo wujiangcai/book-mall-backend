@@ -55,6 +55,7 @@
           </a-table-column>
         </template>
       </a-table>
+      <a-empty v-if="list.length === 0" description="暂无图书" />
 
       <div class="pager">
         <a-pagination
@@ -116,6 +117,7 @@
 
 <script setup lang="ts">
 import { onMounted, reactive, ref } from 'vue'
+import { Message } from '@arco-design/web-vue'
 import adminBookApi from '../../api/admin/book'
 import adminCategoryApi from '../../api/admin/category'
 import type { AdminBookListItem, CategoryAdminItem } from '../../types/api'
@@ -218,8 +220,10 @@ const submit = async () => {
   if (!form.categoryId) return
   if (editing.value && editingId.value) {
     await adminBookApi.update(editingId.value, { ...form, categoryId: form.categoryId })
+    Message.success('图书已更新')
   } else {
     await adminBookApi.create({ ...form, categoryId: form.categoryId })
+    Message.success('图书已创建')
   }
   visible.value = false
   await load()
@@ -227,22 +231,26 @@ const submit = async () => {
 
 const updateStatus = async (id: number, status: number) => {
   await adminBookApi.updateStatus(id, { status })
+  Message.success('状态已更新')
   await load()
 }
 
 const remove = async (id: number) => {
   await adminBookApi.remove(id)
+  Message.success('图书已删除')
   await load()
 }
 
 const batchUpdateStatus = async (status: number) => {
   await Promise.all(selectedRowKeys.value.map((id) => adminBookApi.updateStatus(id, { status })))
+  Message.success('批量状态已更新')
   selectedRowKeys.value = []
   await load()
 }
 
 const batchRemove = async () => {
   await Promise.all(selectedRowKeys.value.map((id) => adminBookApi.remove(id)))
+  Message.success('批量删除完成')
   selectedRowKeys.value = []
   await load()
 }

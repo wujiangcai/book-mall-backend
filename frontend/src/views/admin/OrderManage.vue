@@ -44,6 +44,7 @@
           </a-table-column>
         </template>
       </a-table>
+      <a-empty v-if="list.length === 0" description="暂无订单" />
 
       <div class="pager">
         <a-pagination
@@ -87,6 +88,7 @@
 
 <script setup lang="ts">
 import { onMounted, reactive, ref } from 'vue'
+import { Message } from '@arco-design/web-vue'
 import adminOrderApi from '../../api/admin/order'
 import { OrderStatus } from '../../types/enums'
 import type { AdminOrderDetail, AdminOrderListItem } from '../../types/api'
@@ -158,12 +160,14 @@ const openDetail = async (id: number) => {
 
 const ship = async (id: number) => {
   await adminOrderApi.ship(id)
+  Message.success('发货成功')
   await load()
 }
 
 const batchShip = async () => {
   const ids = selectedRowKeys.value
   await Promise.all(ids.map((id) => adminOrderApi.ship(id)))
+  Message.success('批量发货完成')
   selectedRowKeys.value = []
   await load()
 }

@@ -32,6 +32,7 @@
           </a-table-column>
         </template>
       </a-table>
+      <a-empty v-if="list.length === 0" description="购物车为空" />
       <div class="cart-actions">
         <a-checkbox v-model="checkAll" @change="toggleAll">全选</a-checkbox>
         <div class="total">合计：¥{{ totalPrice }}</div>
@@ -52,6 +53,7 @@
 <script setup lang="ts">
 import { onMounted, computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { Message } from '@arco-design/web-vue'
 import frontCartApi from '../../api/front/cart'
 import frontOrderApi from '../../api/front/order'
 import frontAddressApi from '../../api/front/address'
@@ -80,11 +82,13 @@ const loadAddresses = async () => {
 
 const updateQuantity = async (record: CartItemChecked) => {
   await frontCartApi.update(record.id, { quantity: record.quantity })
+  Message.success('数量已更新')
   await load()
 }
 
 const removeItem = async (record: CartItemChecked) => {
   await frontCartApi.remove(record.id)
+  Message.success('已移除商品')
   await load()
 }
 
@@ -111,6 +115,7 @@ const checkout = async () => {
     cartIds,
   })) as any as OrderCreateResponse
   addressVisible.value = false
+  Message.success('订单已创建')
   await router.push(`/order/${data.orderId}`)
 }
 

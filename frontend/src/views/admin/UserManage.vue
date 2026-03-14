@@ -39,12 +39,14 @@
           </a-table-column>
         </template>
       </a-table>
+      <a-empty v-if="list.length === 0" description="暂无用户" />
     </a-card>
   </a-space>
 </template>
 
 <script setup lang="ts">
 import { onMounted, reactive, ref } from 'vue'
+import { Message } from '@arco-design/web-vue'
 import adminUserApi from '../../api/admin/user'
 import type { AdminUserListItem } from '../../types/api'
 
@@ -66,11 +68,13 @@ const onSelectChange = (keys: number[]) => {
 
 const updateStatus = async (id: number, status: number) => {
   await adminUserApi.updateStatus(id, { status })
+  Message.success('状态已更新')
   await load()
 }
 
 const batchUpdateStatus = async (status: number) => {
   await Promise.all(selectedRowKeys.value.map((id) => adminUserApi.updateStatus(id, { status })))
+  Message.success('批量状态已更新')
   selectedRowKeys.value = []
   await load()
 }

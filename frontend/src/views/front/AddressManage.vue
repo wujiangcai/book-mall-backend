@@ -27,6 +27,7 @@
           </a-table-column>
         </template>
       </a-table>
+      <a-empty v-if="list.length === 0" description="暂无地址" />
     </a-card>
 
     <a-modal v-model:visible="visible" :title="editing ? '编辑地址' : '新增地址'" @ok="submit">
@@ -56,6 +57,7 @@
 
 <script setup lang="ts">
 import { reactive, ref, onMounted } from 'vue'
+import { Message } from '@arco-design/web-vue'
 import frontAddressApi from '../../api/front/address'
 import type { Address } from '../../types/api'
 
@@ -108,8 +110,10 @@ const openEdit = (record: Address) => {
 const submit = async () => {
   if (editing.value && editingId.value) {
     await frontAddressApi.update(editingId.value, { ...form })
+    Message.success('地址已更新')
   } else {
     await frontAddressApi.create({ ...form, isDefault: 0 })
+    Message.success('地址已创建')
   }
   visible.value = false
   await load()
@@ -117,11 +121,13 @@ const submit = async () => {
 
 const remove = async (record: Address) => {
   await frontAddressApi.remove(record.id)
+  Message.success('地址已删除')
   await load()
 }
 
 const setDefault = async (record: Address) => {
   await frontAddressApi.setDefault(record.id)
+  Message.success('默认地址已更新')
   await load()
 }
 

@@ -3,6 +3,10 @@ package top.wjc.bookmallbackend.mapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import top.wjc.bookmallbackend.entity.User;
+import top.wjc.bookmallbackend.vo.AdminUserDetailVO;
+import top.wjc.bookmallbackend.vo.AdminUserListItemVO;
+
+import java.util.List;
 
 @Mapper
 public interface UserMapper {
@@ -18,4 +22,14 @@ public interface UserMapper {
     int insert(User user);
 
     int updateProfile(User user);
+
+    List<AdminUserListItemVO> selectAdminList(@Param("offset") int offset,
+                                              @Param("pageSize") int pageSize,
+                                              @Param("keyword") String keyword);
+
+    long countAdminList(@Param("keyword") String keyword);
+
+    AdminUserDetailVO selectAdminDetail(@Param("id") Long id);
+
+    int updateStatus(@Param("id") Long id, @Param("status") Integer status);
 }

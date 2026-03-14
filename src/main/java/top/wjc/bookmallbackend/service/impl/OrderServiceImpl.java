@@ -22,6 +22,8 @@ import top.wjc.bookmallbackend.mapper.OrderItemMapper;
 import top.wjc.bookmallbackend.mapper.OrderMapper;
 import top.wjc.bookmallbackend.service.OrderService;
 import top.wjc.bookmallbackend.vo.AddressSnapshotVO;
+import top.wjc.bookmallbackend.vo.AdminOrderDetailVO;
+import top.wjc.bookmallbackend.vo.AdminOrderListItemVO;
 import top.wjc.bookmallbackend.vo.OrderCreateVO;
 import top.wjc.bookmallbackend.vo.OrderDetailVO;
 import top.wjc.bookmallbackend.vo.OrderItemVO;
@@ -192,6 +194,50 @@ public class OrderServiceImpl implements OrderService {
         AddressSnapshotVO snapshot = buildAddressSnapshot(address);
         return new OrderDetailVO(order.getId(), order.getOrderNo(), order.getTotalAmount(), order.getStatus(),
                 order.getCreateTime(), order.getPayTime(), snapshot, items);
+    }
+
+    @Override
+    public PageResult<AdminOrderListItemVO> listAdmin(Integer page, Integer pageSize, Integer status, String orderNo, Long userId) {
+        int currentPage = normalizePage(page);
+        int size = normalizeSize(pageSize);
+        int offset = (currentPage - 1) * size;
+        long total = orderMapper.countAdminList(status, orderNo, userId);
+        List<Order> orders = orderMapper.selectAdminList(offset, size, status, orderNo, userId);
+        List<AdminOrderListItemVO> list = orders.stream()
+                .map(order -> new AdminOrderListItemVO(order.getId(), order.getOrderNo(), order.getUserId(),
+                        order.getTotalAmount(), order.getStatus(), order.getCreateTime()))
+                .collect(Collectors.toList());
+        return new PageResult<>(total, list, currentPage, size);
+    }
+
+    @Override
+    public AdminOrderDetailVO detailAdmin(Long orderId) {
+        Order order = orderMapper.selectById(orderId);
+        if (order == null) {
+            throw new NotFoundException();
+        }
+        List<OrderItemVO> items = orderItemMapper.selectByOrderId(orderId);
+        Address address = addressMapper.selectById(order.getAddressId());
+        if (address == null) {
+            throw new NotFoundException();
+        }
+        AddressSnapshotVO snapshot = buildAddressSnapshot(address);
+        return new AdminOrderDetailVO(order.getId(), order.getOrderNo(), order.getUserId(), order.getTotalAmount(),
+                order.getStatus(), order.getCreateTime(), order.getPayTime(), order.getShipTime(), snapshot, items);
+    }
+
+    @Override
+    @Transactional
+    public void ship(Long orderId) {
+        Order order = orderMapper.selectById(orderId);
+        if (order == null) {
+            throw new NotFoundException();
+        }
+        if (order.getStatus() == null || order.getStatus() != OrderStatus.PENDING_SHIP.getCode()) {
+            throw new InvalidOrderStatusException();
+        }
+        orderMapper.updateStatus(orderId, OrderStatus.SHIPPED.getCode());
+        orderMapper.updateShipTime(orderId, LocalDateTime.now());
     }
 
     private String buildItemSummary(Long orderId) {

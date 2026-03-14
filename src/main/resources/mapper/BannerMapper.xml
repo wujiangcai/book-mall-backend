@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="top.wjc.bookmallbackend.mapper.BannerMapper">
+
+    <resultMap id="BaseResultMap" type="top.wjc.bookmallbackend.entity.Banner">
+        <id property="id" column="id"/>
+        <result property="imageUrl" column="image_url"/>
+        <result property="linkUrl" column="link_url"/>
+        <result property="sortOrder" column="sort_order"/>
+        <result property="status" column="status"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, image_url, link_url, sort_order, status, create_time, update_time
+    </sql>
+
+    <select id="selectAdminList" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM banner
+        WHERE status &lt;&gt; -1
+        ORDER BY sort_order ASC, create_time ASC
+    </select>
+
+    <select id="selectFrontList" resultType="top.wjc.bookmallbackend.vo.BannerVO">
+        SELECT id, image_url, link_url, sort_order, status, create_time
+        FROM banner
+        WHERE status = 1
+        ORDER BY sort_order ASC, create_time ASC
+        LIMIT 5
+    </select>
+
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM banner
+        WHERE id = #{id}
+    </select>
+
+    <insert id="insert" parameterType="top.wjc.bookmallbackend.entity.Banner" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO banner (image_url, link_url, sort_order, status)
+        VALUES (#{imageUrl}, #{linkUrl}, #{sortOrder}, #{status})
+    </insert>
+
+    <update id="update" parameterType="top.wjc.bookmallbackend.entity.Banner">
+        UPDATE banner
+        SET image_url = #{imageUrl},
+            link_url = #{linkUrl},
+            sort_order = #{sortOrder},
+            status = #{status}
+        WHERE id = #{id}
+    </update>
+
+    <update id="updateSort">
+        UPDATE banner
+        SET sort_order = #{sortOrder}
+        WHERE id = #{id}
+    </update>
+
+    <update id="updateStatus">
+        UPDATE banner
+        SET status = #{status}
+        WHERE id = #{id}
+    </update>
+
+    <update id="softDelete">
+        UPDATE banner
+        SET status = -1
+        WHERE id = #{id}
+    </update>
+
+</mapper>

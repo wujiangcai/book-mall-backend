@@ -162,6 +162,19 @@ implementation-plan# 实施计划（小步可验证）
 - 订单管理：列表、详情、发货
 - 轮播图：增删改查、排序，前台取前5张
 
+**完成记录（2026-03-14）**：
+- 新增实体/DTO/VO：Banner、BannerCreate/Update/SortRequest、BannerVO、AdminOrderListItemVO、AdminOrderDetailVO、AdminUserListItemVO、AdminUserDetailVO、UserStatusRequest。
+- 新增 Mapper/XML：BannerMapper + BannerMapper.xml；扩展 OrderMapper 与 UserMapper 支持后台列表/详情/状态更新。
+- 新增 Service：BannerService/BannerServiceImpl；扩展 OrderService/UserService 支持后台管理。
+- 新增 Controller：AdminOrderController、AdminUserController、AdminBannerController、FrontBannerController。
+- 轮播图采用软删除（status = -1），后台列表过滤 status != -1，前台仅返回 status = 1 且最多 5 条。
+- 规则落地：发货仅允许 status=2 → status=3 并写入 shipTime；用户状态仅允许 0/1。
+- 联调验证：
+  - 后台订单列表/详情/发货流程通过（创建订单→支付→待发货→发货→已发货）。
+  - 后台用户列表/详情/状态更新通过。
+  - 后台轮播图列表与排序更新通过；前台轮播图列表正确。
+  - 地址创建 500 排查：请求体非 UTF-8 导致 JSON 解析失败。
+
 **验证**：
 - 管理员权限校验
 - 轮播图前台返回数量≤5且排序正确

@@ -56,4 +56,44 @@
         WHERE id = #{id}
     </update>
 
+    <select id="selectAdminList" resultType="top.wjc.bookmallbackend.vo.AdminUserListItemVO">
+        SELECT id, username, nickname, phone, email, role, status, create_time
+        FROM user
+        <where>
+            <if test="keyword != null and keyword != ''">
+                (username LIKE CONCAT('%', #{keyword}, '%')
+                OR nickname LIKE CONCAT('%', #{keyword}, '%')
+                OR phone LIKE CONCAT('%', #{keyword}, '%')
+                OR email LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+        </where>
+        ORDER BY create_time DESC
+        LIMIT #{offset}, #{pageSize}
+    </select>
+
+    <select id="countAdminList" resultType="long">
+        SELECT COUNT(1)
+        FROM user
+        <where>
+            <if test="keyword != null and keyword != ''">
+                (username LIKE CONCAT('%', #{keyword}, '%')
+                OR nickname LIKE CONCAT('%', #{keyword}, '%')
+                OR phone LIKE CONCAT('%', #{keyword}, '%')
+                OR email LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+        </where>
+    </select>
+
+    <select id="selectAdminDetail" resultType="top.wjc.bookmallbackend.vo.AdminUserDetailVO">
+        SELECT id, username, nickname, phone, email, role, status, create_time, update_time
+        FROM user
+        WHERE id = #{id}
+    </select>
+
+    <update id="updateStatus">
+        UPDATE user
+        SET status = #{status}
+        WHERE id = #{id}
+    </update>
+
 </mapper>

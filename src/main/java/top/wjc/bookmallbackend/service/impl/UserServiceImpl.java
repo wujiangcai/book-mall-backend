@@ -5,17 +5,22 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import top.wjc.bookmallbackend.constant.CommonStatus;
 import top.wjc.bookmallbackend.constant.UserRole;
+import top.wjc.bookmallbackend.common.PageResult;
 import top.wjc.bookmallbackend.dto.LoginRequest;
 import top.wjc.bookmallbackend.dto.RegisterRequest;
 import top.wjc.bookmallbackend.dto.UpdateUserRequest;
+import top.wjc.bookmallbackend.dto.UserStatusRequest;
 import top.wjc.bookmallbackend.entity.User;
 import top.wjc.bookmallbackend.exception.BusinessException;
 import top.wjc.bookmallbackend.exception.ForbiddenException;
+import top.wjc.bookmallbackend.exception.InvalidStatusException;
 import top.wjc.bookmallbackend.exception.NotFoundException;
 import top.wjc.bookmallbackend.exception.UnauthorizedException;
 import top.wjc.bookmallbackend.mapper.UserMapper;
 import top.wjc.bookmallbackend.service.UserService;
 import top.wjc.bookmallbackend.util.JwtUtil;
+import top.wjc.bookmallbackend.vo.AdminUserDetailVO;
+import top.wjc.bookmallbackend.vo.AdminUserListItemVO;
 import top.wjc.bookmallbackend.vo.AuthResponse;
 import top.wjc.bookmallbackend.vo.UserInfoResponse;
 
@@ -94,6 +99,56 @@ public class UserServiceImpl implements UserService {
         user.setPhone(request.getPhone());
         user.setEmail(request.getEmail());
         userMapper.updateProfile(user);
+    }
+
+    @Override
+    public PageResult<AdminUserListItemVO> listAdmin(Integer page, Integer pageSize, String keyword) {
+        int currentPage = normalizePage(page);
+        int size = normalizeSize(pageSize);
+        int offset = (currentPage - 1) * size;
+        long total = userMapper.countAdminList(keyword);
+        return new PageResult<>(total, userMapper.selectAdminList(offset, size, keyword), currentPage, size);
+    }
+
+    @Override
+    public AdminUserDetailVO detailAdmin(Long userId) {
+        AdminUserDetailVO detail = userMapper.selectAdminDetail(userId);
+        if (detail == null) {
+            throw new NotFoundException();
+        }
+        return detail;
+    }
+
+    @Override
+    @Transactional
+    public void updateStatus(Long userId, UserStatusRequest request) {
+        User user = userMapper.findById(userId);
+        if (user == null) {
+            throw new NotFoundException();
+        }
+        validateUserStatus(request.getStatus());
+        userMapper.updateStatus(userId, request.getStatus());
+    }
+
+    private void validateUserStatus(Integer status) {
+        if (status == null) {
+            throw new InvalidStatusException("状态不能为空");
+        }
+        if (status != CommonStatus.ENABLED.getCode() && status != CommonStatus.DISABLED.getCode()) {
+            throw new InvalidStatusException("用户状态不合法");
+        }
+    }
+
+    private int normalizePage(Integer page) {
+        return page == null || page < 1 ? 1 : page;
+    }
+
+    private int normalizeSize(Integer pageSize) {
+        int size = pageSize == null ? 20 : pageSize;
+        if (size < 1) {
+            return 20;
+        }
+        return Math.min(size, 100);
     }
 
     private AuthResponse buildAuthResponse(User user) {

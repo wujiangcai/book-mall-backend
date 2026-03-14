@@ -1,7 +1,7 @@
 <template>
   <div class="auth-page">
     <a-card title="前台注册" :bordered="false" class="auth-card">
-      <a-form :model="form" layout="vertical" @submit.prevent="handleRegister">
+      <a-form :model="form" layout="vertical" @submit="handleRegister">
         <a-form-item label="用户名">
           <a-input v-model="form.username" placeholder="用户名" autocomplete="username" />
         </a-form-item>

@@ -6,7 +6,7 @@
       <img :src="heroImage" alt="books" class="visual-image" />
     </div>
     <a-card title="前台登录" :bordered="false" class="auth-card card-glass">
-      <a-form :model="form" layout="vertical" @submit.prevent="handleLogin">
+      <a-form :model="form" layout="vertical" @submit="handleLogin">
         <a-form-item label="用户名">
           <a-input v-model="form.username" placeholder="用户名" autocomplete="username" />
         </a-form-item>

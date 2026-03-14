@@ -49,4 +49,27 @@
         DELETE FROM cart WHERE id = #{id}
     </delete>
 
+    <select id="selectByIdsAndUserId" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM cart
+        WHERE user_id = #{userId}
+        <if test="cartIds != null and cartIds.size() > 0">
+            AND id IN
+            <foreach collection="cartIds" item="id" open="(" separator="," close=")">
+                #{id}
+            </foreach>
+        </if>
+    </select>
+
+    <delete id="deleteByIdsAndUserId">
+        DELETE FROM cart
+        WHERE user_id = #{userId}
+        <if test="cartIds != null and cartIds.size() > 0">
+            AND id IN
+            <foreach collection="cartIds" item="id" open="(" separator="," close=")">
+                #{id}
+            </foreach>
+        </if>
+    </delete>
+
 </mapper>

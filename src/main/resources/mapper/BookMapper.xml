@@ -127,4 +127,10 @@
         SELECT COUNT(1) FROM book WHERE category_id = #{categoryId} AND status &lt;&gt; -1
     </select>
 
+    <update id="decreaseStock">
+        UPDATE book
+        SET stock = stock - #{quantity}
+        WHERE id = #{id} AND stock &gt;= #{quantity}
+    </update>
+
 </mapper>

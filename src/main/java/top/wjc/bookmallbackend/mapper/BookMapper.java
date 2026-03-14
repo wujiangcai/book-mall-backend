@@ -43,4 +43,6 @@ public interface BookMapper {
     int countByIsbn(@Param("isbn") String isbn);
 
     int countByCategoryId(@Param("categoryId") Long categoryId);
+
+    int decreaseStock(@Param("id") Long id, @Param("quantity") Integer quantity);
 }

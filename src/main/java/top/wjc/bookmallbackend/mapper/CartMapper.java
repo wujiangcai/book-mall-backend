@@ -21,4 +21,10 @@ public interface CartMapper {
     int updateQuantity(@Param("id") Long id, @Param("quantity") Integer quantity);
 
     int deleteById(@Param("id") Long id);
+
+    java.util.List<Cart> selectByIdsAndUserId(@Param("cartIds") java.util.List<Long> cartIds,
+                                              @Param("userId") Long userId);
+
+    int deleteByIdsAndUserId(@Param("cartIds") java.util.List<Long> cartIds,
+                             @Param("userId") Long userId);
 }

@@ -21,7 +21,9 @@
       "Bash(bash \"C:\\\\Users\\\\caiwujiang\\\\Desktop\\\\book-mall-backend\\\\scripts\\\\phase5-address-test.sh\")",
       "Bash(curl -sS -X POST \"http://localhost:8003/api/front/auth/register\" -H \"Content-Type: application/json\" -d '{\"username\":\"addr_test_manual\",\"password\":\"test123\",\"nickname\":\"地址测试用户\",\"phone\":\"13900139001\",\"email\":\"addr_test_manual@example.com\"}')",
       "Bash(mysql -h \"localhost\" -P \"3306\" -u \"root\" \"book_mall\" -e \"SELECT COUNT\\(1\\) AS cnt FROM user WHERE phone='13900139001';\")",
-      "Bash(curl -sS -X POST \"http://localhost:8003/api/front/auth/register\" -H \"Content-Type: application/json\" -d '{\"username\":\"addr_test_manual\",\"password\":\"test123\",\"nickname\":\"地址测试用户\",\"phone\":\"13900139001\",\"email\":\"addr_test_manual@example.com\"}' && ls \"C:\\\\Users\\\\caiwujiang\\\\Desktop\\\\book-mall-backend\")"
+      "Bash(curl -sS -X POST \"http://localhost:8003/api/front/auth/register\" -H \"Content-Type: application/json\" -d '{\"username\":\"addr_test_manual\",\"password\":\"test123\",\"nickname\":\"地址测试用户\",\"phone\":\"13900139001\",\"email\":\"addr_test_manual@example.com\"}' && ls \"C:\\\\Users\\\\caiwujiang\\\\Desktop\\\\book-mall-backend\")",
+      "Bash(mvn test:*)",
+      "Bash(set -e; BASE_URL=\"http://localhost:8003\"; TOKEN=\"eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjowLCJ1c2VySWQiOjMsImlhdCI6MTc3MzQ3Mjk3OCwiZXhwIjoxNzczNTU5Mzc4fQ.jYt8gan3zlEAMaeHO_qU9LZSqhO_MwQI4-PMs8eooOI\"; AUTH=\"Authorization: $TOKEN\"; echo \"== Create address \\(Chinese payload\\) ==\"; curl -s -H \"$AUTH\" -H \"Content-Type: application/json; charset=UTF-8\" -X POST \"$BASE_URL/api/front/user/addresses\" -d '{\"receiverName\":\"测试用户\",\"phone\":\"13900139000\",\"province\":\"北京\",\"city\":\"北京\",\"district\":\"海淀\",\"detailAddress\":\"中关村1号\",\"isDefault\":1}')"
     ]
   }
 }

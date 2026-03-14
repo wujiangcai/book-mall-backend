@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="top.wjc.bookmallbackend.mapper.CartMapper">
+
+    <resultMap id="BaseResultMap" type="top.wjc.bookmallbackend.entity.Cart">
+        <id property="id" column="id"/>
+        <result property="userId" column="user_id"/>
+        <result property="bookId" column="book_id"/>
+        <result property="quantity" column="quantity"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, user_id, book_id, quantity, create_time, update_time
+    </sql>
+
+    <select id="selectByUserId" resultType="top.wjc.bookmallbackend.vo.CartItemVO">
+        SELECT c.id, c.book_id, b.book_name, b.price, c.quantity, b.stock, b.cover_image,
+               (b.price * c.quantity) AS total_price
+        FROM cart c
+        INNER JOIN book b ON c.book_id = b.id
+        WHERE c.user_id = #{userId} AND b.status = 1 AND b.status &lt;&gt; -1
+        ORDER BY c.update_time DESC
+    </select>
+
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM cart
+        WHERE id = #{id}
+    </select>
+
+    <select id="selectByUserIdAndBookId" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM cart
+        WHERE user_id = #{userId} AND book_id = #{bookId}
+    </select>
+
+    <insert id="insert" parameterType="top.wjc.bookmallbackend.entity.Cart">
+        INSERT INTO cart (user_id, book_id, quantity)
+        VALUES (#{userId}, #{bookId}, #{quantity})
+    </insert>
+
+    <update id="updateQuantity">
+        UPDATE cart SET quantity = #{quantity} WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM cart WHERE id = #{id}
+    </delete>
+
+</mapper>

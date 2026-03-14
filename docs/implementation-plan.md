@@ -103,6 +103,19 @@
 - Service：添加（合并数量）、更新数量、删除、列表
 - Controller：`/api/front/cart` 相关接口
 
+**对齐记录**：
+- 详细对齐清单见 `docs/phase4-alignment.md`
+
+**完成记录（2026-03-14）**：
+- 新增实体：`entity/Cart`。
+- 新增 DTO：`CartAddRequest`、`CartUpdateRequest`。
+- 新增 VO：`CartItemVO`（含 totalPrice）。
+- 新增 Mapper：`CartMapper` 与对应 XML（购物车列表关联 book 返回价格/库存/封面）。
+- 新增 Service：`CartService` / `CartServiceImpl`（合并数量、库存校验、上架校验、归属校验）。
+- 新增 Controller：`FrontCartController`（GET/POST/PUT/DELETE）。
+- 规则落地：使用 cartId 作为更新/删除路径参数；已存在图书时累加数量。
+- 已完成接口联调验证：添加/合并、更新数量、列表 totalPrice、删除。
+
 **验证**：
 - 下架或库存不足不可添加
 - 数量>0且<=库存

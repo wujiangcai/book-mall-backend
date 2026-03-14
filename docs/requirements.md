@@ -69,7 +69,8 @@
 2. WHEN 管理员创建分类，THE System SHALL 允许指定父分类 ID（支持二级分类）
 3. WHEN 管理员更新分类，THE System SHALL 验证分类名称不与其他分类重复
 4. WHEN 管理员删除分类，THE System SHALL 验证该分类下没有图书商品
-5. THE System SHALL 按排序字段和创建时间排序分类列表
+5. WHEN 管理员启用或禁用分类，THE System SHALL 更新分类状态（status）
+6. THE System SHALL 按排序字段和创建时间排序分类列表
 
 ### 需求 5: 图书信息管理
 

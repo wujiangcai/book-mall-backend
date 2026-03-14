@@ -74,8 +74,23 @@
 ## Phase 3：分类与图书管理（前台+后台）
 **目标**：分类树、图书 CRUD、上下架、前台检索。
 - 实体/Mapper：`Category`、`Book`
-- 后台：分类管理、图书管理
+- 后台：分类管理、图书管理（含启用/禁用分类接口）
 - 前台：图书列表（分页+搜索+分类）、图书详情
+- 软删除：status = -1，API 层统一过滤
+
+**对齐记录**：
+- 详细对齐清单见 `docs/phase3-alignment.md`
+
+**完成记录（2026-03-14）**：
+- 新增实体：`entity/Category`、`entity/Book`。
+- 新增 DTO：`BookCreateRequest`、`BookUpdateRequest`、`BookStatusRequest`、`CategoryCreateRequest`、`CategoryUpdateRequest`、`CategoryStatusRequest`。
+- 新增 VO：`BookListItemVO`、`BookDetailVO`、`BookAdminListItemVO`、`CategoryTreeVO`、`CategoryAdminVO`。
+- 新增 Mapper：`BookMapper`、`CategoryMapper` 与对应 XML（包含前后台列表、详情、统计与软删除过滤）。
+- 新增 Service：`BookService` / `CategoryService` 及实现类（分页、校验、树构建、软删除、状态更新）。
+- 新增 Controller：`FrontBookController`、`FrontCategoryController`、`AdminBookController`、`AdminCategoryController`。
+- 状态策略：`status = -1` 软删除，API 层统一过滤；分类启用/禁用接口已落地。
+- ISBN 重复校验：新增时提示确认；更新时仅在变更 ISBN 时校验。
+- 已完成接口联调验证：前台列表/详情/分类树、后台 CRUD/状态更新。
 
 **验证**：
 - 图书/分类校验（价格>0、库存≥0、分类有效）

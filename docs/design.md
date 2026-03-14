@@ -823,6 +823,17 @@
 - **路径：** DELETE /api/admin/categories/{id}
 - **认证：** 需要管理员 Token
 
+#### 4.7.5 启用/禁用分类
+- **路径：** PUT /api/admin/categories/{id}/status
+- **认证：** 需要管理员 Token
+- **路径参数：** id（分类 ID）
+- **请求体：**
+```json
+{
+  "status": 1
+}
+```
+
 ### 4.8 购物车模块接口
 
 #### 4.8.1 获取购物车列表

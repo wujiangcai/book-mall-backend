@@ -1,3 +1,149 @@
 <template>
-  <div>Category Manage</div>
+  <a-space direction="vertical" fill size="large">
+    <a-card title="分类管理" :bordered="false">
+      <a-space wrap>
+        <a-button type="primary" @click="openCreate">新增分类</a-button>
+        <a-button status="success" :disabled="selectedIds.length === 0" @click="batchUpdateStatus(1)">
+          批量启用
+        </a-button>
+        <a-button status="warning" :disabled="selectedIds.length === 0" @click="batchUpdateStatus(0)">
+          批量禁用
+        </a-button>
+        <a-button status="danger" :disabled="selectedIds.length === 0" @click="batchRemove">批量删除</a-button>
+      </a-space>
+    </a-card>
+
+    <a-card :bordered="false">
+      <a-table
+        row-key="id"
+        :data="list"
+        :pagination="false"
+        :row-selection="{ type: 'checkbox', selectedRowKeys, onChange: onSelectChange }"
+      >
+        <template #columns>
+          <a-table-column title="分类名" data-index="categoryName" />
+          <a-table-column title="父级" :width="120">
+            <template #cell="{ record }">{{ record.parentId || '-' }}</template>
+          </a-table-column>
+          <a-table-column title="排序" data-index="sortOrder" :width="120" />
+          <a-table-column title="状态" :width="120">
+            <template #cell="{ record }">
+              <a-switch
+                :checked="record.status === 1"
+                checked-text="启用"
+                unchecked-text="禁用"
+                @change="(val) => updateStatus(record.id, val ? 1 : 0)"
+              />
+            </template>
+          </a-table-column>
+          <a-table-column title="操作" :width="160">
+            <template #cell="{ record }">
+              <a-space>
+                <a-button size="mini" @click="openEdit(record)">编辑</a-button>
+                <a-button size="mini" status="danger" @click="remove(record.id)">删除</a-button>
+              </a-space>
+            </template>
+          </a-table-column>
+        </template>
+      </a-table>
+    </a-card>
+
+    <a-modal v-model:visible="visible" :title="editing ? '编辑分类' : '新增分类'" @ok="submit">
+      <a-form :model="form" layout="vertical">
+        <a-form-item label="分类名">
+          <a-input v-model="form.categoryName" />
+        </a-form-item>
+        <a-form-item label="父级ID">
+          <a-input-number v-model="form.parentId" :min="0" />
+        </a-form-item>
+        <a-form-item label="排序">
+          <a-input-number v-model="form.sortOrder" :min="0" />
+        </a-form-item>
+      </a-form>
+    </a-modal>
+  </a-space>
 </template>
+
+<script setup lang="ts">
+import { onMounted, reactive, ref } from 'vue'
+import adminCategoryApi from '../../api/admin/category'
+import type { CategoryAdminItem } from '../../types/api'
+
+const list = ref<CategoryAdminItem[]>([])
+const visible = ref(false)
+const editing = ref(false)
+const editingId = ref<number | null>(null)
+const selectedRowKeys = ref<number[]>([])
+
+const form = reactive({
+  categoryName: '',
+  parentId: 0,
+  sortOrder: 0,
+})
+
+const load = async () => {
+  list.value = (await adminCategoryApi.list().catch(() => [])) as any
+}
+
+const onSelectChange = (keys: number[]) => {
+  selectedRowKeys.value = keys
+}
+
+const openCreate = () => {
+  editing.value = false
+  editingId.value = null
+  Object.assign(form, {
+    categoryName: '',
+    parentId: 0,
+    sortOrder: 0,
+  })
+  visible.value = true
+}
+
+const openEdit = (record: CategoryAdminItem) => {
+  editing.value = true
+  editingId.value = record.id
+  Object.assign(form, {
+    categoryName: record.categoryName,
+    parentId: record.parentId,
+    sortOrder: record.sortOrder,
+  })
+  visible.value = true
+}
+
+const submit = async () => {
+  if (editing.value && editingId.value) {
+    await adminCategoryApi.update(editingId.value, { ...form })
+  } else {
+    await adminCategoryApi.create({ ...form })
+  }
+  visible.value = false
+  await load()
+}
+
+const updateStatus = async (id: number, status: number) => {
+  await adminCategoryApi.updateStatus(id, { status })
+  await load()
+}
+
+const remove = async (id: number) => {
+  await adminCategoryApi.remove(id)
+  await load()
+}
+
+const batchUpdateStatus = async (status: number) => {
+  await Promise.all(selectedRowKeys.value.map((id) => adminCategoryApi.updateStatus(id, { status })))
+  selectedRowKeys.value = []
+  await load()
+}
+
+const batchRemove = async () => {
+  await Promise.all(selectedRowKeys.value.map((id) => adminCategoryApi.remove(id)))
+  selectedRowKeys.value = []
+  await load()
+}
+
+const selectedIds = selectedRowKeys
+
+onMounted(load)
+</script>

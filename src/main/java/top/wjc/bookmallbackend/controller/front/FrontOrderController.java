@@ -2,6 +2,8 @@ package top.wjc.bookmallbackend.controller.front;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -17,6 +19,7 @@ import top.wjc.bookmallbackend.vo.OrderCreateVO;
 import top.wjc.bookmallbackend.vo.OrderDetailVO;
 import top.wjc.bookmallbackend.vo.OrderListItemVO;
 
+@Validated
 @RestController
 @RequestMapping("/api/front/orders")
 public class FrontOrderController {
@@ -48,8 +51,8 @@ public class FrontOrderController {
     }
 
     @GetMapping
-    public Result<PageResult<OrderListItemVO>> list(@RequestParam(required = false) Integer page,
-                                                    @RequestParam(required = false) Integer pageSize,
+    public Result<PageResult<OrderListItemVO>> list(@RequestParam(required = false) @Min(value = 1, message = "page必须大于0") Integer page,
+                                                    @RequestParam(required = false) @Min(value = 1, message = "pageSize必须大于0") Integer pageSize,
                                                     HttpServletRequest httpRequest) {
         Object userId = httpRequest.getAttribute("userId");
         return Result.success(orderService.list(Long.valueOf(userId.toString()), page, pageSize));

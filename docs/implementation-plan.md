@@ -186,6 +186,11 @@ implementation-plan# 实施计划（小步可验证）
 - 日志脱敏与异常日志
 - 分页上限与索引校验
 
+**完成记录（2026-03-14）**：
+- 全局异常日志加入敏感字段脱敏（token/password）。
+- 为分页/筛选查询参数增加 @Validated + @Min 校验（page/pageSize/categoryId/userId）。
+- 调整日志级别为 INFO，并禁用 MyBatis StdOut SQL 日志。
+
 **验证**：
 - 校验失败返回 400
 - 日志不含密码/Token

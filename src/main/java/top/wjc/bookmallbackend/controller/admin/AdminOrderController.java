@@ -1,5 +1,7 @@
 package top.wjc.bookmallbackend.controller.admin;
 
+import jakarta.validation.constraints.Min;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -12,6 +14,7 @@ import top.wjc.bookmallbackend.service.OrderService;
 import top.wjc.bookmallbackend.vo.AdminOrderDetailVO;
 import top.wjc.bookmallbackend.vo.AdminOrderListItemVO;
 
+@Validated
 @RestController
 @RequestMapping("/api/admin/orders")
 public class AdminOrderController {
@@ -23,11 +26,11 @@ public class AdminOrderController {
     }
 
     @GetMapping
-    public Result<PageResult<AdminOrderListItemVO>> list(@RequestParam(required = false) Integer page,
-                                                         @RequestParam(required = false) Integer pageSize,
+    public Result<PageResult<AdminOrderListItemVO>> list(@RequestParam(required = false) @Min(value = 1, message = "page必须大于0") Integer page,
+                                                         @RequestParam(required = false) @Min(value = 1, message = "pageSize必须大于0") Integer pageSize,
                                                          @RequestParam(required = false) Integer status,
                                                          @RequestParam(required = false) String orderNo,
-                                                         @RequestParam(required = false) Long userId) {
+                                                         @RequestParam(required = false) @Min(value = 1, message = "userId必须大于0") Long userId) {
         return Result.success(orderService.listAdmin(page, pageSize, status, orderNo, userId));
     }
 

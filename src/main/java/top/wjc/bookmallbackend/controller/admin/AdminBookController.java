@@ -1,6 +1,8 @@
 package top.wjc.bookmallbackend.controller.admin;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -18,6 +20,7 @@ import top.wjc.bookmallbackend.dto.BookUpdateRequest;
 import top.wjc.bookmallbackend.service.BookService;
 import top.wjc.bookmallbackend.vo.BookAdminListItemVO;
 
+@Validated
 @RestController
 @RequestMapping("/api/admin/books")
 public class AdminBookController {
@@ -29,9 +32,9 @@ public class AdminBookController {
     }
 
     @GetMapping
-    public Result<PageResult<BookAdminListItemVO>> list(@RequestParam(required = false) Integer page,
-                                                        @RequestParam(required = false) Integer pageSize,
-                                                        @RequestParam(required = false) Long categoryId,
+    public Result<PageResult<BookAdminListItemVO>> list(@RequestParam(required = false) @Min(value = 1, message = "page必须大于0") Integer page,
+                                                        @RequestParam(required = false) @Min(value = 1, message = "pageSize必须大于0") Integer pageSize,
+                                                        @RequestParam(required = false) @Min(value = 1, message = "categoryId必须大于0") Long categoryId,
                                                         @RequestParam(required = false) String keyword) {
         return Result.success(bookService.listAdmin(page, pageSize, categoryId, keyword));
     }

@@ -1,6 +1,8 @@
 package top.wjc.bookmallbackend.controller.admin;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -15,6 +17,7 @@ import top.wjc.bookmallbackend.service.UserService;
 import top.wjc.bookmallbackend.vo.AdminUserDetailVO;
 import top.wjc.bookmallbackend.vo.AdminUserListItemVO;
 
+@Validated
 @RestController
 @RequestMapping("/api/admin/users")
 public class AdminUserController {
@@ -26,8 +29,8 @@ public class AdminUserController {
     }
 
     @GetMapping
-    public Result<PageResult<AdminUserListItemVO>> list(@RequestParam(required = false) Integer page,
-                                                        @RequestParam(required = false) Integer pageSize,
+    public Result<PageResult<AdminUserListItemVO>> list(@RequestParam(required = false) @Min(value = 1, message = "page必须大于0") Integer page,
+                                                        @RequestParam(required = false) @Min(value = 1, message = "pageSize必须大于0") Integer pageSize,
                                                         @RequestParam(required = false) String keyword) {
         return Result.success(userService.listAdmin(page, pageSize, keyword));
     }

@@ -1,5 +1,7 @@
+import request from '../request'
+
 export const adminAuthApi = {
-  // TODO: implement admin login API
+  login: (payload: unknown) => request.post('/api/admin/auth/login', payload),
 }
 
 export default adminAuthApi

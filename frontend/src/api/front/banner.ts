@@ -1,5 +1,7 @@
+import request from '../request'
+
 export const frontBannerApi = {
-  // TODO: implement banner APIs
+  list: () => request.get('/api/front/banners'),
 }
 
 export default frontBannerApi

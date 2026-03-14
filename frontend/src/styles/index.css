@@ -1,8 +1,59 @@
+:root {
+  --brand-primary: #1e3a5f;
+  --brand-accent: #d4a574;
+  --brand-bg: #fdfbf7;
+  --brand-text: #1b1f23;
+  --brand-muted: #6b7280;
+  --brand-card: rgba(255, 255, 255, 0.86);
+  --brand-border: rgba(30, 58, 95, 0.12);
+  --brand-shadow: 0 10px 30px rgba(30, 58, 95, 0.12);
+}
+
 * {
   box-sizing: border-box;
 }
 
 body {
   margin: 0;
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+  font-family: "Source Han Serif SC", "Noto Serif SC", "Songti SC", "STSong", "Times New Roman", serif;
+  color: var(--brand-text);
+  background-color: var(--brand-bg);
+  background-image: radial-gradient(rgba(30, 58, 95, 0.04) 1px, transparent 0),
+    radial-gradient(rgba(212, 165, 116, 0.04) 1px, transparent 0);
+  background-position: 0 0, 18px 18px;
+  background-size: 36px 36px;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.app-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.card-glass {
+  background: var(--brand-card);
+  border: 1px solid var(--brand-border);
+  box-shadow: var(--brand-shadow);
+  backdrop-filter: blur(12px);
+}
+
+.text-muted {
+  color: var(--brand-muted);
+}
+
+.section-title {
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--brand-primary);
+}
+
+@media (max-width: 992px) {
+  .app-container {
+    padding: 0 16px;
+  }
 }

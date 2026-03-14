@@ -1,6 +1,11 @@
 <template>
-  <div class="auth-page">
-    <a-card title="前台登录" :bordered="false" class="auth-card">
+  <div class="login-layout">
+    <div class="login-visual card-glass">
+      <div class="visual-title">书城 · 现代文艺书店</div>
+      <div class="visual-sub">与书相遇，和自己相逢</div>
+      <img :src="heroImage" alt="books" class="visual-image" />
+    </div>
+    <a-card title="前台登录" :bordered="false" class="auth-card card-glass">
       <a-form :model="form" layout="vertical" @submit.prevent="handleLogin">
         <a-form-item label="用户名">
           <a-input v-model="form.username" placeholder="用户名" autocomplete="username" />
@@ -10,6 +15,15 @@
         </a-form-item>
         <a-button type="primary" html-type="submit" :loading="loading" long>登录</a-button>
       </a-form>
+      <a-space direction="vertical" fill class="social-block">
+        <a-divider>社交登录</a-divider>
+        <a-space>
+          <a-button>微信</a-button>
+          <a-button>QQ</a-button>
+          <a-button>微博</a-button>
+        </a-space>
+        <a-link @click="goRegister">没有账号？去注册</a-link>
+      </a-space>
       <a-alert v-if="error" type="error" :title="error" class="error" />
     </a-card>
   </div>
@@ -21,6 +35,7 @@ import { useRouter, useRoute } from 'vue-router'
 import frontAuthApi from '../../api/front/auth'
 import { useAuthStore } from '../../store/auth'
 import { setRole, setToken, setUserId, setUsername } from '../../utils/auth'
+import heroImage from '../../assets/hero.png'
 
 const router = useRouter()
 const route = useRoute()
@@ -32,6 +47,10 @@ const form = reactive({
   username: '',
   password: '',
 })
+
+const goRegister = () => {
+  router.push('/register')
+}
 
 const handleLogin = async () => {
   error.value = ''
@@ -71,17 +90,52 @@ const handleLogin = async () => {
 </script>
 
 <style scoped>
-.auth-page {
-  display: flex;
-  justify-content: center;
-  margin-top: 40px;
+.login-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  align-items: center;
+  margin-top: 32px;
+}
+
+.login-visual {
+  padding: 32px;
+  border-radius: 20px;
+}
+
+.visual-title {
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--brand-primary);
+}
+
+.visual-sub {
+  margin-top: 8px;
+  color: var(--brand-muted);
+}
+
+.visual-image {
+  width: 100%;
+  margin-top: 20px;
+  border-radius: 16px;
+  object-fit: cover;
 }
 
 .auth-card {
-  width: 360px;
+  width: 100%;
+}
+
+.social-block {
+  margin-top: 16px;
 }
 
 .error {
   margin-top: 12px;
+}
+
+@media (max-width: 992px) {
+  .login-layout {
+    grid-template-columns: 1fr;
+  }
 }
 </style>

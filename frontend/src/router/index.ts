@@ -1,7 +1,9 @@
 import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
 import { frontRoutes } from './front'
 import { adminRoutes } from './admin'
+import { UserRole } from '../types/enums'
 import { clearAuth, getRole, getToken } from '../utils/auth'
+import { useAuthStore } from '../store/auth'
 
 const routes: RouteRecordRaw[] = [
   ...frontRoutes,
@@ -14,14 +16,23 @@ const router = createRouter({
   routes,
 })
 
-router.beforeEach((to) => {
+router.beforeEach(async (to) => {
   const token = getToken()
   const role = getRole()
 
   if (to.meta.requiresAdmin) {
-    if (!token || role !== 1) {
+    if (!token || role !== UserRole.Admin) {
       clearAuth()
       return { path: '/admin/login', query: { redirect: to.fullPath } }
+    }
+    const authStore = useAuthStore()
+    if (!authStore.userInfo && authStore.isAuthed) {
+      try {
+        await authStore.fetchUserInfo()
+      } catch (error: any) {
+        authStore.clear()
+        return { path: '/admin/login', query: { redirect: to.fullPath } }
+      }
     }
   }
 
@@ -29,6 +40,15 @@ router.beforeEach((to) => {
     if (!token) {
       clearAuth()
       return { path: '/login', query: { redirect: to.fullPath } }
+    }
+    const authStore = useAuthStore()
+    if (!authStore.userInfo && authStore.isAuthed) {
+      try {
+        await authStore.fetchUserInfo()
+      } catch (error: any) {
+        authStore.clear()
+        return { path: '/login', query: { redirect: to.fullPath } }
+      }
     }
   }
 

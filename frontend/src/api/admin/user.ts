@@ -1,9 +1,21 @@
 import request from '../request'
+import type { AdminUserDetail, AdminUserListItem, PageResult } from '../../types/api'
+
+export type AdminUserListParams = {
+  page?: number
+  pageSize?: number
+  keyword?: string
+}
+
+export type UserStatusRequest = {
+  status: number
+}
 
 export const adminUserApi = {
-  list: (params?: Record<string, unknown>) => request.get('/api/admin/users', { params }),
-  detail: (id: number | string) => request.get(`/api/admin/users/${id}`),
-  updateStatus: (id: number | string, payload: unknown) => request.put(`/api/admin/users/${id}/status`, payload),
+  list: (params?: AdminUserListParams) => request.get<PageResult<AdminUserListItem>>('/api/admin/users', { params }),
+  detail: (id: number | string) => request.get<AdminUserDetail>(`/api/admin/users/${id}`),
+  updateStatus: (id: number | string, payload: UserStatusRequest) =>
+    request.put<void>(`/api/admin/users/${id}/status`, payload),
 }
 
 export default adminUserApi

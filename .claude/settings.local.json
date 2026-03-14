@@ -49,7 +49,15 @@
       "Bash(curl -s -X PUT \"http://localhost:8003/api/admin/orders/3/ship\" -H \"Authorization: eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoxLCJ1c2VySWQiOjEsImlhdCI6MTc3MzQ4NjA4MywiZXhwIjoxNzczNTcyNDgzfQ.o1rKKRYUDomw1bWuWAlJc_9d9WCSlGdgRNuDraAZhQI\")",
       "Bash(curl -s -X POST \"http://localhost:8003/api/front/orders/4/pay\" -H \"Authorization: eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjowLCJ1c2VySWQiOjMsImlhdCI6MTc3MzQ4NjgzNSwiZXhwIjoxNzczNTczMjM1fQ.-tyUfw4BI9G-VDO_1ZK4-mOAp5VoXhZVF1EkL90uND8\")",
       "Bash(curl -s \"http://localhost:8003/api/front/orders\" -H \"Authorization: eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjowLCJ1c2VySWQiOjMsImlhdCI6MTc3MzQ4NjgzNSwiZXhwIjoxNzczNTczMjM1fQ.-tyUfw4BI9G-VDO_1ZK4-mOAp5VoXhZVF1EkL90uND8\")",
-      "Bash(curl -s -X PUT \"http://localhost:8003/api/admin/orders/4/ship\" -H \"Authorization: eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoxLCJ1c2VySWQiOjEsImlhdCI6MTc3MzQ4NjA4MywiZXhwIjoxNzczNTcyNDgzfQ.o1rKKRYUDomw1bWuWAlJc_9d9WCSlGdgRNuDraAZhQI\")"
+      "Bash(curl -s -X PUT \"http://localhost:8003/api/admin/orders/4/ship\" -H \"Authorization: eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoxLCJ1c2VySWQiOjEsImlhdCI6MTc3MzQ4NjA4MywiZXhwIjoxNzczNTcyNDgzfQ.o1rKKRYUDomw1bWuWAlJc_9d9WCSlGdgRNuDraAZhQI\")",
+      "Bash(npm create:*)",
+      "Bash(npm --prefix \"C:\\\\Users\\\\caiwujiang\\\\Desktop\\\\book-mall-backend\\\\frontend\" install)",
+      "Bash(cd \"C:\\\\Users\\\\caiwujiang\\\\Desktop\\\\book-mall-backend\\\\frontend\" && npm install)",
+      "Bash(cd \"C:\\\\Users\\\\caiwujiang\\\\Desktop\\\\book-mall-backend\\\\frontend\" && npm run dev)",
+      "Bash(cd \"C:\\\\Users\\\\caiwujiang\\\\Desktop\\\\book-mall-backend\\\\frontend\" && npm install vue-router)",
+      "Bash(npm --prefix \"C:\\\\Users\\\\caiwujiang\\\\Desktop\\\\book-mall-backend\\\\frontend\" run build)",
+      "Bash(npm --prefix \"C:\\\\Users\\\\caiwujiang\\\\Desktop\\\\book-mall-backend\\\\frontend\" install axios)",
+      "Bash(npm --prefix \"C:\\\\Users\\\\caiwujiang\\\\Desktop\\\\book-mall-backend\\\\frontend\" run dev)"
     ]
   }
 }

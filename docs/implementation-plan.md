@@ -126,6 +126,20 @@
 - 实体/Mapper：`Address`
 - Controller：`/api/front/user/addresses` 全套接口
 
+**对齐记录**：
+- 详细对齐清单见 `docs/phase5-alignment.md`
+
+**完成记录（2026-03-14）**：
+- 新增实体：`entity/Address`。
+- 新增 DTO：`AddressCreateRequest`、`AddressUpdateRequest`（更新不支持默认切换）。
+- 新增 VO：`AddressVO`。
+- 新增 Mapper：`AddressMapper` 与对应 XML（默认地址清理、查询、最新地址）。
+- 新增 Mapper：`OrderMapper`（统计地址关联待发货订单）。
+- 新增 Service：`AddressService` / `AddressServiceImpl`（归属校验、默认切换、删除限制）。
+- 新增 Controller：`FrontAddressController`（GET/POST/PUT/DELETE/设默认）。
+- 规则落地：首地址自动默认；/default 切换默认；待发货订单（status=2）引用地址不可删除。
+- 已提供自动化脚本：`scripts/phase5-address-test.sh`，脚本执行通过。
+
 **验证**：
 - 首次添加自动设默认
 - 切换默认会清除其他默认

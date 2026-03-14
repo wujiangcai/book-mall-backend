@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="top.wjc.bookmallbackend.mapper.OrderMapper">
+
+    <select id="countPendingShipmentByAddressId" resultType="int">
+        SELECT COUNT(1)
+        FROM `order`
+        WHERE address_id = #{addressId}
+          AND status = 2
+    </select>
+
+</mapper>

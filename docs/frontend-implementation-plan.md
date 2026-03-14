@@ -15,35 +15,38 @@
 
 ## Phase 1：项目初始化与基础设施
 **目标**：搭建单项目结构与基础能力。
-- 初始化 Vite + Vue3 项目结构。
-- 建立目录规范：`views/front`、`views/admin`、`api/front`、`api/admin`、`router`、`store`、`utils`、`components`。
-- 建立统一样式与布局骨架（前台/后台）。
+- 初始化 Vite + Vue3 + TypeScript 项目结构（`frontend/`）。
+- 建立目录规范：`views/front`、`views/admin`、`api/front`、`api/admin`、`router`、`store`、`utils`、`components`、`styles`。
+- 创建占位页面并接入路由入口（前台/后台可编译）。
+- 添加基础样式入口（`src/styles/index.css`）。
+- 安装依赖并启动 dev server（默认端口 5174）。
 
 **验证**：
-- 项目可运行；前台/后台基础布局可访问。
+- 前端工程可运行；前台/后台占位页面可访问。
 
 ---
 
 ## Phase 2：路由与鉴权机制
 **目标**：实现前台/后台路由分区与权限控制。
-- 建立前台路由（公共/需登录）。
-- 建立后台路由（除登录外全部需管理员）。
-- 实现路由守卫（401 清 token 跳登录，403 提示）。
+- 建立前台路由骨架（`/`、`/books`、`/book/:id`、`/cart`、`/orders`、`/order/:id`、`/login`、`/register`、`/user`、`/address`）。
+- 建立后台路由骨架（`/admin/login`、`/admin/dashboard`、`/admin/books`、`/admin/categories`、`/admin/orders`、`/admin/users`、`/admin/banners`）。
+- 预留路由守卫入口（待后续接入 token/401/403 逻辑）。
 
 **验证**：
-- 未登录访问受限页面被拦截。
-- 管理端路由只允许管理员进入。
+- 前台/后台路由均可访问占位页面。
+
 
 ---
 
 ## Phase 3：API 封装与错误处理
 **目标**：统一请求封装、错误处理与提示。
-- 完成 Axios 实例与拦截器封装（`request.ts`）。
-- 统一 `code=200` 判定与错误提示。
-- 统一异常处理策略（401/403/500）。
+- 完成 Axios 实例与拦截器骨架（`src/api/request.ts`）。
+- 统一 `code=200` 判定与错误提示（骨架）。
+- 预留 401 处理入口（清 token/跳转登录）。
+- 创建前台/后台 API 模块占位文件（`src/api/front/*`、`src/api/admin/*`）。
 
 **验证**：
-- 前台/后台 API 请求一致可用。
+- 前端工程可编译；API 模块可被后续实现扩展。
 
 ---
 

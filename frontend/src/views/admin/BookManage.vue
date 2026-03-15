@@ -71,6 +71,15 @@
       </div>
     </a-card>
 
+    <a-card v-if="isStock" :bordered="false" class="stock-panel">
+      <div class="stock-title">库存管理面板</div>
+      <div class="stock-desc">根据库存预警与销量进行补货计划。</div>
+      <a-space wrap>
+        <a-button type="primary">生成补货建议</a-button>
+        <a-button>导出库存报表</a-button>
+      </a-space>
+    </a-card>
+
     <a-modal v-model:visible="visible" :title="editing ? '编辑图书' : '新增图书'" @ok="submit">
       <a-form :model="form" layout="vertical">
         <a-form-item label="书名">
@@ -116,12 +125,14 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
+import { useRoute } from 'vue-router'
 import { Message } from '@arco-design/web-vue'
 import adminBookApi from '../../api/admin/book'
 import adminCategoryApi from '../../api/admin/category'
 import type { AdminBookListItem, CategoryAdminItem } from '../../types/api'
 
+const route = useRoute()
 const list = ref<AdminBookListItem[]>([])
 const total = ref(0)
 const categories = ref<CategoryAdminItem[]>([])
@@ -256,6 +267,7 @@ const batchRemove = async () => {
 }
 
 const selectedIds = selectedRowKeys
+const isStock = computed(() => route.path.endsWith('/stock'))
 
 onMounted(() => {
   loadCategories()
@@ -268,5 +280,21 @@ onMounted(() => {
   display: flex;
   justify-content: flex-end;
   margin-top: 16px;
+}
+
+.stock-panel {
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+}
+
+.stock-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.stock-desc {
+  margin: 8px 0 16px;
+  color: #64748b;
 }
 </style>

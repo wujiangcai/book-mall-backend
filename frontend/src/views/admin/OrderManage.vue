@@ -17,6 +17,24 @@
       </a-space>
     </a-card>
 
+    <a-card v-if="isRefund" :bordered="false" class="sub-panel">
+      <div class="sub-title">退款处理</div>
+      <div class="sub-desc">展示待退款订单与审核记录。</div>
+      <a-space>
+        <a-button type="primary">批量审核</a-button>
+        <a-button>导出退款单</a-button>
+      </a-space>
+    </a-card>
+
+    <a-card v-if="isLogistics" :bordered="false" class="sub-panel">
+      <div class="sub-title">物流跟踪</div>
+      <div class="sub-desc">追踪发货进度与物流状态。</div>
+      <a-space>
+        <a-button type="primary">同步物流</a-button>
+        <a-button>查看异常</a-button>
+      </a-space>
+    </a-card>
+
     <a-card :bordered="false">
       <a-table
         row-key="id"
@@ -87,12 +105,14 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
+import { useRoute } from 'vue-router'
 import { Message } from '@arco-design/web-vue'
 import adminOrderApi from '../../api/admin/order'
 import { OrderStatus } from '../../types/enums'
 import type { AdminOrderDetail, AdminOrderListItem } from '../../types/api'
 
+const route = useRoute()
 const list = ref<AdminOrderListItem[]>([])
 const total = ref(0)
 const detail = ref<AdminOrderDetail | null>(null)
@@ -173,6 +193,8 @@ const batchShip = async () => {
 }
 
 const selectedIds = selectedRowKeys
+const isRefund = computed(() => route.path.endsWith('/refund'))
+const isLogistics = computed(() => route.path.endsWith('/logistics'))
 
 onMounted(load)
 </script>
@@ -182,5 +204,21 @@ onMounted(load)
   display: flex;
   justify-content: flex-end;
   margin-top: 16px;
+}
+
+.sub-panel {
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+}
+
+.sub-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.sub-desc {
+  margin: 8px 0 16px;
+  color: #64748b;
 }
 </style>

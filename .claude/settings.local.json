@@ -61,7 +61,11 @@
       "Bash(npm --prefix \"C:\\\\Users\\\\caiwujiang\\\\Desktop\\\\book-mall-backend\\\\frontend\" install pinia)",
       "Bash(cd \"C:\\\\Users\\\\caiwujiang\\\\Desktop\\\\book-mall-backend\\\\frontend\" && npm install @arco-design/web-vue)",
       "Bash(cd \"C:\\\\Users\\\\caiwujiang\\\\Desktop\\\\book-mall-backend\\\\frontend\" && npm run build)",
-      "Bash(cd /c/Users/caiwujiang/Desktop/book-mall-backend/frontend && npm run dev)"
+      "Bash(cd /c/Users/caiwujiang/Desktop/book-mall-backend/frontend && npm run dev)",
+      "Bash(powershell -Command \"Get-NetTCPConnection -LocalPort 5173 -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess | Sort-Object -Unique | ForEach-Object { Stop-Process -Id $_ -Force }\")",
+      "Bash(powershell -Command \"Get-NetTCPConnection -LocalPort 5173 -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess -Unique | ForEach-Object { Stop-Process -Id \\\\$_ -Force }\")",
+      "Bash(powershell -Command \"Get-NetTCPConnection -LocalPort 5173 -ErrorAction SilentlyContinue | Where-Object { $_.OwningProcess -ne 0 } | Select-Object -ExpandProperty OwningProcess -Unique | ForEach-Object { Stop-Process -Id \\\\$_ -Force }\")",
+      "Bash(powershell -Command \"Get-NetTCPConnection -LocalPort 5173 -ErrorAction SilentlyContinue | Where-Object { \\\\$_.OwningProcess -ne 0 } | Select-Object -ExpandProperty OwningProcess -Unique | ForEach-Object { Stop-Process -Id \\\\$\\\\_ -Force }\")"
     ]
   }
 }

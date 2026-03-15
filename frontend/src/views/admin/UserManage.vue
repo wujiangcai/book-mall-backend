@@ -13,6 +13,15 @@
       </a-space>
     </a-card>
 
+    <a-card v-if="isRoles" :bordered="false" class="roles-panel">
+      <div class="roles-title">权限管理</div>
+      <div class="roles-desc">配置管理员与用户权限等级。</div>
+      <a-space>
+        <a-button type="primary">新建角色</a-button>
+        <a-button>导出权限</a-button>
+      </a-space>
+    </a-card>
+
     <a-card :bordered="false">
       <a-table
         row-key="id"
@@ -45,11 +54,13 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
+import { useRoute } from 'vue-router'
 import { Message } from '@arco-design/web-vue'
 import adminUserApi from '../../api/admin/user'
 import type { AdminUserListItem } from '../../types/api'
 
+const route = useRoute()
 const list = ref<AdminUserListItem[]>([])
 const selectedRowKeys = ref<number[]>([])
 
@@ -80,6 +91,25 @@ const batchUpdateStatus = async (status: number) => {
 }
 
 const selectedIds = selectedRowKeys
+const isRoles = computed(() => route.path.endsWith('/roles'))
 
 onMounted(load)
 </script>
+
+<style scoped>
+.roles-panel {
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+}
+
+.roles-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.roles-desc {
+  margin: 8px 0 16px;
+  color: #64748b;
+}
+</style>

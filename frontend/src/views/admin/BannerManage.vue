@@ -7,6 +7,24 @@
       </a-space>
     </a-card>
 
+    <a-card v-if="isCoupon" :bordered="false" class="notice-panel">
+      <div class="notice-title">优惠券管理</div>
+      <div class="notice-desc">配置优惠券规则与发放策略。</div>
+      <a-space>
+        <a-button type="primary">新建优惠券</a-button>
+        <a-button>导出规则</a-button>
+      </a-space>
+    </a-card>
+
+    <a-card v-if="isNotice" :bordered="false" class="notice-panel">
+      <div class="notice-title">公告管理</div>
+      <div class="notice-desc">发布后台公告与运营通知。</div>
+      <a-space>
+        <a-button type="primary">新建公告</a-button>
+        <a-button>查看记录</a-button>
+      </a-space>
+    </a-card>
+
     <a-card :bordered="false">
       <a-table
         row-key="id"
@@ -69,11 +87,13 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
+import { useRoute } from 'vue-router'
 import { Message } from '@arco-design/web-vue'
 import adminBannerApi from '../../api/admin/banner'
 import type { Banner } from '../../types/api'
 
+const route = useRoute()
 const list = ref<Banner[]>([])
 const visible = ref(false)
 const editing = ref(false)
@@ -162,6 +182,8 @@ const batchRemove = async () => {
 }
 
 const selectedIds = selectedRowKeys
+const isCoupon = computed(() => route.path.endsWith('/coupon'))
+const isNotice = computed(() => route.path.endsWith('/notice'))
 
 onMounted(load)
 </script>
@@ -172,5 +194,21 @@ onMounted(load)
   height: 60px;
   object-fit: cover;
   border-radius: 6px;
+}
+
+.notice-panel {
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+}
+
+.notice-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.notice-desc {
+  margin: 8px 0 16px;
+  color: #64748b;
 }
 </style>

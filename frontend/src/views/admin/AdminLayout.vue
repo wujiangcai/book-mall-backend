@@ -28,7 +28,7 @@
           </template>
           <a-menu-item key="/admin/books">图书列表</a-menu-item>
           <a-menu-item key="/admin/categories">分类管理</a-menu-item>
-          <a-menu-item key="/admin/books?tab=stock">库存管理</a-menu-item>
+          <a-menu-item key="/admin/books/stock">库存管理</a-menu-item>
         </a-sub-menu>
         <a-sub-menu key="orders">
           <template #title>
@@ -36,8 +36,8 @@
             <span>订单管理</span>
           </template>
           <a-menu-item key="/admin/orders">订单列表</a-menu-item>
-          <a-menu-item key="/admin/orders?tab=refund">退款处理</a-menu-item>
-          <a-menu-item key="/admin/orders?tab=logistics">物流跟踪</a-menu-item>
+          <a-menu-item key="/admin/orders/refund">退款处理</a-menu-item>
+          <a-menu-item key="/admin/orders/logistics">物流跟踪</a-menu-item>
         </a-sub-menu>
         <a-sub-menu key="users">
           <template #title>
@@ -45,7 +45,7 @@
             <span>用户管理</span>
           </template>
           <a-menu-item key="/admin/users">用户列表</a-menu-item>
-          <a-menu-item key="/admin/users?tab=roles">权限管理</a-menu-item>
+          <a-menu-item key="/admin/users/roles">权限管理</a-menu-item>
         </a-sub-menu>
         <a-sub-menu key="marketing">
           <template #title>
@@ -53,8 +53,8 @@
             <span>营销中心</span>
           </template>
           <a-menu-item key="/admin/banners">轮播图</a-menu-item>
-          <a-menu-item key="/admin/banners?tab=coupon">优惠券</a-menu-item>
-          <a-menu-item key="/admin/banners?tab=notice">公告管理</a-menu-item>
+          <a-menu-item key="/admin/banners/coupon">优惠券</a-menu-item>
+          <a-menu-item key="/admin/banners/notice">公告管理</a-menu-item>
         </a-sub-menu>
         <a-sub-menu key="settings">
           <template #title>
@@ -95,7 +95,7 @@
           </template>
           <a-menu-item key="/admin/books">图书列表</a-menu-item>
           <a-menu-item key="/admin/categories">分类管理</a-menu-item>
-          <a-menu-item key="/admin/books?tab=stock">库存管理</a-menu-item>
+          <a-menu-item key="/admin/books/stock">库存管理</a-menu-item>
         </a-sub-menu>
         <a-sub-menu key="orders">
           <template #title>
@@ -103,8 +103,8 @@
             <span>订单管理</span>
           </template>
           <a-menu-item key="/admin/orders">订单列表</a-menu-item>
-          <a-menu-item key="/admin/orders?tab=refund">退款处理</a-menu-item>
-          <a-menu-item key="/admin/orders?tab=logistics">物流跟踪</a-menu-item>
+          <a-menu-item key="/admin/orders/refund">退款处理</a-menu-item>
+          <a-menu-item key="/admin/orders/logistics">物流跟踪</a-menu-item>
         </a-sub-menu>
         <a-sub-menu key="users">
           <template #title>
@@ -112,7 +112,7 @@
             <span>用户管理</span>
           </template>
           <a-menu-item key="/admin/users">用户列表</a-menu-item>
-          <a-menu-item key="/admin/users?tab=roles">权限管理</a-menu-item>
+          <a-menu-item key="/admin/users/roles">权限管理</a-menu-item>
         </a-sub-menu>
         <a-sub-menu key="marketing">
           <template #title>
@@ -120,8 +120,8 @@
             <span>营销中心</span>
           </template>
           <a-menu-item key="/admin/banners">轮播图</a-menu-item>
-          <a-menu-item key="/admin/banners?tab=coupon">优惠券</a-menu-item>
-          <a-menu-item key="/admin/banners?tab=notice">公告管理</a-menu-item>
+          <a-menu-item key="/admin/banners/coupon">优惠券</a-menu-item>
+          <a-menu-item key="/admin/banners/notice">公告管理</a-menu-item>
         </a-sub-menu>
         <a-sub-menu key="settings">
           <template #title>
@@ -263,6 +263,12 @@ const toggleCollapse = () => {
 
 const handleMenuClick = (key: string) => {
   drawerVisible.value = false
+  if (key.includes('?')) {
+    const [path, search] = key.split('?')
+    const query = Object.fromEntries(new URLSearchParams(search).entries())
+    router.push({ path, query })
+    return
+  }
   router.push(key)
 }
 
@@ -290,9 +296,9 @@ const handleUserAction = async (value: string | number | Record<string, any> | u
 }
 
 .admin-sider {
-  background: #1e3a5f;
-  color: #f8fafc;
-  border-right: 1px solid rgba(255, 255, 255, 0.06);
+  background: #ffffff;
+  color: #1f2937;
+  border-right: 1px solid rgba(15, 23, 42, 0.08);
   display: none;
 }
 
@@ -302,23 +308,42 @@ const handleUserAction = async (value: string | number | Record<string, any> | u
   align-items: center;
   justify-content: center;
   font-weight: 600;
-  color: #f8fafc;
+  color: #1e3a5f;
   letter-spacing: 1px;
 }
 
 .admin-menu {
   background: transparent;
-  color: #e2e8f0;
+  color: #1f2937;
 }
 
-.admin-menu :deep(.arco-menu-item),
 .admin-menu :deep(.arco-menu-sub-menu-title) {
-  color: #e2e8f0;
+  color: #1f2937;
+  font-weight: 500;
+  font-size: 16px;
+}
+
+.admin-menu :deep(.arco-menu-sub-menu .arco-menu-item) {
+  color: #374151;
+  font-weight: 400;
+  font-size: 14px;
 }
 
 .admin-menu :deep(.arco-menu-item-selected) {
-  background: rgba(248, 250, 252, 0.16);
+  background: #1e3a5f;
   color: #ffffff;
+  font-weight: 600;
+}
+
+.admin-menu :deep(.arco-menu-item:hover),
+.admin-menu :deep(.arco-menu-sub-menu-title:hover) {
+  background: #f3f4f6;
+  color: #1f2937;
+}
+
+.admin-menu :deep(.arco-menu-icon),
+.admin-menu :deep(.arco-menu-icon svg) {
+  color: currentColor;
 }
 
 .admin-main {

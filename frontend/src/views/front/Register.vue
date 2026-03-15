@@ -1,6 +1,7 @@
 <template>
   <div class="auth-page">
-    <a-card title="前台注册" :bordered="false" class="auth-card">
+    <a-card :bordered="false" class="auth-card">
+      <div class="form-title">前台注册</div>
       <a-form :model="form" layout="vertical" @submit="handleRegister">
         <a-form-item label="用户名">
           <a-input v-model="form.username" placeholder="用户名" autocomplete="username" @blur="() => validateField('username')" />
@@ -28,6 +29,9 @@
         </a-form-item>
         <a-button type="primary" html-type="submit" :loading="loading" :disabled="!isFormValid" long>注册</a-button>
       </a-form>
+      <div class="form-footer">
+        <a-link @click="goLogin">已有账号？去登录</a-link>
+      </div>
       <a-alert v-if="error" type="error" :title="error" class="error" />
     </a-card>
   </div>
@@ -132,6 +136,10 @@ const validateAll = () => {
   return isFormValid.value
 }
 
+const goLogin = () => {
+  router.push('/login')
+}
+
 const handleRegister = async () => {
   error.value = ''
   if (!validateAll()) return
@@ -157,11 +165,63 @@ const handleRegister = async () => {
 .auth-page {
   display: flex;
   justify-content: center;
-  margin-top: 40px;
+  align-items: center;
+  min-height: 100vh;
+  padding: 64px 16px 72px;
 }
 
 .auth-card {
-  width: 360px;
+  width: 100%;
+  max-width: 560px;
+  background: #ffffff;
+  border-radius: 12px;
+  border: 1px solid var(--brand-border);
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.08);
+  padding: 40px 48px;
+}
+
+.form-title {
+  text-align: center;
+  font-size: 20px;
+  font-weight: 600;
+  color: #0f172a;
+  margin-bottom: 24px;
+}
+
+:deep(.arco-form-item) {
+  margin-bottom: 20px;
+}
+
+:deep(.arco-form-item-label) {
+  margin-bottom: 8px;
+  color: #0f172a;
+  font-weight: 500;
+}
+
+:deep(.arco-form-item-content) {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+:deep(.arco-form-item:last-child) {
+  margin-bottom: 24px;
+}
+
+:deep(.arco-input-wrapper),
+:deep(.arco-input),
+:deep(.arco-input-password) {
+  min-height: 40px;
+}
+
+:deep(.arco-input-wrapper) {
+  align-items: center;
+}
+
+.form-footer {
+  display: flex;
+  justify-content: center;
+  margin-top: 16px;
 }
 
 .error {
@@ -169,8 +229,9 @@ const handleRegister = async () => {
 }
 
 .helper {
+  display: block;
   font-size: 12px;
-  margin-top: 6px;
+  margin-top: 8px;
 }
 
 .helper.is-muted {

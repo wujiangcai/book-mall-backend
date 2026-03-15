@@ -17,6 +17,14 @@
 
     <div class="list-main">
       <a-card class="card-glass" :bordered="false">
+        <div class="list-search">
+          <a-input-search
+            v-model="query.keyword"
+            placeholder="请输入图书名称、作者等"
+            allow-clear
+            @search="search"
+          />
+        </div>
         <a-space wrap class="category-tabs">
           <a-tag
             v-for="cat in categories"
@@ -167,6 +175,14 @@ onMounted(() => {
   position: sticky;
   top: 96px;
   height: fit-content;
+}
+
+.list-search {
+  margin-bottom: 12px;
+}
+
+.list-search :deep(.arco-input-search) {
+  max-width: 420px;
 }
 
 .category-tabs {

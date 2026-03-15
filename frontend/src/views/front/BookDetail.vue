@@ -1,4 +1,5 @@
 <template>
+  <div class="back-link" @click="goBack">← 返回</div>
   <a-card :bordered="false">
     <template v-if="book">
       <a-grid :cols="2" :col-gap="24">
@@ -28,15 +29,20 @@
 
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { Message } from '@arco-design/web-vue'
 import frontBookApi from '../../api/front/book'
 import frontCartApi from '../../api/front/cart'
 import type { BookDetail } from '../../types/api'
 
 const route = useRoute()
+const router = useRouter()
 const book = ref<BookDetail | null>(null)
 const quantity = ref(1)
+
+const goBack = () => {
+  router.back()
+}
 
 const load = async () => {
   const id = route.params.id as string
@@ -54,6 +60,27 @@ onMounted(load)
 </script>
 
 <style scoped>
+.back-link {
+  position: fixed;
+  left: 24px;
+  top: 120px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: var(--brand-card);
+  border: 1px solid var(--brand-border);
+  box-shadow: var(--brand-shadow);
+  color: var(--brand-primary);
+  font-weight: 500;
+  cursor: pointer;
+  z-index: 10;
+  transition: color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.back-link:hover {
+  color: var(--brand-accent);
+  transform: translateY(-1px);
+}
+
 .detail-cover {
   width: 100%;
   height: 320px;

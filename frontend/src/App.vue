@@ -3,13 +3,6 @@
     <a-layout-header v-if="!isAdminRoute" class="app-header card-glass">
       <div class="app-container header-inner">
         <div class="logo" @click="go('/')">书城 · 文艺书店</div>
-        <a-input-search
-          class="nav-search"
-          v-model="keyword"
-          placeholder="搜索图书、作者、ISBN"
-          allow-clear
-          @search="handleSearch"
-        />
         <a-space class="nav-links">
           <a-link @click="go('/books')">图书</a-link>
           <a-badge :count="cartCount" :offset="[6, -2]">
@@ -51,7 +44,6 @@ import frontCartApi from './api/front/cart'
 const router = useRouter()
 const route = useRoute()
 const authStore = useAuthStore()
-const keyword = ref('')
 const cartCount = ref(0)
 
 const isAuthed = computed(() => authStore.isAuthed)
@@ -59,11 +51,6 @@ const isAdminRoute = computed(() => route.path.startsWith('/admin'))
 
 const go = (path: string) => {
   router.push(path)
-}
-
-const handleSearch = () => {
-  if (!keyword.value) return
-  router.push({ path: '/books', query: { keyword: keyword.value } })
 }
 
 const loadCartCount = async () => {
@@ -82,7 +69,6 @@ const logout = async () => {
 }
 
 onMounted(() => {
-  keyword.value = (route.query.keyword as string) || ''
   loadCartCount()
 })
 </script>
@@ -113,11 +99,6 @@ onMounted(() => {
   color: var(--brand-primary);
   cursor: pointer;
   white-space: nowrap;
-}
-
-.nav-search {
-  flex: 1;
-  max-width: 420px;
 }
 
 .nav-links :deep(.arco-link) {

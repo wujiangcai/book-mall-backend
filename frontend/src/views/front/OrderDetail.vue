@@ -1,4 +1,5 @@
 <template>
+  <div class="back-link" @click="goBack">← 返回</div>
   <a-card title="订单详情" :bordered="false">
     <template v-if="detail">
       <a-descriptions :column="2">
@@ -25,8 +26,14 @@
       </a-table>
 
       <a-space style="margin-top: 16px">
-        <a-button type="primary" @click="pay">支付</a-button>
-        <a-button status="danger" @click="cancel">取消</a-button>
+        <template v-if="detail?.status === OrderStatus.UNPAID">
+          <a-button type="primary" @click="pay">支付</a-button>
+          <a-button status="danger" @click="cancel">取消</a-button>
+        </template>
+        <template v-else>
+          <a-button @click="viewLogistics">查看物流</a-button>
+          <a-button @click="applyAfterSales">申请售后</a-button>
+        </template>
       </a-space>
     </template>
     <a-empty v-else description="暂无订单详情" />
@@ -35,14 +42,19 @@
 
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { Message } from '@arco-design/web-vue'
 import frontOrderApi from '../../api/front/order'
 import { OrderStatus } from '../../types/enums'
 import type { OrderDetail } from '../../types/api'
 
 const route = useRoute()
+const router = useRouter()
 const detail = ref<OrderDetail | null>(null)
+
+const goBack = () => {
+  router.back()
+}
 
 const statusText = (status: number) => {
   switch (status) {
@@ -68,6 +80,14 @@ const load = async () => {
   detail.value = (await frontOrderApi.detail(id)) as any
 }
 
+const viewLogistics = () => {
+  Message.info('物流功能暂未开放')
+}
+
+const applyAfterSales = () => {
+  Message.info('售后功能暂未开放')
+}
+
 const pay = async () => {
   if (!detail.value) return
   await frontOrderApi.pay(detail.value.orderId)
@@ -84,3 +104,26 @@ const cancel = async () => {
 
 onMounted(load)
 </script>
+
+<style scoped>
+.back-link {
+  position: fixed;
+  left: 24px;
+  top: 120px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: var(--brand-card);
+  border: 1px solid var(--brand-border);
+  box-shadow: var(--brand-shadow);
+  color: var(--brand-primary);
+  font-weight: 500;
+  cursor: pointer;
+  z-index: 10;
+  transition: color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.back-link:hover {
+  color: var(--brand-accent);
+  transform: translateY(-1px);
+}
+</style>

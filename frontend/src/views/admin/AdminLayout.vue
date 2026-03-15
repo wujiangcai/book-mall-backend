@@ -17,10 +17,6 @@
         :collapsed="collapsed"
         @menu-item-click="handleMenuClick"
       >
-        <a-menu-item key="/admin/dashboard">
-          <icon-dashboard />
-          <span>仪表盘</span>
-        </a-menu-item>
         <a-sub-menu key="books">
           <template #title>
             <icon-book />
@@ -28,7 +24,6 @@
           </template>
           <a-menu-item key="/admin/books">图书列表</a-menu-item>
           <a-menu-item key="/admin/categories">分类管理</a-menu-item>
-          <a-menu-item key="/admin/books/stock">库存管理</a-menu-item>
         </a-sub-menu>
         <a-sub-menu key="orders">
           <template #title>
@@ -36,8 +31,6 @@
             <span>订单管理</span>
           </template>
           <a-menu-item key="/admin/orders">订单列表</a-menu-item>
-          <a-menu-item key="/admin/orders/refund">退款处理</a-menu-item>
-          <a-menu-item key="/admin/orders/logistics">物流跟踪</a-menu-item>
         </a-sub-menu>
         <a-sub-menu key="users">
           <template #title>
@@ -45,7 +38,6 @@
             <span>用户管理</span>
           </template>
           <a-menu-item key="/admin/users">用户列表</a-menu-item>
-          <a-menu-item key="/admin/users/roles">权限管理</a-menu-item>
         </a-sub-menu>
         <a-sub-menu key="marketing">
           <template #title>
@@ -53,16 +45,6 @@
             <span>营销中心</span>
           </template>
           <a-menu-item key="/admin/banners">轮播图</a-menu-item>
-          <a-menu-item key="/admin/banners/coupon">优惠券</a-menu-item>
-          <a-menu-item key="/admin/banners/notice">公告管理</a-menu-item>
-        </a-sub-menu>
-        <a-sub-menu key="settings">
-          <template #title>
-            <icon-settings />
-            <span>系统设置</span>
-          </template>
-          <a-menu-item key="/admin/settings">基础配置</a-menu-item>
-          <a-menu-item key="/admin/logs">操作日志</a-menu-item>
         </a-sub-menu>
       </a-menu>
     </a-layout-sider>
@@ -84,10 +66,6 @@
         v-model:open-keys="openKeys"
         @menu-item-click="handleMenuClick"
       >
-        <a-menu-item key="/admin/dashboard">
-          <icon-dashboard />
-          <span>仪表盘</span>
-        </a-menu-item>
         <a-sub-menu key="books">
           <template #title>
             <icon-book />
@@ -95,7 +73,6 @@
           </template>
           <a-menu-item key="/admin/books">图书列表</a-menu-item>
           <a-menu-item key="/admin/categories">分类管理</a-menu-item>
-          <a-menu-item key="/admin/books/stock">库存管理</a-menu-item>
         </a-sub-menu>
         <a-sub-menu key="orders">
           <template #title>
@@ -103,8 +80,6 @@
             <span>订单管理</span>
           </template>
           <a-menu-item key="/admin/orders">订单列表</a-menu-item>
-          <a-menu-item key="/admin/orders/refund">退款处理</a-menu-item>
-          <a-menu-item key="/admin/orders/logistics">物流跟踪</a-menu-item>
         </a-sub-menu>
         <a-sub-menu key="users">
           <template #title>
@@ -112,7 +87,6 @@
             <span>用户管理</span>
           </template>
           <a-menu-item key="/admin/users">用户列表</a-menu-item>
-          <a-menu-item key="/admin/users/roles">权限管理</a-menu-item>
         </a-sub-menu>
         <a-sub-menu key="marketing">
           <template #title>
@@ -120,16 +94,6 @@
             <span>营销中心</span>
           </template>
           <a-menu-item key="/admin/banners">轮播图</a-menu-item>
-          <a-menu-item key="/admin/banners/coupon">优惠券</a-menu-item>
-          <a-menu-item key="/admin/banners/notice">公告管理</a-menu-item>
-        </a-sub-menu>
-        <a-sub-menu key="settings">
-          <template #title>
-            <icon-settings />
-            <span>系统设置</span>
-          </template>
-          <a-menu-item key="/admin/settings">基础配置</a-menu-item>
-          <a-menu-item key="/admin/logs">操作日志</a-menu-item>
         </a-sub-menu>
       </a-menu>
     </a-drawer>
@@ -183,12 +147,10 @@ import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '../../store/auth'
 import {
-  IconDashboard,
   IconBook,
   IconFile,
   IconUser,
   IconNotification,
-  IconSettings,
   IconMenuFold,
   IconMenuUnfold,
   IconMenu,
@@ -227,10 +189,6 @@ const syncOpenKeys = () => {
     openKeys.value = ['marketing']
     return
   }
-  if (route.path.startsWith('/admin/settings') || route.path.startsWith('/admin/logs')) {
-    openKeys.value = ['settings']
-    return
-  }
   openKeys.value = []
 }
 
@@ -245,14 +203,11 @@ watch(
 
 const breadcrumb = computed(() => {
   const map: Record<string, string> = {
-    '/admin/dashboard': '仪表盘',
     '/admin/books': '图书列表',
     '/admin/categories': '分类管理',
     '/admin/orders': '订单列表',
     '/admin/users': '用户列表',
     '/admin/banners': '轮播图',
-    '/admin/settings': '基础配置',
-    '/admin/logs': '操作日志',
   }
   return map[route.path] || '管理模块'
 })

@@ -165,6 +165,32 @@
 ### P3（配置一致性）
 - `application.properties` 中 CORS `allowed-origins` 仍包含旧端口（3000/8081），已由 `WebMvcConfig` 覆盖为 5173，建议统一以免误导后续开发。
 
+## 6.1 占位功能可落地性评估（基于现有后端接口）
+> 结论：仅“发货动作”可部分落地，其余需新增后端接口支持。
+
+### 可落地（现有接口足够或基本满足）
+- **后台：订单发货动作**（`OrderManage.vue`）
+  - 现有接口：PUT `/api/admin/orders/{id}/ship`
+  - 说明：可支持“发货”按钮/动作，但缺少物流明细查询/维护。
+
+### 不可落地（后端接口缺失）
+- **前台：订单物流入口**（`OrderList.vue`, `OrderDetail.vue`）
+  - 缺失接口：物流信息查询/轨迹接口
+- **前台：售后入口**（`OrderList.vue`, `OrderDetail.vue`）
+  - 缺失接口：售后申请/售后记录接口
+- **后台：退款面板**（`OrderManage.vue`）
+  - 缺失接口：退款申请/退款处理接口
+- **后台：物流面板**（`OrderManage.vue`）
+  - 缺失接口：物流单号维护/物流轨迹查询接口
+- **后台：用户角色面板**（`UserManage.vue`）
+  - 缺失接口：角色查询/角色变更接口
+- **后台：优惠券/公告**（`BannerManage.vue`）
+  - 缺失接口：coupon/notice 相关 CRUD 接口
+- **后台：仪表盘统计**（`Dashboard.vue`）
+  - 缺失接口：订单/用户/销售额统计接口
+- **后台：设置/日志**（`Settings.vue`, `Logs.vue`）
+  - 缺失接口：系统配置读取/更新、日志查询接口
+
 ## 7. 附录
 ### 前端 API 模块路径
 - `frontend/src/api/front/*.ts`
@@ -175,3 +201,26 @@
 - `frontend/src/router/admin.ts`
 - `frontend/src/views/front/**`
 - `frontend/src/views/admin/**`
+
+## 8. 占位入口清理记录
+- 清理时间：2026-03-15
+- 说明：仅移除入口（菜单/路由），页面文件保留。
+- 已移除路由（`frontend/src/router/admin.ts`）：
+  - `/admin/dashboard`
+  - `/admin/books/stock`
+  - `/admin/orders/refund`
+  - `/admin/orders/logistics`
+  - `/admin/users/roles`
+  - `/admin/banners/coupon`
+  - `/admin/banners/notice`
+  - `/admin/settings`
+  - `/admin/logs`
+- 已移除菜单入口（`frontend/src/views/admin/AdminLayout.vue`）：
+  - 仪表盘
+  - 库存管理
+  - 退款处理
+  - 物流跟踪
+  - 权限管理
+  - 优惠券
+  - 公告管理
+  - 系统设置（基础配置/操作日志）

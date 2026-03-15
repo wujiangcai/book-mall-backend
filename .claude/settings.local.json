@@ -60,7 +60,8 @@
       "Bash(npm --prefix \"C:\\\\Users\\\\caiwujiang\\\\Desktop\\\\book-mall-backend\\\\frontend\" run dev)",
       "Bash(npm --prefix \"C:\\\\Users\\\\caiwujiang\\\\Desktop\\\\book-mall-backend\\\\frontend\" install pinia)",
       "Bash(cd \"C:\\\\Users\\\\caiwujiang\\\\Desktop\\\\book-mall-backend\\\\frontend\" && npm install @arco-design/web-vue)",
-      "Bash(cd \"C:\\\\Users\\\\caiwujiang\\\\Desktop\\\\book-mall-backend\\\\frontend\" && npm run build)"
+      "Bash(cd \"C:\\\\Users\\\\caiwujiang\\\\Desktop\\\\book-mall-backend\\\\frontend\" && npm run build)",
+      "Bash(cd /c/Users/caiwujiang/Desktop/book-mall-backend/frontend && npm run dev)"
     ]
   }
 }

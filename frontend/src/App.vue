@@ -1,6 +1,6 @@
 <template>
-  <a-layout class="app-layout">
-    <a-layout-header class="app-header card-glass">
+  <a-layout class="app-layout" :class="{ 'admin-mode': isAdminRoute }">
+    <a-layout-header v-if="!isAdminRoute" class="app-header card-glass">
       <div class="app-container header-inner">
         <div class="logo" @click="go('/')">书城 · 文艺书店</div>
         <a-input-search
@@ -25,19 +25,20 @@
       </div>
     </a-layout-header>
 
-    <a-layout-content class="app-content">
-      <div class="app-container">
+    <a-layout-content class="app-content" :class="{ 'admin-content': isAdminRoute }">
+      <div v-if="!isAdminRoute" class="app-container">
         <router-view />
       </div>
+      <router-view v-else />
     </a-layout-content>
 
-    <a-layout-footer class="app-footer">
+    <a-layout-footer v-if="!isAdminRoute" class="app-footer">
       <div class="app-container">
         <div class="footer-brand">书城 · 现代文艺书店</div>
         <div class="footer-meta">精选好书 · 安静阅读 · 2026</div>
       </div>
     </a-layout-footer>
-    <a-back-top :visible-height="400" />
+    <a-back-top v-if="!isAdminRoute" :visible-height="400" />
   </a-layout>
 </template>
 
@@ -54,6 +55,7 @@ const keyword = ref('')
 const cartCount = ref(0)
 
 const isAuthed = computed(() => authStore.isAuthed)
+const isAdminRoute = computed(() => route.path.startsWith('/admin'))
 
 const go = (path: string) => {
   router.push(path)
@@ -125,6 +127,14 @@ onMounted(() => {
 
 .app-content {
   padding: 32px 0 48px;
+}
+
+.app-content.admin-content {
+  padding: 0;
+}
+
+.app-layout.admin-mode {
+  background: #0f172a;
 }
 
 .app-footer {

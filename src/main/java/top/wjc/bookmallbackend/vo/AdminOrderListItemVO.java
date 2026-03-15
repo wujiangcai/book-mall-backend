@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 @Data
 @AllArgsConstructor
 public class AdminOrderListItemVO {
-    private Long orderId;
+    private Long id;
     private String orderNo;
     private Long userId;
     private BigDecimal totalAmount;

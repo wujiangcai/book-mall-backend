@@ -3,9 +3,11 @@ package top.wjc.bookmallbackend.service.impl;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import top.wjc.bookmallbackend.common.PageResult;
 import top.wjc.bookmallbackend.constant.CommonStatus;
 import top.wjc.bookmallbackend.constant.UserRole;
-import top.wjc.bookmallbackend.common.PageResult;
+import top.wjc.bookmallbackend.dto.AdminUserCreateRequest;
+import top.wjc.bookmallbackend.dto.AdminUserUpdateRequest;
 import top.wjc.bookmallbackend.dto.ChangePasswordRequest;
 import top.wjc.bookmallbackend.dto.LoginRequest;
 import top.wjc.bookmallbackend.dto.RegisterRequest;
@@ -135,6 +137,58 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
+    public void createAdmin(AdminUserCreateRequest request) {
+        validateUserRole(request.getRole());
+        validateUserStatus(request.getStatus());
+        if (userMapper.countByUsername(request.getUsername()) > 0) {
+            throw new BusinessException(400, "用户名已存在");
+        }
+        if (request.getPhone() != null && !request.getPhone().isBlank() && userMapper.countByPhone(request.getPhone()) > 0) {
+            throw new BusinessException(400, "手机号已存在");
+        }
+        User user = User.builder()
+                .username(request.getUsername())
+                .password(passwordEncoder.encode(request.getPassword()))
+                .nickname(request.getNickname())
+                .phone(request.getPhone())
+                .email(request.getEmail())
+                .role(request.getRole())
+                .status(request.getStatus())
+                .build();
+        userMapper.insert(user);
+    }
+
+    @Override
+    @Transactional
+    public void updateAdmin(Long userId, AdminUserUpdateRequest request) {
+        User existing = userMapper.findById(userId);
+        if (existing == null) {
+            throw new NotFoundException();
+        }
+        validateUserRole(request.getRole());
+        validateUserStatus(request.getStatus());
+        if (!existing.getUsername().equals(request.getUsername()) && userMapper.countByUsername(request.getUsername()) > 0) {
+            throw new BusinessException(400, "用户名已存在");
+        }
+        if (request.getPhone() != null && !request.getPhone().isBlank()
+                && (existing.getPhone() == null || !existing.getPhone().equals(request.getPhone()))
+                && userMapper.countByPhone(request.getPhone()) > 0) {
+            throw new BusinessException(400, "手机号已存在");
+        }
+        User user = User.builder()
+                .id(userId)
+                .username(request.getUsername())
+                .nickname(request.getNickname())
+                .phone(request.getPhone())
+                .email(request.getEmail())
+                .role(request.getRole())
+                .status(request.getStatus())
+                .build();
+        userMapper.updateAdmin(user);
+    }
+
+    @Override
+    @Transactional
     public void updateStatus(Long userId, UserStatusRequest request) {
         User user = userMapper.findById(userId);
         if (user == null) {
@@ -150,6 +204,15 @@ public class UserServiceImpl implements UserService {
         }
         if (status != CommonStatus.ENABLED.getCode() && status != CommonStatus.DISABLED.getCode()) {
             throw new InvalidStatusException("用户状态不合法");
+        }
+    }
+
+    private void validateUserRole(Integer role) {
+        if (role == null) {
+            throw new InvalidStatusException("角色不能为空");
+        }
+        if (!role.equals(UserRole.ADMIN.getCode()) && !role.equals(UserRole.USER.getCode())) {
+            throw new InvalidStatusException("角色不合法");
         }
     }
 

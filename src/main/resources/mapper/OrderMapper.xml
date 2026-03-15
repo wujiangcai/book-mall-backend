@@ -103,4 +103,8 @@
         UPDATE `order` SET ship_time = #{shipTime} WHERE id = #{id}
     </update>
 
+    <update id="updateAddress">
+        UPDATE `order` SET address_id = #{addressId} WHERE id = #{id}
+    </update>
+
 </mapper>

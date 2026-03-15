@@ -1,6 +1,8 @@
 package top.wjc.bookmallbackend.service;
 
 import top.wjc.bookmallbackend.common.PageResult;
+import top.wjc.bookmallbackend.dto.AdminOrderCreateRequest;
+import top.wjc.bookmallbackend.dto.AdminOrderUpdateRequest;
 import top.wjc.bookmallbackend.dto.OrderCreateRequest;
 import top.wjc.bookmallbackend.vo.AdminOrderDetailVO;
 import top.wjc.bookmallbackend.vo.AdminOrderListItemVO;
@@ -22,6 +24,12 @@ public interface OrderService {
     PageResult<AdminOrderListItemVO> listAdmin(Integer page, Integer pageSize, Integer status, String orderNo, Long userId);
 
     AdminOrderDetailVO detailAdmin(Long orderId);
+
+    void createAdmin(AdminOrderCreateRequest request);
+
+    void updateAdmin(Long orderId, AdminOrderUpdateRequest request);
+
+    void cancelAdmin(Long orderId);
 
     void ship(Long orderId);
 }

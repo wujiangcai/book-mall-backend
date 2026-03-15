@@ -13,7 +13,9 @@
           <a-option :value="5">已取消</a-option>
         </a-select>
         <a-button type="primary" @click="load">搜索</a-button>
-        <a-button status="success" :disabled="selectedIds.length === 0" @click="batchShip">批量发货</a-button>
+        <a-button type="primary" @click="openCreate">新增订单</a-button>
+        <a-button status="success" :disabled="!canBatchShip" @click="batchShip">批量发货</a-button>
+        <a-button status="danger" :disabled="selectedIds.length === 0" @click="batchCancel">批量取消</a-button>
       </a-space>
     </a-card>
 
@@ -52,11 +54,13 @@
             <template #cell="{ record }">{{ statusText(record.status) }}</template>
           </a-table-column>
           <a-table-column title="创建时间" data-index="createTime" />
-          <a-table-column title="操作" :width="180">
+          <a-table-column title="操作" :width="240">
             <template #cell="{ record }">
               <a-space>
                 <a-button size="mini" @click="openDetail(record.id)">详情</a-button>
-                <a-button size="mini" type="primary" @click="ship(record.id)">发货</a-button>
+                <a-button size="mini" @click="openEdit(record)">编辑</a-button>
+                <a-button size="mini" type="primary" :disabled="record.status !== OrderStatus.PENDING_SHIP" @click="ship(record.id)">发货</a-button>
+                <a-button size="mini" status="danger" @click="cancelOrder(record.id)">取消</a-button>
               </a-space>
             </template>
           </a-table-column>
@@ -101,6 +105,37 @@
         </template>
       </a-table>
     </a-modal>
+
+    <a-modal v-model:visible="visible" :title="editing ? '编辑订单' : '新增订单'" @ok="submit">
+      <a-form :model="form" layout="vertical">
+        <a-form-item v-if="!editing" label="用户ID">
+          <a-input-number v-model="form.userId" :min="1" />
+        </a-form-item>
+        <a-form-item label="地址ID">
+          <a-input-number v-model="form.addressId" :min="1" />
+        </a-form-item>
+        <a-form-item label="状态">
+          <a-select v-model="form.status">
+            <a-option :value="0">待支付</a-option>
+            <a-option :value="1">已支付</a-option>
+            <a-option :value="2">待发货</a-option>
+            <a-option :value="3">已发货</a-option>
+            <a-option :value="4">已完成</a-option>
+            <a-option :value="5">已取消</a-option>
+          </a-select>
+        </a-form-item>
+        <a-form-item v-if="!editing" label="商品项">
+          <a-space direction="vertical" fill>
+            <div v-for="(item, index) in form.items" :key="index" class="order-item-row">
+              <a-input-number v-model="item.bookId" :min="1" placeholder="图书ID" />
+              <a-input-number v-model="item.quantity" :min="1" placeholder="数量" />
+              <a-button size="mini" status="danger" @click="removeItem(index)">移除</a-button>
+            </div>
+            <a-button size="mini" @click="addItem">添加商品</a-button>
+          </a-space>
+        </a-form-item>
+      </a-form>
+    </a-modal>
   </a-space>
 </template>
 
@@ -117,6 +152,9 @@ const list = ref<AdminOrderListItem[]>([])
 const total = ref(0)
 const detail = ref<AdminOrderDetail | null>(null)
 const detailVisible = ref(false)
+const visible = ref(false)
+const editing = ref(false)
+const editingId = ref<number | null>(null)
 const selectedRowKeys = ref<number[]>([])
 
 const query = reactive({
@@ -125,6 +163,13 @@ const query = reactive({
   status: undefined as number | undefined,
   orderNo: '',
   userId: undefined as number | undefined,
+})
+
+const form = reactive({
+  userId: undefined as number | undefined,
+  addressId: undefined as number | undefined,
+  status: OrderStatus.UNPAID,
+  items: [{ bookId: undefined as number | undefined, quantity: 1 }],
 })
 
 const statusText = (status: number) => {
@@ -146,6 +191,14 @@ const statusText = (status: number) => {
   }
 }
 
+const addItem = () => {
+  form.items.push({ bookId: undefined, quantity: 1 })
+}
+
+const removeItem = (index: number) => {
+  form.items.splice(index, 1)
+}
+
 const load = async () => {
   const data = (await adminOrderApi.list({
     page: query.page,
@@ -154,7 +207,8 @@ const load = async () => {
     orderNo: query.orderNo || undefined,
     userId: query.userId,
   })) as any
-  list.value = data?.list || []
+  const rawList = data?.list || []
+  list.value = rawList.map((item: any) => ({ ...item, id: item.id ?? item.orderId }))
   total.value = data?.total || 0
 }
 
@@ -178,9 +232,68 @@ const openDetail = async (id: number) => {
   detailVisible.value = true
 }
 
+const loadDetail = async (id: number) => {
+  detail.value = (await adminOrderApi.detail(id)) as any
+}
+
+const openCreate = () => {
+  editing.value = false
+  editingId.value = null
+  Object.assign(form, {
+    userId: undefined,
+    addressId: undefined,
+    status: OrderStatus.UNPAID,
+    items: [{ bookId: undefined, quantity: 1 }],
+  })
+  visible.value = true
+}
+
+const openEdit = async (record: AdminOrderListItem) => {
+  editing.value = true
+  editingId.value = record.id
+  await loadDetail(record.id)
+  Object.assign(form, {
+    userId: record.userId,
+    addressId: detail.value?.addressId,
+    status: record.status,
+    items: [{ bookId: undefined, quantity: 1 }],
+  })
+  visible.value = true
+}
+
+const submit = async () => {
+  if (editing.value && editingId.value) {
+    if (!form.addressId) return
+    await adminOrderApi.update(editingId.value, {
+      status: form.status,
+      addressId: form.addressId,
+    })
+    Message.success('订单已更新')
+  } else {
+    if (!form.userId || !form.addressId) return
+    const items = form.items
+      .filter((item) => item.bookId && item.quantity)
+      .map((item) => ({ bookId: item.bookId as number, quantity: item.quantity as number }))
+    await adminOrderApi.create({
+      userId: form.userId,
+      addressId: form.addressId,
+      items,
+    })
+    Message.success('订单已创建')
+  }
+  visible.value = false
+  await load()
+}
+
 const ship = async (id: number) => {
   await adminOrderApi.ship(id)
   Message.success('发货成功')
+  await load()
+}
+
+const cancelOrder = async (id: number) => {
+  await adminOrderApi.cancel(id)
+  Message.success('订单已取消')
   await load()
 }
 
@@ -192,7 +305,20 @@ const batchShip = async () => {
   await load()
 }
 
+const batchCancel = async () => {
+  const ids = selectedRowKeys.value
+  await Promise.all(ids.map((id) => adminOrderApi.cancel(id)))
+  Message.success('批量取消完成')
+  selectedRowKeys.value = []
+  await load()
+}
+
 const selectedIds = selectedRowKeys
+const canBatchShip = computed(
+  () =>
+    selectedRowKeys.value.length > 0 &&
+    selectedRowKeys.value.every((id) => list.value.find((item) => item.id === id)?.status === OrderStatus.PENDING_SHIP),
+)
 const isRefund = computed(() => route.path.endsWith('/refund'))
 const isLogistics = computed(() => route.path.endsWith('/logistics'))
 

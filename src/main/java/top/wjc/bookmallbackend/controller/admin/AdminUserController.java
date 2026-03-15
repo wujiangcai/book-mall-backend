@@ -6,6 +6,7 @@ import jakarta.validation.constraints.Min;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -13,6 +14,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import top.wjc.bookmallbackend.common.PageResult;
 import top.wjc.bookmallbackend.common.Result;
+import top.wjc.bookmallbackend.dto.AdminUserCreateRequest;
+import top.wjc.bookmallbackend.dto.AdminUserUpdateRequest;
 import top.wjc.bookmallbackend.dto.ChangePasswordRequest;
 import top.wjc.bookmallbackend.dto.UserStatusRequest;
 import top.wjc.bookmallbackend.service.UserService;
@@ -40,6 +43,18 @@ public class AdminUserController {
     @GetMapping("/{id}")
     public Result<AdminUserDetailVO> detail(@PathVariable Long id) {
         return Result.success(userService.detailAdmin(id));
+    }
+
+    @PostMapping
+    public Result<Void> create(@Valid @RequestBody AdminUserCreateRequest request) {
+        userService.createAdmin(request);
+        return Result.success();
+    }
+
+    @PutMapping("/{id}")
+    public Result<Void> update(@PathVariable Long id, @Valid @RequestBody AdminUserUpdateRequest request) {
+        userService.updateAdmin(id, request);
+        return Result.success();
     }
 
     @PutMapping("/{id}/status")

@@ -15,6 +15,7 @@ public class AdminOrderDetailVO {
     private Long userId;
     private BigDecimal totalAmount;
     private Integer status;
+    private Long addressId;
     private LocalDateTime createTime;
     private LocalDateTime payTime;
     private LocalDateTime shipTime;

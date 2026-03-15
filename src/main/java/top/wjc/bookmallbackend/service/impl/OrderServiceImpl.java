@@ -5,6 +5,8 @@ import org.springframework.transaction.annotation.Transactional;
 import top.wjc.bookmallbackend.common.PageResult;
 import top.wjc.bookmallbackend.constant.BookStatus;
 import top.wjc.bookmallbackend.constant.OrderStatus;
+import top.wjc.bookmallbackend.dto.AdminOrderCreateRequest;
+import top.wjc.bookmallbackend.dto.AdminOrderUpdateRequest;
 import top.wjc.bookmallbackend.dto.OrderCreateRequest;
 import top.wjc.bookmallbackend.entity.Address;
 import top.wjc.bookmallbackend.entity.Book;
@@ -211,6 +213,84 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    @Transactional
+    public void createAdmin(AdminOrderCreateRequest request) {
+        Address address = addressMapper.selectById(request.getAddressId());
+        if (address == null || !address.getUserId().equals(request.getUserId())) {
+            throw new NotFoundException();
+        }
+        List<AdminOrderCreateRequest.AdminOrderItemRequest> itemsRequest = request.getItems();
+        if (itemsRequest == null || itemsRequest.isEmpty()) {
+            throw new NotFoundException();
+        }
+        List<OrderItem> items = new ArrayList<>();
+        BigDecimal totalAmount = BigDecimal.ZERO;
+        for (AdminOrderCreateRequest.AdminOrderItemRequest itemRequest : itemsRequest) {
+            Book book = bookMapper.selectById(itemRequest.getBookId());
+            if (book == null || isSoftDeleted(book.getStatus())) {
+                throw new NotFoundException();
+            }
+            if (book.getStatus() == null || book.getStatus() != BookStatus.ON_SHELF.getCode()) {
+                throw new BookOffShelfException();
+            }
+            if (book.getStock() == null || itemRequest.getQuantity() == null || itemRequest.getQuantity() < 1
+                    || itemRequest.getQuantity() > book.getStock()) {
+                throw new InsufficientStockException();
+            }
+            BigDecimal itemTotal = book.getPrice().multiply(BigDecimal.valueOf(itemRequest.getQuantity()));
+            totalAmount = totalAmount.add(itemTotal);
+            items.add(OrderItem.builder()
+                    .bookId(book.getId())
+                    .bookName(book.getBookName())
+                    .price(book.getPrice())
+                    .quantity(itemRequest.getQuantity())
+                    .totalPrice(itemTotal)
+                    .build());
+        }
+        Order order = Order.builder()
+                .orderNo(generateOrderNo(request.getUserId()))
+                .userId(request.getUserId())
+                .totalAmount(totalAmount)
+                .status(OrderStatus.UNPAID.getCode())
+                .addressId(address.getId())
+                .build();
+        orderMapper.insert(order);
+        for (OrderItem item : items) {
+            item.setOrderId(order.getId());
+        }
+        orderItemMapper.batchInsert(items);
+    }
+
+    @Override
+    @Transactional
+    public void updateAdmin(Long orderId, AdminOrderUpdateRequest request) {
+        Order order = orderMapper.selectById(orderId);
+        if (order == null) {
+            throw new NotFoundException();
+        }
+        if (request.getAddressId() != null && !request.getAddressId().equals(order.getAddressId())) {
+            Address address = addressMapper.selectById(request.getAddressId());
+            if (address == null || !address.getUserId().equals(order.getUserId())) {
+                throw new NotFoundException();
+            }
+            orderMapper.updateAddress(orderId, request.getAddressId());
+        }
+        if (request.getStatus() != null && !request.getStatus().equals(order.getStatus())) {
+            orderMapper.updateStatus(orderId, request.getStatus());
+        }
+    }
+
+    @Override
+    @Transactional
+    public void cancelAdmin(Long orderId) {
+        Order order = orderMapper.selectById(orderId);
+        if (order == null) {
+            throw new NotFoundException();
+        }
+        orderMapper.updateStatus(orderId, OrderStatus.CANCELLED.getCode());
+    }
+
+    @Override
     public AdminOrderDetailVO detailAdmin(Long orderId) {
         Order order = orderMapper.selectById(orderId);
         if (order == null) {
@@ -223,7 +303,7 @@ public class OrderServiceImpl implements OrderService {
         }
         AddressSnapshotVO snapshot = buildAddressSnapshot(address);
         return new AdminOrderDetailVO(order.getId(), order.getOrderNo(), order.getUserId(), order.getTotalAmount(),
-                order.getStatus(), order.getCreateTime(), order.getPayTime(), order.getShipTime(), snapshot, items);
+                order.getStatus(), order.getAddressId(), order.getCreateTime(), order.getPayTime(), order.getShipTime(), snapshot, items);
     }
 
     @Override

@@ -56,6 +56,17 @@
         WHERE id = #{id}
     </update>
 
+    <update id="updateAdmin" parameterType="top.wjc.bookmallbackend.entity.User">
+        UPDATE user
+        SET username = #{username},
+            nickname = #{nickname},
+            phone = #{phone},
+            email = #{email},
+            role = #{role},
+            status = #{status}
+        WHERE id = #{id}
+    </update>
+
     <update id="updatePassword">
         UPDATE user
         SET password = #{password}

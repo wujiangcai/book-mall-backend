@@ -23,6 +23,8 @@ public interface UserMapper {
 
     int updateProfile(User user);
 
+    int updateAdmin(User user);
+
     int updatePassword(@Param("id") Long id, @Param("password") String password);
 
     List<AdminUserListItemVO> selectAdminList(@Param("offset") int offset,

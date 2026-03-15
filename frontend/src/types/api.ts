@@ -180,6 +180,7 @@ export type AdminOrderDetail = {
   totalAmount: number
   status: OrderStatusValue
   userId: number
+  addressId?: number
   username?: string
   createTime?: string
   payTime?: string

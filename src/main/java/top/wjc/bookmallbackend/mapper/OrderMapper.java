@@ -38,4 +38,6 @@ public interface OrderMapper {
     int updatePayTime(@Param("id") Long id, @Param("payTime") LocalDateTime payTime);
 
     int updateShipTime(@Param("id") Long id, @Param("shipTime") LocalDateTime shipTime);
+
+    int updateAddress(@Param("id") Long id, @Param("addressId") Long addressId);
 }

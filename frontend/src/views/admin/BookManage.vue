@@ -25,7 +25,8 @@
         row-key="id"
         :data="list"
         :pagination="false"
-        :row-selection="{ type: 'checkbox', selectedRowKeys, onChange: onSelectChange }"
+        :row-selection="{ type: 'checkbox', showCheckedAll: true, selectedRowKeys }"
+        @selection-change="onSelectChange"
       >
         <template #columns>
           <a-table-column title="书名" data-index="bookName" />

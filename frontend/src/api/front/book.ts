@@ -6,6 +6,8 @@ export type BookListParams = {
   pageSize?: number
   categoryId?: number
   keyword?: string
+  minPrice?: number
+  maxPrice?: number
 }
 
 export const frontBookApi = {

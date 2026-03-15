@@ -20,6 +20,7 @@ import top.wjc.bookmallbackend.vo.BookAdminListItemVO;
 import top.wjc.bookmallbackend.vo.BookDetailVO;
 import top.wjc.bookmallbackend.vo.BookListItemVO;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Service
@@ -38,12 +39,12 @@ public class BookServiceImpl implements BookService {
     }
 
     @Override
-    public PageResult<BookListItemVO> listFront(Integer page, Integer pageSize, Long categoryId, String keyword) {
+    public PageResult<BookListItemVO> listFront(Integer page, Integer pageSize, Long categoryId, String keyword, BigDecimal minPrice, BigDecimal maxPrice) {
         int currentPage = normalizePage(page);
         int size = normalizeSize(pageSize, FRONT_DEFAULT_SIZE);
         int offset = (currentPage - 1) * size;
-        long total = bookMapper.countFrontList(categoryId, keyword);
-        List<BookListItemVO> list = bookMapper.selectFrontList(offset, size, categoryId, keyword);
+        long total = bookMapper.countFrontList(categoryId, keyword, minPrice, maxPrice);
+        List<BookListItemVO> list = bookMapper.selectFrontList(offset, size, categoryId, keyword, minPrice, maxPrice);
         return new PageResult<>(total, list, currentPage, size);
     }
 

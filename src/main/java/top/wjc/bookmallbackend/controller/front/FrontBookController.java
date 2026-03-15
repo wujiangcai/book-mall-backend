@@ -1,5 +1,6 @@
 package top.wjc.bookmallbackend.controller.front;
 
+import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Min;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -12,6 +13,8 @@ import top.wjc.bookmallbackend.common.Result;
 import top.wjc.bookmallbackend.service.BookService;
 import top.wjc.bookmallbackend.vo.BookDetailVO;
 import top.wjc.bookmallbackend.vo.BookListItemVO;
+
+import java.math.BigDecimal;
 
 @Validated
 @RestController
@@ -28,8 +31,10 @@ public class FrontBookController {
     public Result<PageResult<BookListItemVO>> list(@RequestParam(required = false) @Min(value = 1, message = "page必须大于0") Integer page,
                                                    @RequestParam(required = false) @Min(value = 1, message = "pageSize必须大于0") Integer pageSize,
                                                    @RequestParam(required = false) @Min(value = 1, message = "categoryId必须大于0") Long categoryId,
-                                                   @RequestParam(required = false) String keyword) {
-        return Result.success(bookService.listFront(page, pageSize, categoryId, keyword));
+                                                   @RequestParam(required = false) String keyword,
+                                                   @RequestParam(required = false) @DecimalMin(value = "0", message = "minPrice必须大于等于0") BigDecimal minPrice,
+                                                   @RequestParam(required = false) @DecimalMin(value = "0", message = "maxPrice必须大于等于0") BigDecimal maxPrice) {
+        return Result.success(bookService.listFront(page, pageSize, categoryId, keyword, minPrice, maxPrice));
     }
 
     @GetMapping("/{id}")

@@ -15,10 +15,14 @@ public interface BookMapper {
     List<BookListItemVO> selectFrontList(@Param("offset") int offset,
                                          @Param("pageSize") int pageSize,
                                          @Param("categoryId") Long categoryId,
-                                         @Param("keyword") String keyword);
+                                         @Param("keyword") String keyword,
+                                         @Param("minPrice") java.math.BigDecimal minPrice,
+                                         @Param("maxPrice") java.math.BigDecimal maxPrice);
 
     long countFrontList(@Param("categoryId") Long categoryId,
-                        @Param("keyword") String keyword);
+                        @Param("keyword") String keyword,
+                        @Param("minPrice") java.math.BigDecimal minPrice,
+                        @Param("maxPrice") java.math.BigDecimal maxPrice);
 
     BookDetailVO selectFrontDetail(@Param("id") Long id);
 

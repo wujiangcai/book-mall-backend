@@ -8,8 +8,10 @@ import top.wjc.bookmallbackend.vo.BookAdminListItemVO;
 import top.wjc.bookmallbackend.vo.BookDetailVO;
 import top.wjc.bookmallbackend.vo.BookListItemVO;
 
+import java.math.BigDecimal;
+
 public interface BookService {
-    PageResult<BookListItemVO> listFront(Integer page, Integer pageSize, Long categoryId, String keyword);
+    PageResult<BookListItemVO> listFront(Integer page, Integer pageSize, Long categoryId, String keyword, BigDecimal minPrice, BigDecimal maxPrice);
 
     BookDetailVO getFrontDetail(Long id);
 

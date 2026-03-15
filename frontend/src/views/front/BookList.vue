@@ -108,12 +108,10 @@ const loadList = async () => {
     pageSize: query.pageSize,
     categoryId: query.categoryId,
     keyword: query.keyword || undefined,
+    minPrice: query.minPrice,
+    maxPrice: query.maxPrice,
   })) as any
-  list.value = (data?.list || []).filter((item: any) => {
-    if (query.minPrice !== undefined && item.price < query.minPrice) return false
-    if (query.maxPrice !== undefined && item.price > query.maxPrice) return false
-    return true
-  })
+  list.value = data?.list || []
   total.value = data?.total || 0
   loading.value = false
 }

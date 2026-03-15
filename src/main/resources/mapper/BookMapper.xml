@@ -39,6 +39,12 @@
                 OR b.author LIKE CONCAT('%', #{keyword}, '%')
                 OR b.publisher LIKE CONCAT('%', #{keyword}, '%'))
         </if>
+        <if test="minPrice != null">
+            AND b.price &gt;= #{minPrice}
+        </if>
+        <if test="maxPrice != null">
+            AND b.price &lt;= #{maxPrice}
+        </if>
     </sql>
 
     <select id="selectFrontList" resultType="top.wjc.bookmallbackend.vo.BookListItemVO">

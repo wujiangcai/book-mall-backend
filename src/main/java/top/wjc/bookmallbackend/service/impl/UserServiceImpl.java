@@ -198,6 +198,16 @@ public class UserServiceImpl implements UserService {
         userMapper.updateStatus(userId, request.getStatus());
     }
 
+    @Override
+    @Transactional
+    public void resetPasswordAdmin(Long userId) {
+        User user = userMapper.findById(userId);
+        if (user == null) {
+            throw new NotFoundException();
+        }
+        userMapper.updatePassword(userId, passwordEncoder.encode("123456"));
+    }
+
     private void validateUserStatus(Integer status) {
         if (status == null) {
             throw new InvalidStatusException("状态不能为空");

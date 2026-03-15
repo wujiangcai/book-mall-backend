@@ -37,6 +37,7 @@ export const adminUserApi = {
   update: (id: number | string, payload: AdminUserUpdateRequest) => request.put<void>(`/api/admin/users/${id}`, payload),
   updateStatus: (id: number | string, payload: UserStatusRequest) =>
     request.put<void>(`/api/admin/users/${id}/status`, payload),
+  resetPassword: (id: number | string) => request.put<void>(`/api/admin/users/${id}/reset-password`),
   changePassword: (payload: { oldPassword: string; newPassword: string }) =>
     request.put<void>('/api/admin/users/password', payload),
 }

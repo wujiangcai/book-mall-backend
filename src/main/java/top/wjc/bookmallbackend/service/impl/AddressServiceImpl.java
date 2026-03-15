@@ -93,8 +93,8 @@ public class AddressServiceImpl implements AddressService {
         if (existing == null || !existing.getUserId().equals(userId)) {
             throw new NotFoundException();
         }
-        if (orderMapper.countPendingShipmentByAddressId(addressId) > 0) {
-            throw new BusinessException(400, "地址存在待发货订单，无法删除");
+        if (orderMapper.countByAddressId(addressId) > 0) {
+            throw new BusinessException(400, "地址已被订单使用，无法删除");
         }
         addressMapper.deleteById(addressId);
         if (existing.getIsDefault() != null && existing.getIsDefault() == 1) {

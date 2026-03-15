@@ -26,6 +26,12 @@
           AND status = 2
     </select>
 
+    <select id="countByAddressId" resultType="int">
+        SELECT COUNT(1)
+        FROM `order`
+        WHERE address_id = #{addressId}
+    </select>
+
     <insert id="insert" parameterType="top.wjc.bookmallbackend.entity.Order" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO `order` (order_no, user_id, total_amount, status, address_id)
         VALUES (#{orderNo}, #{userId}, #{totalAmount}, #{status}, #{addressId})

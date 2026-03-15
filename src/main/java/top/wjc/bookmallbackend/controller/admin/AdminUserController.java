@@ -63,6 +63,12 @@ public class AdminUserController {
         return Result.success();
     }
 
+    @PutMapping("/{id}/reset-password")
+    public Result<Void> resetPassword(@PathVariable Long id) {
+        userService.resetPasswordAdmin(id);
+        return Result.success();
+    }
+
     @PutMapping("/password")
     public Result<Void> changePassword(@Valid @RequestBody ChangePasswordRequest request, HttpServletRequest httpRequest) {
         Object userId = httpRequest.getAttribute("userId");

@@ -55,7 +55,7 @@
             <template #cell="{ record }">
               <a-space>
                 <a-button size="mini" @click="openEdit(record)">编辑</a-button>
-                <a-button size="mini" status="danger" @click="disable(record)">禁用</a-button>
+                <a-button size="mini" status="warning" @click="resetPassword(record)">重置</a-button>
               </a-space>
             </template>
           </a-table-column>
@@ -114,7 +114,7 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from 'vue'
 import { useRoute } from 'vue-router'
-import { Message } from '@arco-design/web-vue'
+import { Message, Modal } from '@arco-design/web-vue'
 import adminUserApi from '../../api/admin/user'
 import type { AdminUserListItem } from '../../types/api'
 
@@ -230,10 +230,18 @@ const submit = async () => {
   await load()
 }
 
-const disable = async (record: AdminUserListItem) => {
-  await adminUserApi.updateStatus(record.id, { status: 0 })
-  Message.success('用户已禁用')
-  await load()
+const resetPassword = async (record: AdminUserListItem) => {
+  Modal.confirm({
+    title: '确认重置密码',
+    content: `确认将 ${record.username} 的密码重置为 123456 吗？`,
+    okText: '确认',
+    cancelText: '取消',
+    onOk: async () => {
+      await adminUserApi.resetPassword(record.id)
+      Message.success('密码已重置为 123456')
+      await load()
+    },
+  })
 }
 
 const batchUpdateStatus = async (status: number) => {

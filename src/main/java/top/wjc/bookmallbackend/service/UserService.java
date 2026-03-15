@@ -33,4 +33,6 @@ public interface UserService {
     void updateAdmin(Long userId, AdminUserUpdateRequest request);
 
     void updateStatus(Long userId, UserStatusRequest request);
+
+    void resetPasswordAdmin(Long userId);
 }

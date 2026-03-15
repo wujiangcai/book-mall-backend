@@ -6,8 +6,10 @@
         <a-descriptions-item label="订单号">{{ detail.orderNo }}</a-descriptions-item>
         <a-descriptions-item label="状态">{{ statusText(detail.status) }}</a-descriptions-item>
         <a-descriptions-item label="金额">¥{{ detail.totalAmount }}</a-descriptions-item>
-        <a-descriptions-item label="创建时间">{{ detail.createTime }}</a-descriptions-item>
-        <a-descriptions-item label="支付时间">{{ detail.payTime || '-' }}</a-descriptions-item>
+        <a-descriptions-item label="下单时间">{{ formatTime(detail.createTime) }}</a-descriptions-item>
+        <a-descriptions-item label="收货人">{{ detail.address?.receiverName || '-' }}</a-descriptions-item>
+        <a-descriptions-item label="联系电话">{{ detail.address?.phone || '-' }}</a-descriptions-item>
+        <a-descriptions-item label="收货地址" :span="2">{{ detail.address?.fullAddress || '-' }}</a-descriptions-item>
       </a-descriptions>
 
       <a-divider />
@@ -54,6 +56,11 @@ const detail = ref<OrderDetail | null>(null)
 
 const goBack = () => {
   router.back()
+}
+
+const formatTime = (value?: string) => {
+  if (!value) return '-'
+  return value.replace('T', ' ')
 }
 
 const statusText = (status: number) => {

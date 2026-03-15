@@ -114,12 +114,6 @@
           </a-breadcrumb>
         </div>
         <div class="header-right">
-          <a-input-search class="admin-search" placeholder="搜索功能" allow-clear />
-          <a-badge :count="3" dot>
-            <a-button type="text">
-              <icon-notification />
-            </a-button>
-          </a-badge>
           <a-dropdown @select="handleUserAction">
             <a-space class="admin-user" size="small">
               <a-avatar :size="32">管</a-avatar>
@@ -338,6 +332,7 @@ const handleUserAction = async (value: string | number | Record<string, any> | u
 
 .admin-user {
   cursor: pointer;
+  color: #000000;
 }
 
 .admin-content {

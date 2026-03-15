@@ -2,6 +2,7 @@ package top.wjc.bookmallbackend.service.impl;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import top.wjc.bookmallbackend.common.PageResult;
 import top.wjc.bookmallbackend.constant.CommonStatus;
 import top.wjc.bookmallbackend.dto.CategoryCreateRequest;
 import top.wjc.bookmallbackend.dto.CategoryStatusRequest;
@@ -39,17 +40,18 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
+    public PageResult<CategoryAdminVO> listAdmin(Integer page, Integer pageSize) {
+        int currentPage = normalizePage(page);
+        int size = normalizeSize(pageSize);
+        int offset = (currentPage - 1) * size;
+        long total = categoryMapper.countAdminList();
+        List<CategoryAdminVO> list = toAdminVOs(categoryMapper.selectAdminListPaged(offset, size));
+        return new PageResult<>(total, list, currentPage, size);
+    }
+
+    @Override
     public List<CategoryAdminVO> listAdmin() {
-        return categoryMapper.selectAdminList().stream()
-                .map(category -> new CategoryAdminVO(
-                        category.getId(),
-                        category.getCategoryName(),
-                        category.getParentId(),
-                        category.getSortOrder(),
-                        category.getStatus(),
-                        category.getCreateTime()
-                ))
-                .collect(Collectors.toList());
+        return toAdminVOs(categoryMapper.selectAdminList());
     }
 
     @Override
@@ -111,6 +113,31 @@ public class CategoryServiceImpl implements CategoryService {
         }
         validateCategoryStatus(request.getStatus());
         categoryMapper.updateStatus(id, request.getStatus());
+    }
+
+    private int normalizePage(Integer page) {
+        return page == null || page < 1 ? 1 : page;
+    }
+
+    private int normalizeSize(Integer pageSize) {
+        int size = pageSize == null ? 20 : pageSize;
+        if (size < 1) {
+            return 20;
+        }
+        return Math.min(size, 100);
+    }
+
+    private List<CategoryAdminVO> toAdminVOs(List<Category> categories) {
+        return categories.stream()
+                .map(category -> new CategoryAdminVO(
+                        category.getId(),
+                        category.getCategoryName(),
+                        category.getParentId(),
+                        category.getSortOrder(),
+                        category.getStatus(),
+                        category.getCreateTime()
+                ))
+                .collect(Collectors.toList());
     }
 
     private void validateParent(Long parentId) {

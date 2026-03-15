@@ -13,6 +13,10 @@ public interface CategoryMapper {
 
     List<Category> selectAdminList();
 
+    List<Category> selectAdminListPaged(@Param("offset") int offset, @Param("pageSize") int pageSize);
+
+    long countAdminList();
+
     Category selectById(@Param("id") Long id);
 
     int countByName(@Param("categoryName") String categoryName);

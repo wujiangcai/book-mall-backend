@@ -1,69 +1,67 @@
 <template>
-  <a-card title="用户中心" :bordered="false">
-    <template v-if="authStore.userInfo">
-      <a-descriptions :column="1">
-        <a-descriptions-item label="用户名">{{ authStore.userInfo.username }}</a-descriptions-item>
-        <a-descriptions-item label="昵称">{{ authStore.userInfo.nickname || '-' }}</a-descriptions-item>
-        <a-descriptions-item label="手机号">{{ authStore.userInfo.phone || '-' }}</a-descriptions-item>
-        <a-descriptions-item label="邮箱">{{ authStore.userInfo.email || '-' }}</a-descriptions-item>
-      </a-descriptions>
-      <a-space style="margin-top: 16px">
-        <a-button type="primary" @click="openEdit">编辑资料</a-button>
-        <a-button @click="openPassword">修改密码</a-button>
-        <a-button @click="go('/address')">管理地址</a-button>
-        <a-button @click="go('/orders')">我的订单</a-button>
-        <a-button status="danger" @click="handleLogout">退出登录</a-button>
-      </a-space>
-    </template>
-    <a-empty v-else description="暂无用户信息" />
-  </a-card>
+  <a-space direction="vertical" fill size="large">
+    <a-card title="个人信息" :bordered="false">
+      <template v-if="authStore.userInfo">
+        <a-descriptions :column="1">
+          <a-descriptions-item label="用户名">{{ authStore.userInfo.username }}</a-descriptions-item>
+          <a-descriptions-item label="昵称">{{ authStore.userInfo.nickname || '-' }}</a-descriptions-item>
+          <a-descriptions-item label="手机号">{{ authStore.userInfo.phone || '-' }}</a-descriptions-item>
+          <a-descriptions-item label="邮箱">{{ authStore.userInfo.email || '-' }}</a-descriptions-item>
+        </a-descriptions>
+        <a-space style="margin-top: 16px">
+          <a-button type="primary" @click="openEdit">编辑资料</a-button>
+          <a-button @click="openPassword">修改密码</a-button>
+        </a-space>
+      </template>
+      <a-empty v-else description="暂无用户信息" />
+    </a-card>
 
-  <a-modal v-model:visible="visible" title="编辑资料" :ok-loading="submitting" :ok-button-props="{ disabled: submitting }" @ok="submit">
-    <a-form :model="form" layout="vertical">
-      <a-form-item label="用户名">
-        <a-input v-model="form.username" disabled />
-      </a-form-item>
-      <a-form-item label="昵称">
-        <a-input v-model="form.nickname" placeholder="昵称" />
-      </a-form-item>
-      <a-form-item label="手机号">
-        <a-input v-model="form.phone" placeholder="11位手机号" />
-      </a-form-item>
-      <a-form-item label="邮箱">
-        <a-input v-model="form.email" placeholder="邮箱" />
-      </a-form-item>
-    </a-form>
-  </a-modal>
+    <a-modal v-model:visible="visible" title="编辑资料" :ok-loading="submitting" :ok-button-props="{ disabled: submitting }" @ok="submit">
+      <a-form :model="form" layout="vertical">
+        <a-form-item label="用户名">
+          <a-input v-model="form.username" disabled />
+        </a-form-item>
+        <a-form-item label="昵称">
+          <a-input v-model="form.nickname" placeholder="昵称" />
+        </a-form-item>
+        <a-form-item label="手机号">
+          <a-input v-model="form.phone" placeholder="11位手机号" />
+        </a-form-item>
+        <a-form-item label="邮箱">
+          <a-input v-model="form.email" placeholder="邮箱" />
+        </a-form-item>
+      </a-form>
+    </a-modal>
 
-  <a-modal
-    v-model:visible="passwordVisible"
-    title="修改密码"
-    :ok-loading="passwordSubmitting"
-    :ok-button-props="{ disabled: passwordSubmitting }"
-    @ok="submitPassword"
-  >
-    <a-form :model="passwordForm" layout="vertical">
-      <a-form-item label="旧密码">
-        <a-input-password v-model="passwordForm.oldPassword" placeholder="请输入旧密码" />
-      </a-form-item>
-      <a-form-item label="新密码">
-        <a-input-password v-model="passwordForm.newPassword" placeholder="请输入新密码" />
-      </a-form-item>
-      <a-form-item label="确认新密码">
-        <a-input-password v-model="passwordForm.confirmPassword" placeholder="请再次输入新密码" />
-      </a-form-item>
-    </a-form>
-  </a-modal>
+    <a-modal
+      v-model:visible="passwordVisible"
+      title="修改密码"
+      :ok-loading="passwordSubmitting"
+      :ok-button-props="{ disabled: passwordSubmitting }"
+      @ok="submitPassword"
+    >
+      <a-form :model="passwordForm" layout="vertical">
+        <a-form-item label="旧密码">
+          <a-input-password v-model="passwordForm.oldPassword" placeholder="请输入旧密码" />
+        </a-form-item>
+        <a-form-item label="新密码">
+          <a-input-password v-model="passwordForm.newPassword" placeholder="请输入新密码" />
+        </a-form-item>
+        <a-form-item label="确认新密码">
+          <a-input-password v-model="passwordForm.confirmPassword" placeholder="请再次输入新密码" />
+        </a-form-item>
+      </a-form>
+    </a-modal>
+  </a-space>
 </template>
 
 <script setup lang="ts">
-import { reactive, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { onMounted, reactive, ref } from 'vue'
 import { Message } from '@arco-design/web-vue'
 import { useAuthStore } from '../../store/auth'
+import adminUserApi from '../../api/admin/user'
 import frontUserApi from '../../api/front/user'
 
-const router = useRouter()
 const authStore = useAuthStore()
 const visible = ref(false)
 const submitting = ref(false)
@@ -83,8 +81,10 @@ const passwordForm = reactive({
   confirmPassword: '',
 })
 
-const go = (path: string) => {
-  router.push(path)
+const ensureUserInfo = async () => {
+  if (!authStore.userInfo && authStore.isAuthed) {
+    await authStore.fetchUserInfo()
+  }
 }
 
 const openEdit = () => {
@@ -162,14 +162,14 @@ const submitPassword = async () => {
   if (!validatePassword()) return
   passwordSubmitting.value = true
   try {
-    await frontUserApi.changePassword({
+    await adminUserApi.changePassword({
       oldPassword: passwordForm.oldPassword,
       newPassword: passwordForm.newPassword,
     })
     Message.success('密码已更新，请重新登录')
     passwordVisible.value = false
     authStore.clear()
-    await router.replace('/login')
+    window.location.href = '/admin/login'
   } catch (err: any) {
     Message.error(err?.message || '更新失败')
   } finally {
@@ -177,10 +177,5 @@ const submitPassword = async () => {
   }
 }
 
-const handleLogout = async () => {
-  authStore.clear()
-  Message.success('已退出登录')
-  await router.replace('/login')
-}
+onMounted(ensureUserInfo)
 </script>
-

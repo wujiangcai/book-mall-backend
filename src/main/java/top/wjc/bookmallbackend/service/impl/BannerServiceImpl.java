@@ -2,6 +2,7 @@ package top.wjc.bookmallbackend.service.impl;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import top.wjc.bookmallbackend.common.PageResult;
 import top.wjc.bookmallbackend.constant.CommonStatus;
 import top.wjc.bookmallbackend.dto.BannerCreateRequest;
 import top.wjc.bookmallbackend.dto.BannerSortRequest;
@@ -26,17 +27,18 @@ public class BannerServiceImpl implements BannerService {
     }
 
     @Override
+    public PageResult<BannerVO> listAdmin(Integer page, Integer pageSize) {
+        int currentPage = normalizePage(page);
+        int size = normalizeSize(pageSize);
+        int offset = (currentPage - 1) * size;
+        long total = bannerMapper.countAdminList();
+        List<BannerVO> list = toAdminVOs(bannerMapper.selectAdminListPaged(offset, size));
+        return new PageResult<>(total, list, currentPage, size);
+    }
+
+    @Override
     public List<BannerVO> listAdmin() {
-        return bannerMapper.selectAdminList().stream()
-                .map(banner -> new BannerVO(
-                        banner.getId(),
-                        banner.getImageUrl(),
-                        banner.getLinkUrl(),
-                        banner.getSortOrder(),
-                        banner.getStatus(),
-                        banner.getCreateTime()
-                ))
-                .collect(Collectors.toList());
+        return toAdminVOs(bannerMapper.selectAdminList());
     }
 
     @Override
@@ -93,6 +95,31 @@ public class BannerServiceImpl implements BannerService {
     @Override
     public List<BannerVO> listFront() {
         return bannerMapper.selectFrontList();
+    }
+
+    private int normalizePage(Integer page) {
+        return page == null || page < 1 ? 1 : page;
+    }
+
+    private int normalizeSize(Integer pageSize) {
+        int size = pageSize == null ? 20 : pageSize;
+        if (size < 1) {
+            return 20;
+        }
+        return Math.min(size, 100);
+    }
+
+    private List<BannerVO> toAdminVOs(List<Banner> banners) {
+        return banners.stream()
+                .map(banner -> new BannerVO(
+                        banner.getId(),
+                        banner.getImageUrl(),
+                        banner.getLinkUrl(),
+                        banner.getSortOrder(),
+                        banner.getStatus(),
+                        banner.getCreateTime()
+                ))
+                .collect(Collectors.toList());
     }
 
     private void validateStatus(Integer status) {

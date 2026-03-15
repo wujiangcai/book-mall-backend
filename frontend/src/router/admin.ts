@@ -13,6 +13,7 @@ export const adminRoutes: RouteRecordRaw[] = [
       { path: 'orders', name: 'OrderManage', component: () => import('../views/admin/OrderManage.vue'), meta: { requiresAdmin: true } },
       { path: 'users', name: 'UserManage', component: () => import('../views/admin/UserManage.vue'), meta: { requiresAdmin: true } },
       { path: 'banners', name: 'BannerManage', component: () => import('../views/admin/BannerManage.vue'), meta: { requiresAdmin: true } },
+      { path: 'profile', name: 'AdminProfile', component: () => import('../views/admin/AdminProfile.vue'), meta: { requiresAdmin: true } },
     ],
   },
 ]

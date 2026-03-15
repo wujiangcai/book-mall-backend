@@ -16,6 +16,8 @@ export const adminUserApi = {
   detail: (id: number | string) => request.get<AdminUserDetail>(`/api/admin/users/${id}`),
   updateStatus: (id: number | string, payload: UserStatusRequest) =>
     request.put<void>(`/api/admin/users/${id}/status`, payload),
+  changePassword: (payload: { oldPassword: string; newPassword: string }) =>
+    request.put<void>('/api/admin/users/password', payload),
 }
 
 export default adminUserApi

@@ -1,5 +1,6 @@
 package top.wjc.bookmallbackend.service;
 
+import top.wjc.bookmallbackend.common.PageResult;
 import top.wjc.bookmallbackend.dto.CategoryCreateRequest;
 import top.wjc.bookmallbackend.dto.CategoryStatusRequest;
 import top.wjc.bookmallbackend.dto.CategoryUpdateRequest;
@@ -10,6 +11,8 @@ import java.util.List;
 
 public interface CategoryService {
     List<CategoryTreeVO> getFrontTree();
+
+    PageResult<CategoryAdminVO> listAdmin(Integer page, Integer pageSize);
 
     List<CategoryAdminVO> listAdmin();
 

@@ -12,6 +12,10 @@ public interface BannerMapper {
 
     List<Banner> selectAdminList();
 
+    List<Banner> selectAdminListPaged(@Param("offset") int offset, @Param("pageSize") int pageSize);
+
+    long countAdminList();
+
     List<BannerVO> selectFrontList();
 
     Banner selectById(@Param("id") Long id);

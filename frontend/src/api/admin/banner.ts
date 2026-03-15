@@ -1,5 +1,10 @@
 import request from '../request'
-import type { Banner } from '../../types/api'
+import type { Banner, PageResult } from '../../types/api'
+
+export type BannerAdminListParams = {
+  page?: number
+  pageSize?: number
+}
 
 export type BannerCreateRequest = {
   imageUrl: string
@@ -15,7 +20,7 @@ export type BannerSortRequest = {
 }
 
 export const adminBannerApi = {
-  list: () => request.get<Banner[]>('/api/admin/banners'),
+  list: (params?: BannerAdminListParams) => request.get<PageResult<Banner>>('/api/admin/banners', { params }),
   create: (payload: BannerCreateRequest) => request.post<void>('/api/admin/banners', payload),
   update: (id: number | string, payload: BannerUpdateRequest) => request.put<void>(`/api/admin/banners/${id}`, payload),
   remove: (id: number | string) => request.delete<void>(`/api/admin/banners/${id}`),

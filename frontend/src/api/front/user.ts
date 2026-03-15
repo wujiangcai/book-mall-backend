@@ -10,6 +10,8 @@ export type UpdateUserRequest = {
 export const frontUserApi = {
   getInfo: () => request.get<UserInfoResponse>('/api/front/user/info'),
   updateInfo: (payload: UpdateUserRequest) => request.put<void>('/api/front/user/info', payload),
+  changePassword: (payload: { oldPassword: string; newPassword: string }) =>
+    request.put<void>('/api/front/user/password', payload),
 }
 
 export default frontUserApi

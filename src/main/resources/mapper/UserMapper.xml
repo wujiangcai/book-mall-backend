@@ -56,6 +56,12 @@
         WHERE id = #{id}
     </update>
 
+    <update id="updatePassword">
+        UPDATE user
+        SET password = #{password}
+        WHERE id = #{id}
+    </update>
+
     <select id="selectAdminList" resultType="top.wjc.bookmallbackend.vo.AdminUserListItemVO">
         SELECT id, username, nickname, phone, email, role, status, create_time
         FROM user

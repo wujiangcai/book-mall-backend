@@ -6,6 +6,7 @@ import org.springframework.transaction.annotation.Transactional;
 import top.wjc.bookmallbackend.constant.CommonStatus;
 import top.wjc.bookmallbackend.constant.UserRole;
 import top.wjc.bookmallbackend.common.PageResult;
+import top.wjc.bookmallbackend.dto.ChangePasswordRequest;
 import top.wjc.bookmallbackend.dto.LoginRequest;
 import top.wjc.bookmallbackend.dto.RegisterRequest;
 import top.wjc.bookmallbackend.dto.UpdateUserRequest;
@@ -99,6 +100,19 @@ public class UserServiceImpl implements UserService {
         user.setPhone(request.getPhone());
         user.setEmail(request.getEmail());
         userMapper.updateProfile(user);
+    }
+
+    @Override
+    @Transactional
+    public void changePassword(Long userId, ChangePasswordRequest request) {
+        User user = userMapper.findById(userId);
+        if (user == null) {
+            throw new NotFoundException();
+        }
+        if (!passwordEncoder.matches(request.getOldPassword(), user.getPassword())) {
+            throw new UnauthorizedException();
+        }
+        userMapper.updatePassword(userId, passwordEncoder.encode(request.getNewPassword()));
     }
 
     @Override

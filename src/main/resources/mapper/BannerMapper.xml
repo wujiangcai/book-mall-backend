@@ -23,6 +23,20 @@
         ORDER BY sort_order ASC, create_time ASC
     </select>
 
+    <select id="selectAdminListPaged" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM banner
+        WHERE status &lt;&gt; -1
+        ORDER BY sort_order ASC, create_time ASC
+        LIMIT #{offset}, #{pageSize}
+    </select>
+
+    <select id="countAdminList" resultType="long">
+        SELECT COUNT(1)
+        FROM banner
+        WHERE status &lt;&gt; -1
+    </select>
+
     <select id="selectFrontList" resultType="top.wjc.bookmallbackend.vo.BannerVO">
         SELECT id, image_url, link_url, sort_order, status, create_time
         FROM banner

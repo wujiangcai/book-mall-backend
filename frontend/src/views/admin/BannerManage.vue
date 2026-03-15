@@ -43,7 +43,7 @@
           <a-table-column title="状态" :width="120">
             <template #cell="{ record }">
               <a-switch
-                :checked="record.status === 1"
+                :model-value="Number(record.status) === 1"
                 checked-text="启用"
                 unchecked-text="禁用"
                 @change="(val) => updateStatus(record, val ? 1 : 0)"
@@ -62,6 +62,19 @@
         </template>
       </a-table>
       <a-empty v-if="list.length === 0" description="暂无轮播" />
+
+      <div class="pager">
+        <a-pagination
+          :current="query.page"
+          :page-size="query.pageSize"
+          :total="total"
+          show-total
+          show-jumper
+          show-page-size
+          @change="handlePageChange"
+          @page-size-change="handlePageSizeChange"
+        />
+      </div>
     </a-card>
 
     <a-modal v-model:visible="visible" :title="editing ? '编辑轮播' : '新增轮播'" @ok="submit">
@@ -95,10 +108,16 @@ import type { Banner } from '../../types/api'
 
 const route = useRoute()
 const list = ref<Banner[]>([])
+const total = ref(0)
 const visible = ref(false)
 const editing = ref(false)
 const editingId = ref<number | null>(null)
 const selectedRowKeys = ref<number[]>([])
+
+const query = reactive({
+  page: 1,
+  pageSize: 10,
+})
 
 const form = reactive({
   imageUrl: '',
@@ -108,7 +127,20 @@ const form = reactive({
 })
 
 const load = async () => {
-  list.value = (await adminBannerApi.list().catch(() => [])) as any
+  const data = (await adminBannerApi.list({ page: query.page, pageSize: query.pageSize }).catch(() => null)) as any
+  list.value = data?.list || []
+  total.value = data?.total || 0
+}
+
+const handlePageChange = (page: number) => {
+  query.page = page
+  load()
+}
+
+const handlePageSizeChange = (pageSize: number) => {
+  query.pageSize = pageSize
+  query.page = 1
+  load()
 }
 
 const onSelectChange = (keys: number[]) => {
@@ -210,5 +242,11 @@ onMounted(load)
 .notice-desc {
   margin: 8px 0 16px;
   color: #64748b;
+}
+
+.pager {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 16px;
 }
 </style>

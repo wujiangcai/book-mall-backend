@@ -1,6 +1,8 @@
 package top.wjc.bookmallbackend.controller.admin;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -8,7 +10,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import top.wjc.bookmallbackend.common.PageResult;
 import top.wjc.bookmallbackend.common.Result;
 import top.wjc.bookmallbackend.dto.CategoryCreateRequest;
 import top.wjc.bookmallbackend.dto.CategoryStatusRequest;
@@ -16,8 +20,7 @@ import top.wjc.bookmallbackend.dto.CategoryUpdateRequest;
 import top.wjc.bookmallbackend.service.CategoryService;
 import top.wjc.bookmallbackend.vo.CategoryAdminVO;
 
-import java.util.List;
-
+@Validated
 @RestController
 @RequestMapping("/api/admin/categories")
 public class AdminCategoryController {
@@ -29,8 +32,9 @@ public class AdminCategoryController {
     }
 
     @GetMapping
-    public Result<List<CategoryAdminVO>> list() {
-        return Result.success(categoryService.listAdmin());
+    public Result<PageResult<CategoryAdminVO>> list(@RequestParam(required = false) @Min(value = 1, message = "page必须大于0") Integer page,
+                                                    @RequestParam(required = false) @Min(value = 1, message = "pageSize必须大于0") Integer pageSize) {
+        return Result.success(categoryService.listAdmin(page, pageSize));
     }
 
     @PostMapping

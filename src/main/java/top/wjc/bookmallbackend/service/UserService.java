@@ -1,6 +1,7 @@
 package top.wjc.bookmallbackend.service;
 
 import top.wjc.bookmallbackend.common.PageResult;
+import top.wjc.bookmallbackend.dto.ChangePasswordRequest;
 import top.wjc.bookmallbackend.dto.LoginRequest;
 import top.wjc.bookmallbackend.dto.RegisterRequest;
 import top.wjc.bookmallbackend.dto.UpdateUserRequest;
@@ -18,6 +19,8 @@ public interface UserService {
     UserInfoResponse getUserInfo(Long userId);
 
     void updateUserInfo(Long userId, UpdateUserRequest request);
+
+    void changePassword(Long userId, ChangePasswordRequest request);
 
     PageResult<AdminUserListItemVO> listAdmin(Integer page, Integer pageSize, String keyword);
 

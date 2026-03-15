@@ -208,6 +208,7 @@ const breadcrumb = computed(() => {
     '/admin/orders': '订单列表',
     '/admin/users': '用户列表',
     '/admin/banners': '轮播图',
+    '/admin/profile': '个人信息',
   }
   return map[route.path] || '管理模块'
 })
@@ -238,7 +239,7 @@ const handleUserAction = async (value: string | number | Record<string, any> | u
     return
   }
   if (value === 'profile') {
-    router.push('/admin/users?tab=profile')
+    router.push('/admin/profile')
   }
 }
 </script>

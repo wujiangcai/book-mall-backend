@@ -1,5 +1,10 @@
 import request from '../request'
-import type { CategoryAdminItem } from '../../types/api'
+import type { CategoryAdminItem, PageResult } from '../../types/api'
+
+export type CategoryAdminListParams = {
+  page?: number
+  pageSize?: number
+}
 
 export type CategoryCreateRequest = {
   categoryName: string
@@ -14,7 +19,8 @@ export type CategoryStatusRequest = {
 }
 
 export const adminCategoryApi = {
-  list: () => request.get<CategoryAdminItem[]>('/api/admin/categories'),
+  list: (params?: CategoryAdminListParams) =>
+    request.get<PageResult<CategoryAdminItem>>('/api/admin/categories', { params }),
   create: (payload: CategoryCreateRequest) => request.post<void>('/api/admin/categories', payload),
   update: (id: number | string, payload: CategoryUpdateRequest) =>
     request.put<void>(`/api/admin/categories/${id}`, payload),

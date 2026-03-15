@@ -1,5 +1,6 @@
 package top.wjc.bookmallbackend.controller.admin;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import org.springframework.validation.annotation.Validated;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import top.wjc.bookmallbackend.common.PageResult;
 import top.wjc.bookmallbackend.common.Result;
+import top.wjc.bookmallbackend.dto.ChangePasswordRequest;
 import top.wjc.bookmallbackend.dto.UserStatusRequest;
 import top.wjc.bookmallbackend.service.UserService;
 import top.wjc.bookmallbackend.vo.AdminUserDetailVO;
@@ -43,6 +45,13 @@ public class AdminUserController {
     @PutMapping("/{id}/status")
     public Result<Void> updateStatus(@PathVariable Long id, @Valid @RequestBody UserStatusRequest request) {
         userService.updateStatus(id, request);
+        return Result.success();
+    }
+
+    @PutMapping("/password")
+    public Result<Void> changePassword(@Valid @RequestBody ChangePasswordRequest request, HttpServletRequest httpRequest) {
+        Object userId = httpRequest.getAttribute("userId");
+        userService.changePassword(Long.valueOf(userId.toString()), request);
         return Result.success();
     }
 }

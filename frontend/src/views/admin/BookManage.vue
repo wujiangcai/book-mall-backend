@@ -38,7 +38,7 @@
           <a-table-column title="状态" :width="120">
             <template #cell="{ record }">
               <a-switch
-                :checked="record.status === 1"
+                :model-value="Number(record.status) === 1"
                 checked-text="上架"
                 unchecked-text="下架"
                 @change="(val) => updateStatus(record.id, val ? 1 : 0)"

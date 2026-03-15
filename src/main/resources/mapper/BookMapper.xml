@@ -30,7 +30,7 @@
         b.status &lt;&gt; -1
     </sql>
 
-    <sql id="Search_Conditions">
+    <sql id="Search_Conditions_Front">
         <if test="categoryId != null">
             AND b.category_id = #{categoryId}
         </if>
@@ -47,12 +47,23 @@
         </if>
     </sql>
 
+    <sql id="Search_Conditions_Admin">
+        <if test="categoryId != null">
+            AND b.category_id = #{categoryId}
+        </if>
+        <if test="keyword != null and keyword != ''">
+            AND (b.book_name LIKE CONCAT('%', #{keyword}, '%')
+                OR b.author LIKE CONCAT('%', #{keyword}, '%')
+                OR b.publisher LIKE CONCAT('%', #{keyword}, '%'))
+        </if>
+    </sql>
+
     <select id="selectFrontList" resultType="top.wjc.bookmallbackend.vo.BookListItemVO">
         SELECT b.id, b.book_name, b.author, b.publisher, b.price, b.cover_image, c.category_name
         FROM book b
         LEFT JOIN category c ON b.category_id = c.id
         WHERE <include refid="Front_Filter"/>
-        <include refid="Search_Conditions"/>
+        <include refid="Search_Conditions_Front"/>
         ORDER BY b.create_time DESC
         LIMIT #{offset}, #{pageSize}
     </select>
@@ -62,7 +73,7 @@
         FROM book b
         LEFT JOIN category c ON b.category_id = c.id
         WHERE <include refid="Front_Filter"/>
-        <include refid="Search_Conditions"/>
+        <include refid="Search_Conditions_Front"/>
     </select>
 
     <select id="selectFrontDetail" resultType="top.wjc.bookmallbackend.vo.BookDetailVO">
@@ -79,7 +90,7 @@
         FROM book b
         LEFT JOIN category c ON b.category_id = c.id
         WHERE <include refid="Admin_Filter"/>
-        <include refid="Search_Conditions"/>
+        <include refid="Search_Conditions_Admin"/>
         ORDER BY b.create_time DESC
         LIMIT #{offset}, #{pageSize}
     </select>
@@ -88,7 +99,7 @@
         SELECT COUNT(1)
         FROM book b
         WHERE <include refid="Admin_Filter"/>
-        <include refid="Search_Conditions"/>
+        <include refid="Search_Conditions_Admin"/>
     </select>
 
     <select id="selectById" resultMap="BaseResultMap">

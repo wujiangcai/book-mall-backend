@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import top.wjc.bookmallbackend.common.Result;
+import top.wjc.bookmallbackend.dto.ChangePasswordRequest;
 import top.wjc.bookmallbackend.dto.UpdateUserRequest;
 import top.wjc.bookmallbackend.service.UserService;
 import top.wjc.bookmallbackend.vo.UserInfoResponse;
@@ -32,6 +33,13 @@ public class UserController {
     public Result<Void> update(@Valid @RequestBody UpdateUserRequest request, HttpServletRequest httpRequest) {
         Object userId = httpRequest.getAttribute("userId");
         userService.updateUserInfo(Long.valueOf(userId.toString()), request);
+        return Result.success();
+    }
+
+    @PutMapping("/password")
+    public Result<Void> changePassword(@Valid @RequestBody ChangePasswordRequest request, HttpServletRequest httpRequest) {
+        Object userId = httpRequest.getAttribute("userId");
+        userService.changePassword(Long.valueOf(userId.toString()), request);
         return Result.success();
     }
 }

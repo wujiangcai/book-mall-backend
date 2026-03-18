@@ -10,10 +10,16 @@ import top.wjc.bookmallbackend.vo.OrderCreateVO;
 import top.wjc.bookmallbackend.vo.OrderDetailVO;
 import top.wjc.bookmallbackend.vo.OrderListItemVO;
 
+import java.util.Map;
+
 public interface OrderService {
     OrderCreateVO create(Long userId, OrderCreateRequest request);
 
-    void pay(Long userId, Long orderId);
+    String pay(Long userId, Long orderId);
+
+    boolean handleAlipayNotify(Map<String, String> params);
+
+    Long handleAlipayReturn(Map<String, String> params);
 
     void cancel(Long userId, Long orderId);
 

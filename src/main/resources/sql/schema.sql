@@ -124,6 +124,7 @@ DROP TABLE IF EXISTS `order`;
 CREATE TABLE `order` (
   `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '订单ID',
   `order_no` VARCHAR(50) NOT NULL COMMENT '订单编号，格式：时间戳+用户ID+随机数',
+  `trade_no` VARCHAR(64) DEFAULT NULL COMMENT '支付宝交易号',
   `user_id` BIGINT NOT NULL COMMENT '用户ID',
   `total_amount` DECIMAL(10,2) NOT NULL COMMENT '订单总金额',
   `status` TINYINT NOT NULL DEFAULT 0 COMMENT '订单状态：0-待支付，1-已支付，2-待发货，3-已发货，4-已完成，5-已取消',

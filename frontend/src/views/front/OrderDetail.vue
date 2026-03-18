@@ -45,7 +45,6 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { Message } from '@arco-design/web-vue'
 import frontOrderApi from '../../api/front/order'
 import { OrderStatus } from '../../types/enums'
 import type { OrderDetail } from '../../types/api'
@@ -97,9 +96,15 @@ const applyAfterSales = () => {
 
 const pay = async () => {
   if (!detail.value) return
-  await frontOrderApi.pay(detail.value.orderId)
-  Message.success('支付成功')
-  await load()
+  const formHtml = await frontOrderApi.pay(detail.value.orderId)
+  if (!formHtml) return
+  const container = document.createElement('div')
+  container.innerHTML = formHtml
+  document.body.appendChild(container)
+  const form = container.querySelector('form') as HTMLFormElement | null
+  if (form) {
+    form.submit()
+  }
 }
 
 const cancel = async () => {

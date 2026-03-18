@@ -5,6 +5,7 @@
     <resultMap id="BaseResultMap" type="top.wjc.bookmallbackend.entity.Order">
         <id property="id" column="id"/>
         <result property="orderNo" column="order_no"/>
+        <result property="tradeNo" column="trade_no"/>
         <result property="userId" column="user_id"/>
         <result property="totalAmount" column="total_amount"/>
         <result property="status" column="status"/>
@@ -16,7 +17,7 @@
     </resultMap>
 
     <sql id="Base_Column_List">
-        id, order_no, user_id, total_amount, status, address_id, create_time, update_time, pay_time, ship_time
+        id, order_no, trade_no, user_id, total_amount, status, address_id, create_time, update_time, pay_time, ship_time
     </sql>
 
     <select id="countPendingShipmentByAddressId" resultType="int">
@@ -33,8 +34,8 @@
     </select>
 
     <insert id="insert" parameterType="top.wjc.bookmallbackend.entity.Order" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO `order` (order_no, user_id, total_amount, status, address_id)
-        VALUES (#{orderNo}, #{userId}, #{totalAmount}, #{status}, #{addressId})
+        INSERT INTO `order` (order_no, trade_no, user_id, total_amount, status, address_id)
+        VALUES (#{orderNo}, #{tradeNo}, #{userId}, #{totalAmount}, #{status}, #{addressId})
     </insert>
 
     <select id="selectById" resultMap="BaseResultMap">
@@ -47,6 +48,12 @@
         SELECT <include refid="Base_Column_List"/>
         FROM `order`
         WHERE id = #{id} AND user_id = #{userId}
+    </select>
+
+    <select id="selectByOrderNo" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM `order`
+        WHERE order_no = #{orderNo}
     </select>
 
     <select id="selectByUserId" resultMap="BaseResultMap">
@@ -103,6 +110,10 @@
 
     <update id="updatePayTime">
         UPDATE `order` SET pay_time = #{payTime} WHERE id = #{id}
+    </update>
+
+    <update id="updateTradeNo">
+        UPDATE `order` SET trade_no = #{tradeNo} WHERE id = #{id}
     </update>
 
     <update id="updateShipTime">

@@ -33,7 +33,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(userAuthInterceptor)
                 .addPathPatterns("/api/front/**")
-                .excludePathPatterns("/api/front/auth/**", "/api/front/books/**", "/api/front/categories", "/api/front/banners");
+                .excludePathPatterns("/api/front/auth/**", "/api/front/books/**", "/api/front/categories", "/api/front/banners", "/api/front/pay/**");
 
         registry.addInterceptor(adminAuthInterceptor)
                 .addPathPatterns("/api/admin/**")

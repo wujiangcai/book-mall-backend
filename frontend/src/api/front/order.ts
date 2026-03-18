@@ -13,7 +13,8 @@ export type OrderListParams = {
 
 export const frontOrderApi = {
   create: (payload: OrderCreateRequest) => request.post<OrderCreateResponse>('/api/front/orders', payload),
-  pay: (id: number | string) => request.post<void>(`/api/front/orders/${id}/pay`),
+  pay: (id: number | string) =>
+    request.post<any>(`/api/front/orders/${id}/pay`, undefined, { responseType: 'text' as any }),
   cancel: (id: number | string) => request.post<void>(`/api/front/orders/${id}/cancel`),
   list: (params?: OrderListParams) => request.get<PageResult<OrderListItem>>('/api/front/orders', { params }),
   detail: (id: number | string) => request.get<OrderDetail>(`/api/front/orders/${id}`),

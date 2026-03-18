@@ -1,5 +1,11 @@
 package top.wjc.bookmallbackend.service.impl;
 
+import com.alipay.api.AlipayClient;
+import com.alipay.api.AlipayApiException;
+import com.alipay.api.request.AlipayTradePagePayRequest;
+import com.alipay.api.response.AlipayTradePagePayResponse;
+import com.alipay.api.internal.util.AlipaySignature;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import top.wjc.bookmallbackend.common.PageResult;
@@ -14,6 +20,7 @@ import top.wjc.bookmallbackend.entity.Cart;
 import top.wjc.bookmallbackend.entity.Order;
 import top.wjc.bookmallbackend.entity.OrderItem;
 import top.wjc.bookmallbackend.exception.BookOffShelfException;
+import top.wjc.bookmallbackend.exception.BusinessException;
 import top.wjc.bookmallbackend.exception.InsufficientStockException;
 import top.wjc.bookmallbackend.exception.InvalidOrderStatusException;
 import top.wjc.bookmallbackend.exception.NotFoundException;
@@ -35,6 +42,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 
@@ -49,17 +57,38 @@ public class OrderServiceImpl implements OrderService {
     private final CartMapper cartMapper;
     private final BookMapper bookMapper;
     private final AddressMapper addressMapper;
+    private final AlipayClient alipayClient;
+
+    private static final String ALIPAY_TRADE_SUCCESS = "TRADE_SUCCESS";
+    private static final String ALIPAY_TRADE_FINISHED = "TRADE_FINISHED";
+
+    @Value("${alipay.notify-url}")
+    private String alipayNotifyUrl;
+
+    @Value("${alipay.return-url}")
+    private String alipayReturnUrl;
+
+    @Value("${alipay.public-key:}")
+    private String alipayPublicKey;
+
+    @Value("${alipay.charset}")
+    private String alipayCharset;
+
+    @Value("${alipay.sign-type}")
+    private String alipaySignType;
 
     public OrderServiceImpl(OrderMapper orderMapper,
                             OrderItemMapper orderItemMapper,
                             CartMapper cartMapper,
                             BookMapper bookMapper,
-                            AddressMapper addressMapper) {
+                            AddressMapper addressMapper,
+                            AlipayClient alipayClient) {
         this.orderMapper = orderMapper;
         this.orderItemMapper = orderItemMapper;
         this.cartMapper = cartMapper;
         this.bookMapper = bookMapper;
         this.addressMapper = addressMapper;
+        this.alipayClient = alipayClient;
     }
 
     @Override
@@ -127,12 +156,15 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     @Transactional
-    public void pay(Long userId, Long orderId) {
+    public String pay(Long userId, Long orderId) {
         Order order = orderMapper.selectByIdAndUserId(orderId, userId);
         if (order == null) {
             throw new NotFoundException();
         }
         if (order.getStatus() == null || order.getStatus() != OrderStatus.UNPAID.getCode()) {
+            throw new InvalidOrderStatusException();
+        }
+        if (order.getPayTime() != null || order.getTradeNo() != null) {
             throw new InvalidOrderStatusException();
         }
         List<OrderItemVO> items = orderItemMapper.selectByOrderId(orderId);
@@ -151,8 +183,101 @@ public class OrderServiceImpl implements OrderService {
                 throw new InsufficientStockException();
             }
         }
-        orderMapper.updateStatus(orderId, OrderStatus.PENDING_SHIP.getCode());
-        orderMapper.updatePayTime(orderId, LocalDateTime.now());
+
+        return buildAlipayPage(order);
+    }
+
+    @Override
+    public boolean handleAlipayNotify(Map<String, String> params) {
+        if (!verifyAlipaySign(params)) {
+            return false;
+        }
+        String tradeStatus = params.get("trade_status");
+        if (!ALIPAY_TRADE_SUCCESS.equals(tradeStatus) && !ALIPAY_TRADE_FINISHED.equals(tradeStatus)) {
+            return false;
+        }
+        String outTradeNo = params.get("out_trade_no");
+        if (outTradeNo == null || outTradeNo.isBlank()) {
+            return false;
+        }
+        Order order = orderMapper.selectByOrderNo(outTradeNo);
+        if (order == null) {
+            return false;
+        }
+        if (order.getStatus() != null && order.getStatus() == OrderStatus.PENDING_SHIP.getCode()) {
+            return true;
+        }
+        BigDecimal totalAmount = order.getTotalAmount();
+        String totalAmountParam = params.get("total_amount");
+        if (totalAmount == null || totalAmountParam == null) {
+            return false;
+        }
+        if (totalAmount.compareTo(new BigDecimal(totalAmountParam)) != 0) {
+            return false;
+        }
+        if (order.getStatus() == null || order.getStatus() != OrderStatus.UNPAID.getCode()) {
+            return false;
+        }
+        orderMapper.updateStatus(order.getId(), OrderStatus.PENDING_SHIP.getCode());
+        orderMapper.updatePayTime(order.getId(), LocalDateTime.now());
+        String tradeNo = params.get("trade_no");
+        if (tradeNo != null && !tradeNo.isBlank()) {
+            orderMapper.updateTradeNo(order.getId(), tradeNo);
+        }
+        return true;
+    }
+
+    @Override
+    public Long handleAlipayReturn(Map<String, String> params) {
+        if (!verifyAlipaySign(params)) {
+            return null;
+        }
+        String outTradeNo = params.get("out_trade_no");
+        if (outTradeNo == null || outTradeNo.isBlank()) {
+            return null;
+        }
+        Order order = orderMapper.selectByOrderNo(outTradeNo);
+        if (order == null) {
+            return null;
+        }
+        return order.getId();
+    }
+
+    private String buildAlipayPage(Order order) {
+        if (alipayClient == null) {
+            throw new BusinessException(500, "支付宝未配置");
+        }
+        try {
+            AlipayTradePagePayRequest request = new AlipayTradePagePayRequest();
+            request.setNotifyUrl(alipayNotifyUrl);
+            request.setReturnUrl(alipayReturnUrl);
+            String subject = "图书订单" + order.getOrderNo();
+            String bizContent = "{" +
+                    "\"out_trade_no\":\"" + order.getOrderNo() + "\"," +
+                    "\"product_code\":\"FAST_INSTANT_TRADE_PAY\"," +
+                    "\"total_amount\":\"" + order.getTotalAmount() + "\"," +
+                    "\"subject\":\"" + subject + "\"" +
+                    "}";
+            request.setBizContent(bizContent);
+            AlipayTradePagePayResponse response = alipayClient.pageExecute(request);
+            if (!response.isSuccess()) {
+                throw new BusinessException(500, "支付宝支付发起失败");
+            }
+            return response.getBody();
+        } catch (AlipayApiException ex) {
+            throw new BusinessException(500, "支付宝支付发起失败");
+        }
+    }
+
+    private boolean verifyAlipaySign(Map<String, String> params) {
+        if (alipayPublicKey == null || alipayPublicKey.isBlank()) {
+            return false;
+        }
+        try {
+            return AlipaySignature.rsaCheckV1(params, alipayPublicKey, alipayCharset, alipaySignType);
+        } catch (AlipayApiException ex) {
+            return false;
+        }
     }
 
     @Override

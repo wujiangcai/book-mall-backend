@@ -112,9 +112,15 @@ const applyAfterSales = () => {
 }
 
 const pay = async (id: number) => {
-  await frontOrderApi.pay(id)
-  Message.success('支付成功')
-  await load()
+  const formHtml = await frontOrderApi.pay(id)
+  if (!formHtml) return
+  const container = document.createElement('div')
+  container.innerHTML = formHtml
+  document.body.appendChild(container)
+  const form = container.querySelector('form') as HTMLFormElement | null
+  if (form) {
+    form.submit()
+  }
 }
 
 const cancel = async (id: number) => {

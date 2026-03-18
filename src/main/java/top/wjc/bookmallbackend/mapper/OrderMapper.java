@@ -17,6 +17,8 @@ public interface OrderMapper {
 
     Order selectByIdAndUserId(@Param("id") Long id, @Param("userId") Long userId);
 
+    Order selectByOrderNo(@Param("orderNo") String orderNo);
+
     List<Order> selectByUserId(@Param("userId") Long userId,
                                @Param("offset") int offset,
                                @Param("pageSize") int pageSize);
@@ -36,6 +38,8 @@ public interface OrderMapper {
     int updateStatus(@Param("id") Long id, @Param("status") Integer status);
 
     int updatePayTime(@Param("id") Long id, @Param("payTime") LocalDateTime payTime);
+
+    int updateTradeNo(@Param("id") Long id, @Param("tradeNo") String tradeNo);
 
     int updateShipTime(@Param("id") Long id, @Param("shipTime") LocalDateTime shipTime);
 

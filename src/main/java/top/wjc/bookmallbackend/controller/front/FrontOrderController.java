@@ -3,6 +3,9 @@ package top.wjc.bookmallbackend.controller.front;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -37,10 +40,12 @@ public class FrontOrderController {
     }
 
     @PostMapping("/{id}/pay")
-    public Result<Void> pay(@PathVariable Long id, HttpServletRequest httpRequest) {
+    public ResponseEntity<String> pay(@PathVariable Long id, HttpServletRequest httpRequest) {
         Object userId = httpRequest.getAttribute("userId");
-        orderService.pay(Long.valueOf(userId.toString()), id);
-        return Result.success();
+        String form = orderService.pay(Long.valueOf(userId.toString()), id);
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_HTML_VALUE + ";charset=UTF-8")
+                .body(form);
     }
 
     @PostMapping("/{id}/cancel")

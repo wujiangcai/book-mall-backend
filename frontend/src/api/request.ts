@@ -16,6 +16,8 @@ request.interceptors.request.use((config) => {
 
 request.interceptors.response.use(
   (response: any) => {
+    const contentType = response?.headers?.['content-type'] || ''
+    if (contentType.includes('text/html')) return response.data
     const { code, message, data } = response.data || {}
     if (code === 200) return data
     Message.error(message || '请求失败')

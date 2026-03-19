@@ -222,10 +222,6 @@ const handleMenuClick = (key: string) => {
   router.push(key)
 }
 
-const handleSubMenuClick = (key: string) => {
-  if (!openKeys.value.includes(key)) return
-}
-
 const handleUserAction = async (value: string | number | Record<string, any> | undefined) => {
   if (value === 'logout') {
     authStore.clear()

@@ -45,6 +45,7 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { Message } from '@arco-design/web-vue'
 import frontOrderApi from '../../api/front/order'
 import { OrderStatus } from '../../types/enums'
 import type { OrderDetail } from '../../types/api'
@@ -96,7 +97,7 @@ const applyAfterSales = () => {
 
 const pay = async () => {
   if (!detail.value) return
-  const formHtml = await frontOrderApi.pay(detail.value.orderId)
+  const formHtml = (await frontOrderApi.pay(detail.value.orderId)) as unknown as string
   if (!formHtml) return
   const container = document.createElement('div')
   container.innerHTML = formHtml

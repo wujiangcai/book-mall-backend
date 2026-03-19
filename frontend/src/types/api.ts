@@ -147,6 +147,7 @@ export type AdminUserListItem = {
   username: string
   nickname?: string
   phone?: string
+  email?: string
   role: RoleValue
   status: number
   createTime?: string

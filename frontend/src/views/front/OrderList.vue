@@ -112,7 +112,7 @@ const applyAfterSales = () => {
 }
 
 const pay = async (id: number) => {
-  const formHtml = await frontOrderApi.pay(id)
+  const formHtml = (await frontOrderApi.pay(id)) as unknown as string
   if (!formHtml) return
   const container = document.createElement('div')
   container.innerHTML = formHtml

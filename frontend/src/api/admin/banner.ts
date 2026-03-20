@@ -26,6 +26,13 @@ export const adminBannerApi = {
   remove: (id: number | string) => request.delete<void>(`/api/admin/banners/${id}`),
   updateSort: (id: number | string, payload: BannerSortRequest) =>
     request.put<void>(`/api/admin/banners/${id}/sort`, payload),
+  upload: (file: File) => {
+    const formData = new FormData()
+    formData.append('file', file)
+    return request.post<string>('/api/admin/upload/banner', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
+  },
 }
 
 export default adminBannerApi

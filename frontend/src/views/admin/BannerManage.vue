@@ -80,8 +80,9 @@
 
     <a-modal v-model:visible="visible" :title="editing ? '编辑轮播' : '新增轮播'" @ok="submit">
       <a-form :model="form" layout="vertical">
-        <a-form-item label="图片 URL">
-          <a-input v-model="form.imageUrl" />
+        <a-form-item label="图片">
+          <input type="file" accept="image/jpeg,image/png,image/webp" @change="handleUpload" />
+          <a-input v-model="form.imageUrl" style="margin-top: 8px" placeholder="上传后自动填充" />
         </a-form-item>
         <a-form-item label="跳转链接">
           <a-input v-model="form.linkUrl" />
@@ -170,6 +171,21 @@ const openEdit = (record: Banner) => {
     status: record.status,
   })
   visible.value = true
+}
+
+const handleUpload = async (event: Event) => {
+  const target = event.target as HTMLInputElement
+  const file = target.files?.[0]
+  if (!file) return
+  try {
+    const url = (await adminBannerApi.upload(file)) as unknown as string
+    form.imageUrl = url
+    Message.success('上传成功')
+  } catch (error: any) {
+    Message.error(error?.message || '上传失败')
+  } finally {
+    target.value = ''
+  }
 }
 
 const submit = async () => {

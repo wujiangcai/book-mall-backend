@@ -55,7 +55,7 @@ const router = useRouter()
 const detail = ref<OrderDetail | null>(null)
 
 const goBack = () => {
-  router.back()
+  router.push('/orders')
 }
 
 const formatTime = (value?: string) => {

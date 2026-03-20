@@ -81,8 +81,18 @@
     <a-modal v-model:visible="visible" :title="editing ? '编辑轮播' : '新增轮播'" @ok="submit">
       <a-form :model="form" layout="vertical">
         <a-form-item label="图片">
-          <input type="file" accept="image/jpeg,image/png,image/webp" @change="handleUpload" />
-          <a-input v-model="form.imageUrl" style="margin-top: 8px" placeholder="上传后自动填充" />
+          <div class="upload-panel">
+            <input
+              ref="fileInputRef"
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              class="hidden-file-input"
+              @change="handleUpload"
+            />
+            <a-button class="upload-trigger" @click="triggerFileSelect">选择图片</a-button>
+            <div class="file-name">{{ selectedFileName || '未选择文件' }}</div>
+            <a-input v-model="form.imageUrl" placeholder="上传后自动填充" />
+          </div>
         </a-form-item>
         <a-form-item label="跳转链接">
           <a-input v-model="form.linkUrl" />
@@ -115,6 +125,8 @@ const visible = ref(false)
 const editing = ref(false)
 const editingId = ref<number | null>(null)
 const selectedRowKeys = ref<number[]>([])
+const selectedFileName = ref('')
+const fileInputRef = ref<HTMLInputElement | null>(null)
 
 const query = reactive({
   page: 1,
@@ -149,9 +161,21 @@ const onSelectChange = (keys: number[]) => {
   selectedRowKeys.value = keys
 }
 
+const resetUploadState = () => {
+  selectedFileName.value = ''
+  if (fileInputRef.value) {
+    fileInputRef.value.value = ''
+  }
+}
+
+const triggerFileSelect = () => {
+  fileInputRef.value?.click()
+}
+
 const openCreate = () => {
   editing.value = false
   editingId.value = null
+  resetUploadState()
   Object.assign(form, {
     imageUrl: '',
     linkUrl: '',
@@ -164,6 +188,7 @@ const openCreate = () => {
 const openEdit = (record: Banner) => {
   editing.value = true
   editingId.value = record.id
+  resetUploadState()
   Object.assign(form, {
     imageUrl: record.imageUrl,
     linkUrl: record.linkUrl || '',
@@ -177,11 +202,13 @@ const handleUpload = async (event: Event) => {
   const target = event.target as HTMLInputElement
   const file = target.files?.[0]
   if (!file) return
+  selectedFileName.value = file.name
   try {
     const url = (await adminBannerApi.upload(file)) as unknown as string
     form.imageUrl = url
     Message.success('上传成功')
   } catch (error: any) {
+    selectedFileName.value = ''
     Message.error(error?.message || '上传失败')
   } finally {
     target.value = ''
@@ -197,6 +224,7 @@ const submit = async () => {
     Message.success('轮播已创建')
   }
   visible.value = false
+  resetUploadState()
   await load()
 }
 
@@ -259,6 +287,31 @@ onMounted(load)
 .notice-desc {
   margin: 8px 0 16px;
   color: #64748b;
+}
+
+.upload-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  width: 100%;
+}
+
+.upload-trigger {
+  min-width: 96px;
+}
+
+.hidden-file-input {
+  display: none;
+}
+
+.file-name {
+  width: 100%;
+  min-height: 22px;
+  color: #64748b;
+  font-size: 13px;
+  line-height: 1.6;
+  word-break: break-all;
 }
 
 .pager {

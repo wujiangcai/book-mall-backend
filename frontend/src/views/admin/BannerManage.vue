@@ -92,6 +92,7 @@
             <a-button class="upload-trigger" @click="triggerFileSelect">选择图片</a-button>
             <div class="file-name">{{ selectedFileName || '未选择文件' }}</div>
             <a-input v-model="form.imageUrl" placeholder="上传后自动填充" />
+            <img v-if="form.imageUrl" :src="form.imageUrl" alt="banner-preview" class="upload-preview" />
           </div>
         </a-form-item>
         <a-form-item label="跳转链接">
@@ -312,6 +313,15 @@ onMounted(load)
   font-size: 13px;
   line-height: 1.6;
   word-break: break-all;
+}
+
+.upload-preview {
+  width: 180px;
+  height: 90px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 6px 14px rgba(15, 23, 42, 0.08);
 }
 
 .pager {

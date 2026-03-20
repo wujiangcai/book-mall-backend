@@ -205,6 +205,7 @@ export type AdminBookListItem = {
   price: number
   stock: number
   coverImage?: string
+  description?: string
   status: number
   createTime?: string
   updateTime?: string

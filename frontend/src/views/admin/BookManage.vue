@@ -29,6 +29,12 @@
         @selection-change="onSelectChange"
       >
         <template #columns>
+          <a-table-column title="封面" :width="110">
+            <template #cell="{ record }">
+              <img v-if="record.coverImage" :src="record.coverImage" alt="cover" class="book-cover" />
+              <span v-else class="cover-placeholder">暂无封面</span>
+            </template>
+          </a-table-column>
           <a-table-column title="书名" data-index="bookName" />
           <a-table-column title="作者" data-index="author" />
           <a-table-column title="分类" data-index="categoryName" />
@@ -109,7 +115,19 @@
           <a-input-number v-model="form.stock" :min="0" />
         </a-form-item>
         <a-form-item label="封面">
-          <a-input v-model="form.coverImage" placeholder="封面 URL" />
+          <div class="upload-panel">
+            <input
+              ref="fileInputRef"
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              class="hidden-file-input"
+              @change="handleUpload"
+            />
+            <a-button class="upload-trigger" @click="triggerFileSelect">选择封面</a-button>
+            <div class="file-name">{{ selectedFileName || '未选择文件' }}</div>
+            <a-input v-model="form.coverImage" placeholder="上传后自动填充" />
+            <img v-if="form.coverImage" :src="form.coverImage" alt="book-cover-preview" class="upload-preview" />
+          </div>
         </a-form-item>
         <a-form-item label="描述">
           <a-textarea v-model="form.description" />
@@ -141,6 +159,8 @@ const visible = ref(false)
 const editing = ref(false)
 const editingId = ref<number | null>(null)
 const selectedRowKeys = ref<number[]>([])
+const selectedFileName = ref('')
+const fileInputRef = ref<HTMLInputElement | null>(null)
 
 const query = reactive({
   page: 1,
@@ -192,9 +212,38 @@ const onSelectChange = (keys: number[]) => {
   selectedRowKeys.value = keys
 }
 
+const resetUploadState = () => {
+  selectedFileName.value = ''
+  if (fileInputRef.value) {
+    fileInputRef.value.value = ''
+  }
+}
+
+const triggerFileSelect = () => {
+  fileInputRef.value?.click()
+}
+
+const handleUpload = async (event: Event) => {
+  const target = event.target as HTMLInputElement
+  const file = target.files?.[0]
+  if (!file) return
+  selectedFileName.value = file.name
+  try {
+    const url = (await adminBookApi.upload(file)) as unknown as string
+    form.coverImage = url
+    Message.success('上传成功')
+  } catch (error: any) {
+    selectedFileName.value = ''
+    Message.error(error?.message || '上传失败')
+  } finally {
+    target.value = ''
+  }
+}
+
 const openCreate = () => {
   editing.value = false
   editingId.value = null
+  resetUploadState()
   Object.assign(form, {
     bookName: '',
     author: '',
@@ -213,6 +262,7 @@ const openCreate = () => {
 const openEdit = (record: AdminBookListItem) => {
   editing.value = true
   editingId.value = record.id
+  resetUploadState()
   Object.assign(form, {
     bookName: record.bookName,
     author: record.author || '',
@@ -222,7 +272,7 @@ const openEdit = (record: AdminBookListItem) => {
     price: record.price,
     stock: record.stock,
     coverImage: record.coverImage || '',
-    description: '',
+    description: record.description || '',
     status: record.status,
   })
   visible.value = true
@@ -238,6 +288,7 @@ const submit = async () => {
     Message.success('图书已创建')
   }
   visible.value = false
+  resetUploadState()
   await load()
 }
 
@@ -277,6 +328,52 @@ onMounted(() => {
 </script>
 
 <style scoped>
+.book-cover {
+  width: 48px;
+  height: 64px;
+  object-fit: cover;
+  border-radius: 6px;
+}
+
+.cover-placeholder {
+  color: #94a3b8;
+  font-size: 12px;
+}
+
+.upload-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  width: 100%;
+}
+
+.upload-trigger {
+  min-width: 96px;
+}
+
+.hidden-file-input {
+  display: none;
+}
+
+.file-name {
+  width: 100%;
+  min-height: 22px;
+  color: #64748b;
+  font-size: 13px;
+  line-height: 1.6;
+  word-break: break-all;
+}
+
+.upload-preview {
+  width: 120px;
+  height: 160px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 6px 14px rgba(15, 23, 42, 0.08);
+}
+
 .pager {
   display: flex;
   justify-content: flex-end;

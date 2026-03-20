@@ -34,6 +34,13 @@ export const adminBookApi = {
   remove: (id: number | string) => request.delete<void>(`/api/admin/books/${id}`),
   updateStatus: (id: number | string, payload: BookStatusRequest) =>
     request.put<void>(`/api/admin/books/${id}/status`, payload),
+  upload: (file: File) => {
+    const formData = new FormData()
+    formData.append('file', file)
+    return request.post<string>('/api/admin/upload/book-cover', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
+  },
 }
 
 export default adminBookApi

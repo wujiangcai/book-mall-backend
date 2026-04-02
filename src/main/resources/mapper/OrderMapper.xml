@@ -108,6 +108,15 @@
         UPDATE `order` SET status = #{status} WHERE id = #{id}
     </update>
 
+    <update id="updatePaymentSuccess">
+        UPDATE `order`
+        SET status = #{toStatus},
+            pay_time = #{payTime},
+            trade_no = #{tradeNo}
+        WHERE id = #{id}
+          AND status = #{fromStatus}
+    </update>
+
     <update id="updatePayTime">
         UPDATE `order` SET pay_time = #{payTime} WHERE id = #{id}
     </update>

@@ -16,12 +16,14 @@ import top.wjc.bookmallbackend.exception.NotFoundException;
 import top.wjc.bookmallbackend.mapper.BookMapper;
 import top.wjc.bookmallbackend.mapper.CategoryMapper;
 import top.wjc.bookmallbackend.service.BookService;
+import top.wjc.bookmallbackend.service.UploadService;
 import top.wjc.bookmallbackend.vo.BookAdminListItemVO;
 import top.wjc.bookmallbackend.vo.BookDetailVO;
 import top.wjc.bookmallbackend.vo.BookListItemVO;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class BookServiceImpl implements BookService {
@@ -32,10 +34,12 @@ public class BookServiceImpl implements BookService {
 
     private final BookMapper bookMapper;
     private final CategoryMapper categoryMapper;
+    private final UploadService uploadService;
 
-    public BookServiceImpl(BookMapper bookMapper, CategoryMapper categoryMapper) {
+    public BookServiceImpl(BookMapper bookMapper, CategoryMapper categoryMapper, UploadService uploadService) {
         this.bookMapper = bookMapper;
         this.categoryMapper = categoryMapper;
+        this.uploadService = uploadService;
     }
 
     @Override
@@ -44,7 +48,10 @@ public class BookServiceImpl implements BookService {
         int size = normalizeSize(pageSize, FRONT_DEFAULT_SIZE);
         int offset = (currentPage - 1) * size;
         long total = bookMapper.countFrontList(categoryId, keyword, minPrice, maxPrice);
-        List<BookListItemVO> list = bookMapper.selectFrontList(offset, size, categoryId, keyword, minPrice, maxPrice);
+        List<BookListItemVO> list = bookMapper.selectFrontList(offset, size, categoryId, keyword, minPrice, maxPrice)
+                .stream()
+                .map(this::resolveFrontCover)
+                .collect(Collectors.toList());
         return new PageResult<>(total, list, currentPage, size);
     }
 
@@ -54,7 +61,7 @@ public class BookServiceImpl implements BookService {
         if (detail == null) {
             throw new NotFoundException();
         }
-        return detail;
+        return resolveDetailCover(detail);
     }
 
     @Override
@@ -63,7 +70,10 @@ public class BookServiceImpl implements BookService {
         int size = normalizeSize(pageSize, ADMIN_DEFAULT_SIZE);
         int offset = (currentPage - 1) * size;
         long total = bookMapper.countAdminList(categoryId, keyword);
-        List<BookAdminListItemVO> list = bookMapper.selectAdminList(offset, size, categoryId, keyword);
+        List<BookAdminListItemVO> list = bookMapper.selectAdminList(offset, size, categoryId, keyword)
+                .stream()
+                .map(this::resolveAdminCover)
+                .collect(Collectors.toList());
         return new PageResult<>(total, list, currentPage, size);
     }
 
@@ -133,6 +143,53 @@ public class BookServiceImpl implements BookService {
         }
         validateBookStatus(request.getStatus());
         bookMapper.updateStatus(id, request.getStatus());
+    }
+
+    private BookListItemVO resolveFrontCover(BookListItemVO book) {
+        return new BookListItemVO(
+                book.getId(),
+                book.getBookName(),
+                book.getAuthor(),
+                book.getPublisher(),
+                book.getPrice(),
+                uploadService.resolveBookCoverUrl(book.getCoverImage()),
+                book.getCategoryName()
+        );
+    }
+
+    private BookDetailVO resolveDetailCover(BookDetailVO book) {
+        return new BookDetailVO(
+                book.getId(),
+                book.getBookName(),
+                book.getAuthor(),
+                book.getPublisher(),
+                book.getIsbn(),
+                book.getPrice(),
+                book.getStock(),
+                uploadService.resolveBookCoverUrl(book.getCoverImage()),
+                book.getDescription(),
+                book.getCategoryId(),
+                book.getCategoryName(),
+                book.getStatus()
+        );
+    }
+
+    private BookAdminListItemVO resolveAdminCover(BookAdminListItemVO book) {
+        return new BookAdminListItemVO(
+                book.getId(),
+                book.getBookName(),
+                book.getAuthor(),
+                book.getPublisher(),
+                book.getIsbn(),
+                book.getPrice(),
+                book.getStock(),
+                uploadService.resolveBookCoverUrl(book.getCoverImage()),
+                book.getDescription(),
+                book.getCategoryId(),
+                book.getCategoryName(),
+                book.getStatus(),
+                book.getCreateTime()
+        );
     }
 
     private void validateCategory(Long categoryId) {

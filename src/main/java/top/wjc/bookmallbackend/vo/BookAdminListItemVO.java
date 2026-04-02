@@ -17,6 +17,7 @@ public class BookAdminListItemVO {
     private BigDecimal price;
     private Integer stock;
     private String coverImage;
+    private String description;
     private Long categoryId;
     private String categoryName;
     private Integer status;

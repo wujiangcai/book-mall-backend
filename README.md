@@ -87,6 +87,7 @@
 
 - 前台接口：`docs/frontend-api.md`
 - 后台接口：`docs/admin-api.md`
+- 服务器部署与支付联调：`docs/deployment-payment-test.md`
 
 ### 7) docs 目录索引
 

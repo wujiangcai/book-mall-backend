@@ -65,7 +65,24 @@
       "Bash(powershell -Command \"Get-NetTCPConnection -LocalPort 5173 -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess | Sort-Object -Unique | ForEach-Object { Stop-Process -Id $_ -Force }\")",
       "Bash(powershell -Command \"Get-NetTCPConnection -LocalPort 5173 -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess -Unique | ForEach-Object { Stop-Process -Id \\\\$_ -Force }\")",
       "Bash(powershell -Command \"Get-NetTCPConnection -LocalPort 5173 -ErrorAction SilentlyContinue | Where-Object { $_.OwningProcess -ne 0 } | Select-Object -ExpandProperty OwningProcess -Unique | ForEach-Object { Stop-Process -Id \\\\$_ -Force }\")",
-      "Bash(powershell -Command \"Get-NetTCPConnection -LocalPort 5173 -ErrorAction SilentlyContinue | Where-Object { \\\\$_.OwningProcess -ne 0 } | Select-Object -ExpandProperty OwningProcess -Unique | ForEach-Object { Stop-Process -Id \\\\$\\\\_ -Force }\")"
+      "Bash(powershell -Command \"Get-NetTCPConnection -LocalPort 5173 -ErrorAction SilentlyContinue | Where-Object { \\\\$_.OwningProcess -ne 0 } | Select-Object -ExpandProperty OwningProcess -Unique | ForEach-Object { Stop-Process -Id \\\\$\\\\_ -Force }\")",
+      "Bash(curl:*)",
+      "Bash(npm run:*)",
+      "Bash(npm:*)",
+      "Bash(mvn:*)",
+      "Bash(netstat -ano)",
+      "Bash(findstr \":8003\")",
+      "Bash(cmd /c netstat -ano)",
+      "Bash(findstr :8003)",
+      "Bash(cmd /c \"netstat -ano | findstr :8003\")",
+      "Bash(cmd /c \"netstat -ano | findstr :8004\")",
+      "Bash(powershell -Command \"Get-NetTCPConnection -LocalPort 8003 -State Listen | Select-Object LocalAddress,LocalPort,OwningProcess | Format-Table -HideTableHeaders\")",
+      "Bash(powershell -Command \"Get-NetTCPConnection -LocalPort 8004 -State Listen | Select-Object LocalAddress,LocalPort,OwningProcess | Format-Table -HideTableHeaders\")",
+      "Bash(taskkill:*)",
+      "Bash(cmd /c taskkill /PID 20844 /F)",
+      "Bash(powershell -Command \"Get-NetTCPConnection -LocalPort 8004 -State Listen | Select-Object OwningProcess | Format-Table -HideTableHeaders\")",
+      "Bash(powershell -Command \"Stop-Process -Id 20844 -Force\")",
+      "Bash(python:*)"
     ]
   }
 }

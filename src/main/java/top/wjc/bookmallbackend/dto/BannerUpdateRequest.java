@@ -10,7 +10,7 @@ import lombok.Data;
 public class BannerUpdateRequest {
 
     @NotBlank(message = "图片地址不能为空")
-    @Pattern(regexp = "^https?://.*\\.(jpg|jpeg|png|webp)$", message = "图片格式必须为jpg/png/webp")
+    @Pattern(regexp = "^https?://.*\\.(jpg|jpeg|png|webp)(\\?.*)?$", message = "图片格式必须为jpg/png/webp")
     private String imageUrl;
 
     private String linkUrl;

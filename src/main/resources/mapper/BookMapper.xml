@@ -86,7 +86,7 @@
 
     <select id="selectAdminList" resultType="top.wjc.bookmallbackend.vo.BookAdminListItemVO">
         SELECT b.id, b.book_name, b.author, b.publisher, b.isbn, b.price, b.stock,
-               b.cover_image, b.category_id, c.category_name, b.status, b.create_time
+               b.cover_image, b.description, b.category_id, c.category_name, b.status, b.create_time
         FROM book b
         LEFT JOIN category c ON b.category_id = c.id
         WHERE <include refid="Admin_Filter"/>

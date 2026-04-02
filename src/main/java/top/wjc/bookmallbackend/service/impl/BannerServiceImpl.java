@@ -12,6 +12,7 @@ import top.wjc.bookmallbackend.exception.InvalidStatusException;
 import top.wjc.bookmallbackend.exception.NotFoundException;
 import top.wjc.bookmallbackend.mapper.BannerMapper;
 import top.wjc.bookmallbackend.service.BannerService;
+import top.wjc.bookmallbackend.service.UploadService;
 import top.wjc.bookmallbackend.vo.BannerVO;
 
 import java.util.List;
@@ -21,9 +22,11 @@ import java.util.stream.Collectors;
 public class BannerServiceImpl implements BannerService {
 
     private final BannerMapper bannerMapper;
+    private final UploadService uploadService;
 
-    public BannerServiceImpl(BannerMapper bannerMapper) {
+    public BannerServiceImpl(BannerMapper bannerMapper, UploadService uploadService) {
         this.bannerMapper = bannerMapper;
+        this.uploadService = uploadService;
     }
 
     @Override
@@ -94,7 +97,16 @@ public class BannerServiceImpl implements BannerService {
 
     @Override
     public List<BannerVO> listFront() {
-        return bannerMapper.selectFrontList();
+        return bannerMapper.selectFrontList().stream()
+                .map(banner -> new BannerVO(
+                        banner.getId(),
+                        uploadService.resolveBannerUrl(banner.getImageUrl()),
+                        banner.getLinkUrl(),
+                        banner.getSortOrder(),
+                        banner.getStatus(),
+                        banner.getCreateTime()
+                ))
+                .collect(Collectors.toList());
     }
 
     private int normalizePage(Integer page) {

@@ -37,6 +37,12 @@ public interface OrderMapper {
 
     int updateStatus(@Param("id") Long id, @Param("status") Integer status);
 
+    int updatePaymentSuccess(@Param("id") Long id,
+                             @Param("fromStatus") Integer fromStatus,
+                             @Param("toStatus") Integer toStatus,
+                             @Param("payTime") LocalDateTime payTime,
+                             @Param("tradeNo") String tradeNo);
+
     int updatePayTime(@Param("id") Long id, @Param("payTime") LocalDateTime payTime);
 
     int updateTradeNo(@Param("id") Long id, @Param("tradeNo") String tradeNo);

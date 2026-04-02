@@ -5,6 +5,7 @@ import com.alipay.api.AlipayApiException;
 import com.alipay.api.request.AlipayTradePagePayRequest;
 import com.alipay.api.response.AlipayTradePagePayResponse;
 import com.alipay.api.internal.util.AlipaySignature;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -43,6 +44,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 
@@ -68,6 +70,12 @@ public class OrderServiceImpl implements OrderService {
     @Value("${alipay.return-url}")
     private String alipayReturnUrl;
 
+    @Value("${alipay.app-id:}")
+    private String alipayAppId;
+
+    @Value("${alipay.seller-id:}")
+    private String alipaySellerId;
+
     @Value("${alipay.public-key:}")
     private String alipayPublicKey;
 
@@ -82,13 +90,13 @@ public class OrderServiceImpl implements OrderService {
                             CartMapper cartMapper,
                             BookMapper bookMapper,
                             AddressMapper addressMapper,
-                            AlipayClient alipayClient) {
+                            ObjectProvider<AlipayClient> alipayClientProvider) {
         this.orderMapper = orderMapper;
         this.orderItemMapper = orderItemMapper;
         this.cartMapper = cartMapper;
         this.bookMapper = bookMapper;
         this.addressMapper = addressMapper;
-        this.alipayClient = alipayClient;
+        this.alipayClient = alipayClientProvider.getIfAvailable();
     }
 
     @Override
@@ -179,7 +187,7 @@ public class OrderServiceImpl implements OrderService {
             if (book.getStatus() == null || book.getStatus() != BookStatus.ON_SHELF.getCode()) {
                 throw new BookOffShelfException();
             }
-            if (bookMapper.decreaseStock(book.getId(), item.getQuantity()) == 0) {
+            if (book.getStock() == null || item.getQuantity() > book.getStock()) {
                 throw new InsufficientStockException();
             }
         }
@@ -188,6 +196,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    @Transactional
     public boolean handleAlipayNotify(Map<String, String> params) {
         if (!verifyAlipaySign(params)) {
             return false;
@@ -204,25 +213,29 @@ public class OrderServiceImpl implements OrderService {
         if (order == null) {
             return false;
         }
-        if (order.getStatus() != null && order.getStatus() == OrderStatus.PENDING_SHIP.getCode()) {
+        if (isPaymentHandled(order)) {
             return true;
         }
-        BigDecimal totalAmount = order.getTotalAmount();
-        String totalAmountParam = params.get("total_amount");
-        if (totalAmount == null || totalAmountParam == null) {
-            return false;
-        }
-        if (totalAmount.compareTo(new BigDecimal(totalAmountParam)) != 0) {
+        if (!isValidAlipayApp(params) || !isValidAlipaySeller(params) || !isValidAlipayAmount(order, params.get("total_amount"))) {
             return false;
         }
         if (order.getStatus() == null || order.getStatus() != OrderStatus.UNPAID.getCode()) {
             return false;
         }
-        orderMapper.updateStatus(order.getId(), OrderStatus.PENDING_SHIP.getCode());
-        orderMapper.updatePayTime(order.getId(), LocalDateTime.now());
-        String tradeNo = params.get("trade_no");
-        if (tradeNo != null && !tradeNo.isBlank()) {
-            orderMapper.updateTradeNo(order.getId(), tradeNo);
+        int updated = orderMapper.updatePaymentSuccess(order.getId(), OrderStatus.UNPAID.getCode(),
+                OrderStatus.PENDING_SHIP.getCode(), LocalDateTime.now(), normalizeTradeNo(params.get("trade_no")));
+        if (updated == 0) {
+            Order latestOrder = orderMapper.selectById(order.getId());
+            return latestOrder != null && isPaymentHandled(latestOrder);
+        }
+        List<OrderItemVO> items = orderItemMapper.selectByOrderId(order.getId());
+        if (items == null || items.isEmpty()) {
+            throw new BusinessException(500, "订单商品不存在");
+        }
+        for (OrderItemVO item : items) {
+            if (bookMapper.decreaseStock(item.getBookId(), item.getQuantity()) == 0) {
+                throw new InsufficientStockException();
+            }
         }
         return true;
     }
@@ -278,6 +291,73 @@ public class OrderServiceImpl implements OrderService {
         } catch (AlipayApiException ex) {
             return false;
         }
+    }
+
+    private boolean isValidAlipayApp(Map<String, String> params) {
+        if (alipayAppId == null || alipayAppId.isBlank()) {
+            return false;
+        }
+        return Objects.equals(alipayAppId, params.get("app_id"));
+    }
+
+    private boolean isValidAlipaySeller(Map<String, String> params) {
+        if (alipaySellerId == null || alipaySellerId.isBlank()) {
+            return true;
+        }
+        String sellerId = params.get("seller_id");
+        return sellerId != null && !sellerId.isBlank() && Objects.equals(alipaySellerId, sellerId);
+    }
+
+    private boolean isValidAlipayAmount(Order order, String totalAmountParam) {
+        BigDecimal totalAmount = order.getTotalAmount();
+        if (totalAmount == null || totalAmountParam == null || totalAmountParam.isBlank()) {
+            return false;
+        }
+        try {
+            return totalAmount.compareTo(new BigDecimal(totalAmountParam)) == 0;
+        } catch (NumberFormatException ex) {
+            return false;
+        }
+    }
+
+    private boolean isPaymentHandled(Order order) {
+        return order.getStatus() != null
+                && order.getStatus() == OrderStatus.PENDING_SHIP.getCode()
+                && order.getPayTime() != null;
+    }
+
+    private String normalizeTradeNo(String tradeNo) {
+        if (tradeNo == null || tradeNo.isBlank()) {
+            return null;
+        }
+        return tradeNo;
+    }
+
+    private boolean canUpdateAddress(Integer status) {
+        return status != null
+                && status != OrderStatus.SHIPPED.getCode()
+                && status != OrderStatus.COMPLETED.getCode()
+                && status != OrderStatus.CANCELLED.getCode();
+    }
+
+    private boolean canAdminUpdateStatus(Integer currentStatus, Integer targetStatus) {
+        if (currentStatus == null || targetStatus == null) {
+            return false;
+        }
+        if (Objects.equals(currentStatus, targetStatus)) {
+            return true;
+        }
+        if (targetStatus == OrderStatus.CANCELLED.getCode()) {
+            return canCancel(currentStatus);
+        }
+        return currentStatus == OrderStatus.PENDING_SHIP.getCode() && targetStatus == OrderStatus.SHIPPED.getCode();
+    }
+
+    private boolean canCancel(Integer status) {
+        return status != null
+                && status != OrderStatus.SHIPPED.getCode()
+                && status != OrderStatus.COMPLETED.getCode()
+                && status != OrderStatus.CANCELLED.getCode();
     }
 
     @Override
@@ -393,14 +473,23 @@ public class OrderServiceImpl implements OrderService {
         if (order == null) {
             throw new NotFoundException();
         }
+        if (request.getAddressId() == null && request.getStatus() == null) {
+            throw new BusinessException(400, "至少修改一项订单信息");
+        }
         if (request.getAddressId() != null && !request.getAddressId().equals(order.getAddressId())) {
             Address address = addressMapper.selectById(request.getAddressId());
             if (address == null || !address.getUserId().equals(order.getUserId())) {
                 throw new NotFoundException();
             }
+            if (!canUpdateAddress(order.getStatus())) {
+                throw new InvalidOrderStatusException();
+            }
             orderMapper.updateAddress(orderId, request.getAddressId());
         }
         if (request.getStatus() != null && !request.getStatus().equals(order.getStatus())) {
+            if (!canAdminUpdateStatus(order.getStatus(), request.getStatus())) {
+                throw new InvalidOrderStatusException();
+            }
             orderMapper.updateStatus(orderId, request.getStatus());
         }
     }
@@ -411,6 +500,9 @@ public class OrderServiceImpl implements OrderService {
         Order order = orderMapper.selectById(orderId);
         if (order == null) {
             throw new NotFoundException();
+        }
+        if (!canCancel(order.getStatus())) {
+            throw new InvalidOrderStatusException();
         }
         orderMapper.updateStatus(orderId, OrderStatus.CANCELLED.getCode());
     }

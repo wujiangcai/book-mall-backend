@@ -3,7 +3,6 @@ package top.wjc.bookmallbackend.mapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import top.wjc.bookmallbackend.entity.Banner;
-import top.wjc.bookmallbackend.vo.BannerVO;
 
 import java.util.List;
 
@@ -16,7 +15,7 @@ public interface BannerMapper {
 
     long countAdminList();
 
-    List<BannerVO> selectFrontList();
+    List<Banner> selectFrontList();
 
     Banner selectById(@Param("id") Long id);
 

@@ -32,7 +32,7 @@ public class BookUpdateRequest {
     @Min(value = 0, message = "库存不能为负数")
     private Integer stock;
 
-    @Pattern(regexp = "^$|^https?://.*\\.(jpg|jpeg|png|webp)$", message = "封面图片格式必须为jpg/png/webp")
+    @Pattern(regexp = "^$|^https?://.*\\.(jpg|jpeg|png|webp)(\\?.*)?$", message = "封面图片格式必须为jpg/png/webp")
     private String coverImage;
 
     private String description;

@@ -45,9 +45,9 @@
 
 ### 3) CORS
 
-- 配置来源：`src/main/java/top/wjc/bookmallbackend/config/CorsConfig.java:12`
+- 配置来源：`src/main/java/top/wjc/bookmallbackend/config/SecurityConfig.java:20`
 - 允许来源：`cors.allowed-origins`（`src/main/resources/application.properties:25`）
-  - 默认：`http://localhost:3000,http://localhost:8081`
+  - 默认：`http://localhost:5173,http://127.0.0.1:5173,http://localhost:3000,http://localhost:8081`
 - 允许方法：GET/POST/PUT/DELETE/PATCH
 - 允许 Header：`Content-Type`, `Authorization`
 - 允许携带凭证：`true`
@@ -103,6 +103,7 @@
 - `docs/phase8-alignment.md`：非功能质量对齐
 - `docs/frontend-api.md`：前台接口清单
 - `docs/admin-api.md`：后台接口清单
+- `docs/production-deployment.md`：生产环境上线部署说明
 - `docs/frontend-guideline.md`：前端开发规范（前台+后台）
 - `docs/frontend-implementation-plan.md`：前端开发执行计划
 

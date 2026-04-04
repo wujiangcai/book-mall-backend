@@ -38,3 +38,8 @@ frontend/dist/
 
 # ReCode local database
 .recode
+
+# Local config and Maven cache
+.m2/
+config/*.yml
+!config/*.example.yml

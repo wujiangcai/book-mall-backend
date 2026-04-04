@@ -4,7 +4,8 @@
     <template v-if="book">
       <a-grid :cols="2" :col-gap="24">
         <a-grid-item>
-          <img :src="book.coverImage" alt="cover" class="detail-cover" />
+          <img v-if="book.coverImage" :src="book.coverImage" alt="cover" class="detail-cover" @error="handleCoverError" />
+          <div v-else class="detail-cover-placeholder">暂无封面</div>
         </a-grid-item>
         <a-grid-item>
           <a-space direction="vertical" fill>
@@ -42,6 +43,12 @@ const quantity = ref(1)
 
 const goBack = () => {
   router.back()
+}
+
+const handleCoverError = () => {
+  if (book.value) {
+    book.value.coverImage = undefined
+  }
 }
 
 const load = async () => {
@@ -85,6 +92,17 @@ onMounted(load)
   width: 100%;
   height: 320px;
   object-fit: cover;
+}
+
+.detail-cover-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 320px;
+  color: var(--brand-muted);
+  background: linear-gradient(135deg, #edf2f7, #f8fafc);
+  border-radius: 12px;
 }
 
 .price {

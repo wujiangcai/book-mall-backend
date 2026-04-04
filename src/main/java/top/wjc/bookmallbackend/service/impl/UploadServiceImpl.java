@@ -1,11 +1,8 @@
 package top.wjc.bookmallbackend.service.impl;
 
 import com.qcloud.cos.COSClient;
-import com.qcloud.cos.http.HttpMethodName;
-import com.qcloud.cos.model.GeneratePresignedUrlRequest;
 import com.qcloud.cos.model.ObjectMetadata;
 import com.qcloud.cos.model.PutObjectRequest;
-import com.qcloud.cos.model.ResponseHeaderOverrides;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -16,7 +13,6 @@ import top.wjc.bookmallbackend.service.UploadService;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
-import java.util.Date;
 import java.util.UUID;
 
 @Service
@@ -31,9 +27,6 @@ public class UploadServiceImpl implements UploadService {
 
     @Value("${cos.base-url:}")
     private String baseUrl;
-
-    @Value("${cos.sign-duration-seconds:604800}")
-    private long signDurationSeconds;
 
     public UploadServiceImpl(ObjectProvider<COSClient> cosClientProvider) {
         this.cosClient = cosClientProvider.getIfAvailable();
@@ -113,17 +106,7 @@ public class UploadServiceImpl implements UploadService {
     }
 
     private String buildAccessibleUrl(String key) {
-        String normalized = normalizeUrl(baseUrl, key);
-        if (cosClient == null || signDurationSeconds <= 0) {
-            return normalized;
-        }
-        Date expiration = new Date(System.currentTimeMillis() + signDurationSeconds * 1000);
-        GeneratePresignedUrlRequest request = new GeneratePresignedUrlRequest(bucket, key, HttpMethodName.GET);
-        request.setExpiration(expiration);
-        ResponseHeaderOverrides overrides = new ResponseHeaderOverrides();
-        overrides.setContentDisposition("inline");
-        request.setResponseHeaders(overrides);
-        return cosClient.generatePresignedUrl(request).toString();
+        return normalizeUrl(baseUrl, key);
     }
 
     private String extractKey(String imageUrl) {

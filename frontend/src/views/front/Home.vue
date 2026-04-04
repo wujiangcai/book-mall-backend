@@ -51,14 +51,15 @@
       <template v-else>
         <a-grid :cols="4" :col-gap="16" :row-gap="16" style="margin-top: 16px">
           <a-grid-item v-for="book in books" :key="book.id">
-            <a-card hoverable class="book-card" @click="goDetail(book.id)">
-              <template #cover>
-                <img :src="book.coverImage" alt="cover" class="book-cover" />
-              </template>
-              <div class="book-name">{{ book.bookName }}</div>
-              <div class="book-meta">作者：{{ book.author || '佚名' }}</div>
-              <div class="book-meta">¥{{ book.price }}</div>
-              <div class="book-rating">评分：{{ getRating(book.id) }}</div>
+              <a-card hoverable class="book-card" @click="goDetail(book.id)">
+                <template #cover>
+                  <img v-if="book.coverImage" :src="book.coverImage" alt="cover" class="book-cover" @error="handleBookCoverError(book)" />
+                  <div v-else class="book-cover-placeholder">暂无封面</div>
+                </template>
+                <div class="book-name">{{ book.bookName }}</div>
+                <div class="book-meta">作者：{{ book.author || '佚名' }}</div>
+                <div class="book-meta">¥{{ book.price }}</div>
+                <div class="book-rating">评分：{{ getRating(book.id) }}</div>
             </a-card>
           </a-grid-item>
         </a-grid>
@@ -70,7 +71,8 @@
       <div class="section-title">畅销榜</div>
       <div class="best-seller">
         <div v-for="book in books" :key="`hot-${book.id}`" class="best-item" @click="goDetail(book.id)">
-          <img :src="book.coverImage" alt="cover" />
+          <img v-if="book.coverImage" :src="book.coverImage" alt="cover" @error="handleBookCoverError(book)" />
+          <div v-else class="best-item-placeholder">暂无封面</div>
           <div>
             <div class="book-name">{{ book.bookName }}</div>
             <div class="book-meta">¥{{ book.price }}</div>
@@ -112,6 +114,10 @@ const openBanner = (linkUrl?: string) => {
 
 const getRating = (id: number) => {
   return (4 + (id % 10) / 10).toFixed(1)
+}
+
+const handleBookCoverError = (book: BookListItem) => {
+  book.coverImage = undefined
 }
 
 const startBannerTimer = () => {
@@ -277,6 +283,16 @@ onBeforeUnmount(() => {
   object-fit: cover;
 }
 
+.book-cover-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 180px;
+  color: var(--brand-muted);
+  background: linear-gradient(135deg, #edf2f7, #f8fafc);
+}
+
 .book-name {
   font-weight: 600;
   margin-top: 8px;
@@ -323,6 +339,19 @@ onBeforeUnmount(() => {
   height: 80px;
   object-fit: cover;
   border-radius: 8px;
+}
+
+.best-item-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 60px;
+  height: 80px;
+  flex-shrink: 0;
+  border-radius: 8px;
+  color: var(--brand-muted);
+  background: linear-gradient(135deg, #edf2f7, #f8fafc);
+  font-size: 12px;
 }
 
 @media (max-width: 768px) {

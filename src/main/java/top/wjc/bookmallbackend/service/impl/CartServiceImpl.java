@@ -13,24 +13,39 @@ import top.wjc.bookmallbackend.exception.NotFoundException;
 import top.wjc.bookmallbackend.mapper.BookMapper;
 import top.wjc.bookmallbackend.mapper.CartMapper;
 import top.wjc.bookmallbackend.service.CartService;
+import top.wjc.bookmallbackend.service.UploadService;
 import top.wjc.bookmallbackend.vo.CartItemVO;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class CartServiceImpl implements CartService {
 
     private final CartMapper cartMapper;
     private final BookMapper bookMapper;
+    private final UploadService uploadService;
 
-    public CartServiceImpl(CartMapper cartMapper, BookMapper bookMapper) {
+    public CartServiceImpl(CartMapper cartMapper, BookMapper bookMapper, UploadService uploadService) {
         this.cartMapper = cartMapper;
         this.bookMapper = bookMapper;
+        this.uploadService = uploadService;
     }
 
     @Override
     public List<CartItemVO> list(Long userId) {
-        return cartMapper.selectByUserId(userId);
+        return cartMapper.selectByUserId(userId).stream()
+                .map(item -> new CartItemVO(
+                        item.getId(),
+                        item.getBookId(),
+                        item.getBookName(),
+                        item.getPrice(),
+                        item.getQuantity(),
+                        item.getStock(),
+                        uploadService.resolveBookCoverUrl(item.getCoverImage()),
+                        item.getTotalPrice()
+                ))
+                .collect(Collectors.toList());
     }
 
     @Override

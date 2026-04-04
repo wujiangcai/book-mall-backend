@@ -91,7 +91,7 @@ public class BookServiceImpl implements BookService {
                 .categoryId(request.getCategoryId())
                 .price(request.getPrice())
                 .stock(request.getStock())
-                .coverImage(request.getCoverImage())
+                .coverImage(uploadService.resolveBookCoverUrl(request.getCoverImage()))
                 .description(request.getDescription())
                 .status(request.getStatus())
                 .build();
@@ -117,7 +117,7 @@ public class BookServiceImpl implements BookService {
                 .categoryId(request.getCategoryId())
                 .price(request.getPrice())
                 .stock(request.getStock())
-                .coverImage(request.getCoverImage())
+                .coverImage(uploadService.resolveBookCoverUrl(request.getCoverImage()))
                 .description(request.getDescription())
                 .status(request.getStatus())
                 .build();

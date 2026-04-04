@@ -45,7 +45,8 @@
             <a-grid-item v-for="book in list" :key="book.id">
               <a-card hoverable class="book-card" @click="goDetail(book.id)">
                 <template #cover>
-                  <img :src="book.coverImage" alt="cover" class="book-cover" />
+                  <img v-if="book.coverImage" :src="book.coverImage" alt="cover" class="book-cover" @error="handleBookCoverError(book)" />
+                  <div v-else class="book-cover-placeholder">暂无封面</div>
                 </template>
                 <div class="book-name">{{ book.bookName }}</div>
                 <div class="book-meta">作者：{{ book.author || '佚名' }}</div>
@@ -141,6 +142,10 @@ const goDetail = (id: number) => {
   router.push(`/book/${id}`)
 }
 
+const handleBookCoverError = (book: BookListItem) => {
+  book.coverImage = undefined
+}
+
 watch(
   () => route.query,
   (q) => {
@@ -204,6 +209,16 @@ onMounted(() => {
   width: 100%;
   height: 180px;
   object-fit: cover;
+}
+
+.book-cover-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 180px;
+  color: var(--brand-muted);
+  background: linear-gradient(135deg, #edf2f7, #f8fafc);
 }
 
 .book-name {

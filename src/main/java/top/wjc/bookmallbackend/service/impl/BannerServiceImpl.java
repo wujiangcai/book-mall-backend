@@ -49,7 +49,7 @@ public class BannerServiceImpl implements BannerService {
     public void create(BannerCreateRequest request) {
         validateStatus(request.getStatus());
         Banner banner = Banner.builder()
-                .imageUrl(request.getImageUrl())
+                .imageUrl(uploadService.resolveBannerUrl(request.getImageUrl()))
                 .linkUrl(request.getLinkUrl())
                 .sortOrder(request.getSortOrder() == null ? 0 : request.getSortOrder())
                 .status(request.getStatus())
@@ -67,7 +67,7 @@ public class BannerServiceImpl implements BannerService {
         validateStatus(request.getStatus());
         Banner banner = Banner.builder()
                 .id(id)
-                .imageUrl(request.getImageUrl())
+                .imageUrl(uploadService.resolveBannerUrl(request.getImageUrl()))
                 .linkUrl(request.getLinkUrl())
                 .sortOrder(request.getSortOrder() == null ? existing.getSortOrder() : request.getSortOrder())
                 .status(request.getStatus())
@@ -125,7 +125,7 @@ public class BannerServiceImpl implements BannerService {
         return banners.stream()
                 .map(banner -> new BannerVO(
                         banner.getId(),
-                        banner.getImageUrl(),
+                        uploadService.resolveBannerUrl(banner.getImageUrl()),
                         banner.getLinkUrl(),
                         banner.getSortOrder(),
                         banner.getStatus(),

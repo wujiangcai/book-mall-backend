@@ -82,7 +82,20 @@
       "Bash(cmd /c taskkill /PID 20844 /F)",
       "Bash(powershell -Command \"Get-NetTCPConnection -LocalPort 8004 -State Listen | Select-Object OwningProcess | Format-Table -HideTableHeaders\")",
       "Bash(powershell -Command \"Stop-Process -Id 20844 -Force\")",
-      "Bash(python:*)"
+      "Bash(python:*)",
+      "Bash(jar tf:*)",
+      "Bash(ps -W)",
+      "Bash(wmic process:*)",
+      "Bash(powershell.exe -Command \"Get-CimInstance Win32_Process -Filter \\\\\"ProcessId=11868\\\\\" | Select-Object ProcessId,ParentProcessId,CommandLine | Format-List\")",
+      "Bash(powershell.exe -Command \"Get-CimInstance Win32_Process -Filter \\\\\"ProcessId=17344\\\\\" | Select-Object ProcessId,ParentProcessId,CommandLine | Format-List\")",
+      "Bash(powershell.exe -Command \"Get-CimInstance Win32_Process -Filter \\\\\"ProcessId=21848\\\\\" | Select-Object ProcessId,ParentProcessId,CommandLine | Format-List\")",
+      "Bash(powershell.exe -Command \"Get-Item 'C:\\\\Users\\\\caiwujiang\\\\Desktop\\\\book-mall-backend\\\\target\\\\classes\\\\top\\\\wjc\\\\bookmallbackend\\\\config\\\\MyBatisConfig.class' | Select-Object FullName,LastWriteTime,Length | Format-List\")",
+      "Bash(powershell.exe -Command \"Get-Item 'C:\\\\Users\\\\caiwujiang\\\\Desktop\\\\book-mall-backend\\\\target\\\\classes\\\\mapper\\\\DashboardMapper.xml' | Select-Object FullName,LastWriteTime,Length | Format-List\")",
+      "Bash(powershell.exe -Command \"Get-CimInstance Win32_Process -Filter \\\\\"ProcessId=11868\\\\\" | Select-Object CreationDate | Format-List\")",
+      "Bash(powershell.exe -Command \"Stop-Process -Id 11868 -Force\")",
+      "Bash(powershell.exe -Command \"Get-CimInstance Win32_Process -Filter \\\\\"ProcessId=3828\\\\\" | Select-Object ProcessId,CreationDate,ParentProcessId,CommandLine | Format-List\")",
+      "mcp__playwright__browser_navigate",
+      "Bash(git:*)"
     ]
   }
 }

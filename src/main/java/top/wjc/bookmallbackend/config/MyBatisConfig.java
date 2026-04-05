@@ -26,6 +26,10 @@ public class MyBatisConfig {
         factoryBean.setDataSource(dataSource);
         factoryBean.setTypeAliasesPackage(typeAliasesPackage);
 
+        org.apache.ibatis.session.Configuration configuration = new org.apache.ibatis.session.Configuration();
+        configuration.setMapUnderscoreToCamelCase(true);
+        factoryBean.setConfiguration(configuration);
+
         PathMatchingResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
         Resource[] resources = resolver.getResources(mapperLocations);
         factoryBean.setMapperLocations(resources);

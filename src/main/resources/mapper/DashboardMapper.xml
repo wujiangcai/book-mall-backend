@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="top.wjc.bookmallbackend.mapper.DashboardMapper">
+
+    <resultMap id="AdminDashboardOverviewMap" type="top.wjc.bookmallbackend.vo.AdminDashboardOverviewVO">
+        <result column="customer_count" property="customerCount"/>
+        <result column="admin_count" property="adminCount"/>
+        <result column="total_books" property="totalBooks"/>
+        <result column="on_shelf_books" property="onShelfBooks"/>
+        <result column="total_orders" property="totalOrders"/>
+        <result column="pending_ship_orders" property="pendingShipOrders"/>
+        <result column="low_stock_books" property="lowStockBooks"/>
+        <result column="active_banners" property="activeBanners"/>
+        <result column="today_orders" property="todayOrders"/>
+        <result column="total_revenue" property="totalRevenue"/>
+        <result column="today_revenue" property="todayRevenue"/>
+    </resultMap>
+
+    <resultMap id="AdminDashboardTrendPointMap" type="top.wjc.bookmallbackend.vo.AdminDashboardTrendPointVO">
+        <result column="day" property="day"/>
+        <result column="order_count" property="orderCount"/>
+        <result column="revenue" property="revenue"/>
+    </resultMap>
+
+    <resultMap id="AdminDashboardOrderStatusMap" type="top.wjc.bookmallbackend.vo.AdminDashboardOrderStatusVO">
+        <result column="status" property="status"/>
+        <result column="label" property="label"/>
+        <result column="count" property="count"/>
+    </resultMap>
+
+    <resultMap id="AdminDashboardCategoryStatMap" type="top.wjc.bookmallbackend.vo.AdminDashboardCategoryStatVO">
+        <id column="category_id" property="categoryId"/>
+        <result column="category_name" property="categoryName"/>
+        <result column="book_count" property="bookCount"/>
+    </resultMap>
+
+    <resultMap id="AdminDashboardHotBookMap" type="top.wjc.bookmallbackend.vo.AdminDashboardHotBookVO">
+        <result column="book_id" property="bookId"/>
+        <result column="book_name" property="bookName"/>
+        <result column="author" property="author"/>
+        <result column="cover_image" property="coverImage"/>
+        <result column="sales_count" property="salesCount"/>
+        <result column="sales_amount" property="salesAmount"/>
+    </resultMap>
+
+    <resultMap id="AdminDashboardLowStockBookMap" type="top.wjc.bookmallbackend.vo.AdminDashboardLowStockBookVO">
+        <id column="id" property="id"/>
+        <result column="book_name" property="bookName"/>
+        <result column="author" property="author"/>
+        <result column="stock" property="stock"/>
+        <result column="status" property="status"/>
+    </resultMap>
+
+    <resultMap id="AdminDashboardRecentOrderMap" type="top.wjc.bookmallbackend.vo.AdminDashboardRecentOrderVO">
+        <id column="id" property="id"/>
+        <result column="order_no" property="orderNo"/>
+        <result column="username" property="username"/>
+        <result column="total_amount" property="totalAmount"/>
+        <result column="status" property="status"/>
+        <result column="create_time" property="createTime"/>
+    </resultMap>
+
+    <select id="selectOverview" resultMap="AdminDashboardOverviewMap">
+        SELECT
+            (SELECT COUNT(1) FROM user WHERE status = 1 AND role = 0) AS customer_count,
+            (SELECT COUNT(1) FROM user WHERE status = 1 AND role = 1) AS admin_count,
+            (SELECT COUNT(1) FROM book WHERE status &lt;&gt; -1) AS total_books,
+            (SELECT COUNT(1) FROM book WHERE status = 1) AS on_shelf_books,
+            (SELECT COUNT(1) FROM `order` WHERE status &lt;&gt; 5) AS total_orders,
+            (SELECT COUNT(1) FROM `order` WHERE status = 2) AS pending_ship_orders,
+            (SELECT COUNT(1) FROM book WHERE status = 1 AND stock &lt;= #{lowStockThreshold}) AS low_stock_books,
+            (SELECT COUNT(1) FROM banner WHERE status = 1) AS active_banners,
+            (SELECT COUNT(1) FROM `order` WHERE status &lt;&gt; 5 AND create_time &gt;= #{todayStart} AND create_time &lt; #{tomorrowStart}) AS today_orders,
+            COALESCE((SELECT SUM(total_amount) FROM `order` WHERE status IN (2, 3, 4)), 0) AS total_revenue,
+            COALESCE((SELECT SUM(total_amount) FROM `order`
+                      WHERE status IN (2, 3, 4)
+                        AND create_time &gt;= #{todayStart}
+                        AND create_time &lt; #{tomorrowStart}), 0) AS today_revenue
+    </select>
+
+    <select id="selectOrderTrend" resultMap="AdminDashboardTrendPointMap">
+        SELECT
+            CONCAT(LPAD(grouped.order_month, 2, '0'), '-', LPAD(grouped.order_day, 2, '0')) AS day,
+            grouped.order_count,
+            grouped.revenue
+        FROM (
+            SELECT
+                YEAR(create_time) AS order_year,
+                MONTH(create_time) AS order_month,
+                DAY(create_time) AS order_day,
+                COUNT(1) AS order_count,
+                COALESCE(SUM(CASE WHEN status IN (2, 3, 4) THEN total_amount ELSE 0 END), 0) AS revenue
+            FROM `order`
+            WHERE create_time >= #{startTime}
+            GROUP BY YEAR(create_time), MONTH(create_time), DAY(create_time)
+        ) grouped
+        ORDER BY grouped.order_year, grouped.order_month, grouped.order_day
+    </select>
+
+    <select id="selectOrderStatusStats" resultMap="AdminDashboardOrderStatusMap">
+        SELECT
+            status,
+            CASE status
+                WHEN 0 THEN '待支付'
+                WHEN 1 THEN '已支付'
+                WHEN 2 THEN '待发货'
+                WHEN 3 THEN '已发货'
+                WHEN 4 THEN '已完成'
+                WHEN 5 THEN '已取消'
+                ELSE '未知'
+            END AS label,
+            COUNT(1) AS count
+        FROM `order`
+        GROUP BY status
+        ORDER BY status
+    </select>
+
+    <select id="selectCategoryBookStats" resultMap="AdminDashboardCategoryStatMap">
+        SELECT
+            c.id AS category_id,
+            c.category_name,
+            COUNT(b.id) AS book_count
+        FROM category c
+        LEFT JOIN book b ON b.category_id = c.id AND b.status &lt;&gt; -1
+        WHERE c.status &lt;&gt; -1
+        GROUP BY c.id, c.category_name
+        ORDER BY book_count DESC, c.sort_order ASC, c.id ASC
+        LIMIT #{limit}
+    </select>
+
+    <select id="selectHotBooks" resultMap="AdminDashboardHotBookMap">
+        SELECT
+            oi.book_id,
+            oi.book_name,
+            b.author,
+            b.cover_image,
+            SUM(oi.quantity) AS sales_count,
+            SUM(oi.total_price) AS sales_amount
+        FROM order_item oi
+        INNER JOIN `order` o ON o.id = oi.order_id
+        LEFT JOIN book b ON b.id = oi.book_id
+        WHERE o.status IN (2, 3, 4)
+        GROUP BY oi.book_id, oi.book_name, b.author, b.cover_image
+        ORDER BY sales_count DESC, sales_amount DESC, oi.book_id ASC
+        LIMIT #{limit}
+    </select>
+
+    <select id="selectLowStockBooks" resultMap="AdminDashboardLowStockBookMap">
+        SELECT
+            id,
+            book_name,
+            author,
+            stock,
+            status
+        FROM book
+        WHERE status = 1
+          AND stock &lt;= #{lowStockThreshold}
+        ORDER BY stock ASC, update_time DESC
+        LIMIT #{limit}
+    </select>
+
+    <select id="selectRecentOrders" resultMap="AdminDashboardRecentOrderMap">
+        SELECT
+            o.id,
+            o.order_no,
+            u.username,
+            o.total_amount,
+            o.status,
+            DATE_FORMAT(o.create_time, '%Y-%m-%d %H:%i') AS create_time
+        FROM `order` o
+        LEFT JOIN user u ON u.id = o.user_id
+        ORDER BY o.create_time DESC
+        LIMIT #{limit}
+    </select>
+
+</mapper>

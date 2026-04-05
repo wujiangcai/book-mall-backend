@@ -211,6 +211,74 @@ export type AdminBookListItem = {
   updateTime?: string
 }
 
+export type AdminDashboardOverview = {
+  customerCount: number
+  adminCount: number
+  totalBooks: number
+  onShelfBooks: number
+  totalOrders: number
+  pendingShipOrders: number
+  lowStockBooks: number
+  activeBanners: number
+  todayOrders: number
+  totalRevenue: number
+  todayRevenue: number
+}
+
+export type AdminDashboardTrendPoint = {
+  day: string
+  orderCount: number
+  revenue: number
+}
+
+export type AdminDashboardOrderStatus = {
+  status: number
+  label: string
+  count: number
+}
+
+export type AdminDashboardCategoryStat = {
+  categoryId: number
+  categoryName: string
+  bookCount: number
+}
+
+export type AdminDashboardHotBook = {
+  bookId: number
+  bookName: string
+  author?: string
+  coverImage?: string
+  salesCount: number
+  salesAmount: number
+}
+
+export type AdminDashboardLowStockBook = {
+  id: number
+  bookName: string
+  author?: string
+  stock: number
+  status: number
+}
+
+export type AdminDashboardRecentOrder = {
+  id: number
+  orderNo: string
+  username?: string
+  totalAmount: number
+  status: number
+  createTime: string
+}
+
+export type AdminDashboard = {
+  overview: AdminDashboardOverview
+  orderTrend: AdminDashboardTrendPoint[]
+  orderStatus: AdminDashboardOrderStatus[]
+  categoryStats: AdminDashboardCategoryStat[]
+  hotBooks: AdminDashboardHotBook[]
+  lowStockBooks: AdminDashboardLowStockBook[]
+  recentOrders: AdminDashboardRecentOrder[]
+}
+
 export type CategoryAdminItem = {
   id: number
   categoryName: string

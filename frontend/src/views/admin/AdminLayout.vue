@@ -17,6 +17,12 @@
         :collapsed="collapsed"
         @menu-item-click="handleMenuClick"
       >
+        <a-menu-item key="/admin/dashboard">
+          <template #icon>
+            <icon-apps />
+          </template>
+          数据大屏
+        </a-menu-item>
         <a-sub-menu key="books">
           <template #title>
             <icon-book />
@@ -66,6 +72,12 @@
         v-model:open-keys="openKeys"
         @menu-item-click="handleMenuClick"
       >
+        <a-menu-item key="/admin/dashboard">
+          <template #icon>
+            <icon-apps />
+          </template>
+          数据大屏
+        </a-menu-item>
         <a-sub-menu key="books">
           <template #title>
             <icon-book />
@@ -141,6 +153,7 @@ import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '../../store/auth'
 import {
+  IconApps,
   IconBook,
   IconFile,
   IconUser,
@@ -197,6 +210,7 @@ watch(
 
 const breadcrumb = computed(() => {
   const map: Record<string, string> = {
+    '/admin/dashboard': '数据大屏',
     '/admin/books': '图书列表',
     '/admin/categories': '分类管理',
     '/admin/orders': '订单列表',

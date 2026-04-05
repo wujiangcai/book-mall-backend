@@ -15,73 +15,57 @@
       </div>
 
       <div class="hero-metrics">
-        <div class="hero-metric">
-          <span>今日订单</span>
-          <strong>{{ formatNumber(data.overview.todayOrders) }}</strong>
-        </div>
-        <div class="hero-metric">
-          <span>今日营收</span>
-          <strong>{{ formatCurrency(data.overview.todayRevenue) }}</strong>
-        </div>
-        <div class="hero-metric">
-          <span>待发货</span>
-          <strong>{{ formatNumber(data.overview.pendingShipOrders) }}</strong>
-        </div>
+        <button
+          v-for="metric in heroMetrics"
+          :key="metric.label"
+          type="button"
+          class="hero-metric hero-metric--interactive"
+          @click="go(metric.path)"
+        >
+          <span>{{ metric.label }}</span>
+          <strong>{{ metric.value }}</strong>
+          <em>{{ metric.hint }}</em>
+        </button>
       </div>
     </section>
 
-    <section class="stats-grid">
-      <article v-for="card in overviewCards" :key="card.title" class="stat-card">
+    <section class="screen-filter">
+      <div class="filter-copy">
+        <strong>大屏导航</strong>
+        <span>切换不同业务视角，聚焦当前最重要的运营信息。</span>
+      </div>
+      <a-space wrap size="medium">
+        <a-tag
+          v-for="section in dashboardSections"
+          :key="section.key"
+          class="section-tag"
+          :color="activeSection === section.key ? 'arcoblue' : 'gray'"
+          @click="activeSection = section.key"
+        >
+          {{ section.label }}
+        </a-tag>
+      </a-space>
+    </section>
+
+    <section class="stats-grid" v-if="showSection('overview')">
+      <button
+        v-for="card in overviewCards"
+        :key="card.title"
+        type="button"
+        class="stat-card stat-card--interactive"
+        @click="go(card.path)"
+      >
         <div class="stat-head">
           <span class="stat-dot" :style="{ background: card.color }"></span>
           <span class="stat-title">{{ card.title }}</span>
         </div>
         <div class="stat-value">{{ card.value }}</div>
         <div class="stat-sub">{{ card.sub }}</div>
-      </article>
+      </button>
     </section>
 
-    <a-card class="panel verify-panel" :bordered="false">
-      <template #title>数据校验</template>
-      <div class="verify-grid">
-        <div class="verify-item">
-          <span class="verify-label">最近刷新</span>
-          <strong>{{ lastLoadedAtText }}</strong>
-        </div>
-        <div class="verify-item">
-          <span class="verify-label">近 7 天趋势条数</span>
-          <strong>{{ formatNumber(safeOrderTrend.length) }}</strong>
-        </div>
-        <div class="verify-item">
-          <span class="verify-label">状态汇总单量</span>
-          <strong>{{ formatNumber(statusOrderTotal) }}</strong>
-        </div>
-        <div class="verify-item">
-          <span class="verify-label">低库存列表条数</span>
-          <strong>{{ formatNumber(safeLowStockBooks.length) }}</strong>
-        </div>
-      </div>
-      <div class="verify-list">
-        <div v-for="item in verificationItems" :key="item.label" class="verify-row">
-          <div>
-            <div class="verify-row-label">{{ item.label }}</div>
-            <div class="verify-row-meta">页面值 {{ item.display }} · 推导值 {{ item.derived }}</div>
-          </div>
-          <a-tag :color="item.match ? 'green' : 'orange'">{{ item.match ? '一致' : '待核对' }}</a-tag>
-        </div>
-      </div>
-      <a-alert
-        v-if="hasVerificationMismatch"
-        type="warning"
-        show-icon
-        class="verify-alert"
-      >
-        当前页面存在需要人工核对的汇总差异，请对照 /api/admin/dashboard 响应确认后端返回值。
-      </a-alert>
-    </a-card>
-
-    <section class="analytics-grid">
-      <a-card class="panel panel-trend" :bordered="false">
+    <section class="analytics-grid" v-if="showSection('overview') || showSection('orders')">
+      <a-card class="panel panel-trend panel--interactive" :bordered="false" @click="go('/admin/orders')">
         <template #title>近 7 天订单趋势</template>
         <template v-if="trendPoints.length > 0">
           <div class="trend-header">
@@ -126,7 +110,7 @@
         <a-empty v-else description="暂无趋势数据" />
       </a-card>
 
-      <a-card class="panel panel-ring" :bordered="false">
+      <a-card class="panel panel-ring panel--interactive" :bordered="false" @click="go('/admin/orders')">
         <template #title>订单状态分布</template>
         <template v-if="statusSegments.length > 0">
           <div class="ring-layout">
@@ -151,19 +135,25 @@
       </a-card>
     </section>
 
-    <section class="details-grid">
-      <a-card class="panel" :bordered="false">
+    <section class="details-grid" v-if="showSection('overview') || showSection('inventory')">
+      <a-card class="panel panel--interactive" :bordered="false" @click="go('/admin/categories')">
         <template #title>分类图书分布</template>
         <div v-if="categoryBars.length > 0" class="category-bars">
-          <div v-for="item in categoryBars" :key="item.categoryName" class="category-row">
+          <button
+            v-for="item in categoryBars"
+            :key="item.categoryName"
+            type="button"
+            class="category-row category-row--interactive"
+            @click.stop="go('/admin/categories')"
+          >
             <div class="category-meta">
               <span>{{ item.categoryName }}</span>
               <strong>{{ item.bookCount }}</strong>
             </div>
             <div class="bar-track">
-              <div class="bar-fill" :style="{ width: `${item.percent}%` }"></div>
+              <div class="bar-fill" :style="{ width: `${item.percent}%`, background: `linear-gradient(90deg, ${item.color} 0%, #67c4ff 100%)` }"></div>
             </div>
-          </div>
+          </button>
         </div>
         <a-empty v-else description="暂无分类数据" />
       </a-card>
@@ -171,7 +161,13 @@
       <a-card class="panel" :bordered="false">
         <template #title>低库存预警</template>
         <div v-if="safeLowStockBooks.length > 0" class="warning-list">
-          <div v-for="item in safeLowStockBooks" :key="item.id" class="warning-item">
+          <button
+            v-for="item in safeLowStockBooks"
+            :key="item.id"
+            type="button"
+            class="warning-item detail-card-button"
+            @click="go('/admin/books')"
+          >
             <div>
               <div class="warning-title">{{ item.bookName }}</div>
               <div class="warning-sub">{{ item.author || '作者未填写' }}</div>
@@ -179,17 +175,23 @@
             <div class="warning-stock" :class="{ danger: item.stock <= 3 }">
               {{ item.stock }}
             </div>
-          </div>
+          </button>
         </div>
         <a-empty v-else description="暂无低库存图书" />
       </a-card>
     </section>
 
-    <section class="details-grid">
+    <section class="details-grid" v-if="showSection('overview') || showSection('operations')">
       <a-card class="panel" :bordered="false">
         <template #title>热销图书 TOP 5</template>
         <div v-if="safeHotBooks.length > 0" class="hot-book-list">
-          <div v-for="(book, index) in safeHotBooks" :key="book.bookId" class="hot-book-item">
+          <button
+            v-for="(book, index) in safeHotBooks"
+            :key="book.bookId"
+            type="button"
+            class="hot-book-item detail-card-button"
+            @click="openHotBook(book)"
+          >
             <div class="hot-rank">{{ index + 1 }}</div>
             <img v-if="book.coverImage" :src="book.coverImage" alt="cover" class="hot-cover" @error="book.coverImage = undefined" />
             <div v-else class="hot-cover hot-cover--empty">封面</div>
@@ -201,7 +203,7 @@
               <strong>{{ book.salesCount }}</strong>
               <span>{{ formatCurrency(book.salesAmount) }}</span>
             </div>
-          </div>
+          </button>
         </div>
         <a-empty v-else description="暂无热销数据" />
       </a-card>
@@ -209,7 +211,13 @@
       <a-card class="panel" :bordered="false">
         <template #title>最近订单动态</template>
         <div v-if="safeRecentOrders.length > 0" class="recent-order-list">
-          <div v-for="order in safeRecentOrders" :key="order.id" class="recent-order-item">
+          <button
+            v-for="order in safeRecentOrders"
+            :key="order.id"
+            type="button"
+            class="recent-order-item detail-card-button"
+            @click="openRecentOrder(order)"
+          >
             <div>
               <div class="recent-order-no">{{ order.orderNo }}</div>
               <div class="recent-order-meta">{{ order.username || '未知用户' }} · {{ order.createTime }}</div>
@@ -220,11 +228,38 @@
               </span>
               <strong>{{ formatCurrency(order.totalAmount) }}</strong>
             </div>
-          </div>
+          </button>
         </div>
         <a-empty v-else description="暂无订单数据" />
       </a-card>
     </section>
+
+    <a-modal v-model:visible="hotBookVisible" title="热销图书详情" :footer="false">
+      <a-descriptions v-if="activeHotBook" :column="1">
+        <a-descriptions-item label="书名">{{ activeHotBook.bookName }}</a-descriptions-item>
+        <a-descriptions-item label="作者">{{ activeHotBook.author || '作者未填写' }}</a-descriptions-item>
+        <a-descriptions-item label="销量">{{ formatNumber(activeHotBook.salesCount) }}</a-descriptions-item>
+        <a-descriptions-item label="销售额">{{ formatCurrency(activeHotBook.salesAmount) }}</a-descriptions-item>
+      </a-descriptions>
+      <a-space style="margin-top: 16px">
+        <a-button type="primary" @click="go('/admin/books')">前往图书管理</a-button>
+        <a-button @click="hotBookVisible = false">关闭</a-button>
+      </a-space>
+    </a-modal>
+
+    <a-modal v-model:visible="recentOrderVisible" title="订单摘要" :footer="false">
+      <a-descriptions v-if="activeRecentOrder" :column="1">
+        <a-descriptions-item label="订单号">{{ activeRecentOrder.orderNo }}</a-descriptions-item>
+        <a-descriptions-item label="用户">{{ activeRecentOrder.username || '未知用户' }}</a-descriptions-item>
+        <a-descriptions-item label="状态">{{ statusText(activeRecentOrder.status) }}</a-descriptions-item>
+        <a-descriptions-item label="金额">{{ formatCurrency(activeRecentOrder.totalAmount) }}</a-descriptions-item>
+        <a-descriptions-item label="创建时间">{{ activeRecentOrder.createTime }}</a-descriptions-item>
+      </a-descriptions>
+      <a-space style="margin-top: 16px">
+        <a-button type="primary" @click="go('/admin/orders')">前往订单管理</a-button>
+        <a-button @click="recentOrderVisible = false">关闭</a-button>
+      </a-space>
+    </a-modal>
   </div>
 </template>
 
@@ -237,7 +272,9 @@ import { useAuthStore } from '../../store/auth'
 import type {
   AdminDashboard,
   AdminDashboardCategoryStat,
+  AdminDashboardHotBook,
   AdminDashboardOrderStatus,
+  AdminDashboardRecentOrder,
   AdminDashboardTrendPoint,
 } from '../../types/api'
 
@@ -246,6 +283,8 @@ type TrendSvgPoint = {
   x: number
   y: number
 }
+
+type DashboardSectionKey = 'overview' | 'orders' | 'inventory' | 'operations'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -294,7 +333,11 @@ const normalizeDashboardResponse = async () => {
 }
 
 const data = reactive<AdminDashboard>(emptyDashboard())
-const lastLoadedAt = ref('')
+const activeSection = ref<DashboardSectionKey>('overview')
+const hotBookVisible = ref(false)
+const recentOrderVisible = ref(false)
+const activeHotBook = ref<AdminDashboardHotBook | null>(null)
+const activeRecentOrder = ref<AdminDashboardRecentOrder | null>(null)
 
 const palette = ['#2870ff', '#00a6a6', '#ff8a00', '#ff5f5f', '#8856ff', '#20b15a']
 
@@ -302,7 +345,6 @@ const load = async () => {
   try {
     const dashboard = await normalizeDashboardResponse()
     Object.assign(data, dashboard)
-    lastLoadedAt.value = new Date().toLocaleString('zh-CN')
   } catch (error: any) {
     Object.assign(data, emptyDashboard())
     Message.error(error?.message || '加载大屏数据失败')
@@ -310,8 +352,22 @@ const load = async () => {
 }
 
 const go = (path: string) => {
+  hotBookVisible.value = false
+  recentOrderVisible.value = false
   router.push(path)
 }
+
+const openHotBook = (book: AdminDashboardHotBook) => {
+  activeHotBook.value = book
+  hotBookVisible.value = true
+}
+
+const openRecentOrder = (order: AdminDashboardRecentOrder) => {
+  activeRecentOrder.value = order
+  recentOrderVisible.value = true
+}
+
+const showSection = (section: DashboardSectionKey) => activeSection.value === 'overview' || activeSection.value === section
 
 const formatNumber = (value?: number) => Number(value || 0).toLocaleString('zh-CN')
 
@@ -341,42 +397,76 @@ const statusColor = (status: number) => {
   return map[status] || '#6c7a89'
 }
 
+const dashboardSections = [
+  { key: 'overview' as DashboardSectionKey, label: '总览' },
+  { key: 'orders' as DashboardSectionKey, label: '订单' },
+  { key: 'inventory' as DashboardSectionKey, label: '库存' },
+  { key: 'operations' as DashboardSectionKey, label: '运营' },
+]
+
+const heroMetrics = computed(() => [
+  {
+    label: '今日订单',
+    value: formatNumber(data.overview.todayOrders),
+    hint: '点击查看订单列表',
+    path: '/admin/orders',
+  },
+  {
+    label: '今日营收',
+    value: formatCurrency(data.overview.todayRevenue),
+    hint: '点击查看订单走势',
+    path: '/admin/orders',
+  },
+  {
+    label: '待发货',
+    value: formatNumber(data.overview.pendingShipOrders),
+    hint: '点击处理待发货订单',
+    path: '/admin/orders',
+  },
+])
+
 const overviewCards = computed(() => [
   {
     title: '用户总量',
     value: formatNumber(data.overview.customerCount),
     sub: `管理员 ${formatNumber(data.overview.adminCount)} 人`,
     color: '#2870ff',
+    path: '/admin/users',
   },
   {
     title: '图书总量',
     value: formatNumber(data.overview.totalBooks),
     sub: `上架中 ${formatNumber(data.overview.onShelfBooks)} 本`,
     color: '#00a6a6',
+    path: '/admin/books',
   },
   {
     title: '订单总量',
     value: formatNumber(data.overview.totalOrders),
     sub: `待发货 ${formatNumber(data.overview.pendingShipOrders)} 单`,
     color: '#ff8a00',
+    path: '/admin/orders',
   },
   {
     title: '累计营收',
     value: formatCurrency(data.overview.totalRevenue),
     sub: `今日 ${formatCurrency(data.overview.todayRevenue)}`,
     color: '#ff5f5f',
+    path: '/admin/orders',
   },
   {
     title: '轮播启用',
     value: formatNumber(data.overview.activeBanners),
     sub: '当前首页可展示内容',
     color: '#8856ff',
+    path: '/admin/banners',
   },
   {
     title: '低库存预警',
     value: formatNumber(data.overview.lowStockBooks),
     sub: '安全阈值 10 本以内',
     color: '#20b15a',
+    path: '/admin/books',
   },
 ])
 
@@ -384,37 +474,6 @@ const safeOrderTrend = computed(() => (data.orderTrend as AdminDashboardTrendPoi
 const safeHotBooks = computed(() => (data.hotBooks || []).filter(Boolean))
 const safeLowStockBooks = computed(() => (data.lowStockBooks || []).filter(Boolean))
 const safeRecentOrders = computed(() => (data.recentOrders || []).filter(Boolean))
-const statusOrderTotal = computed(() => statusSegments.value.reduce((sum, item) => sum + Number(item.count || 0), 0))
-const lastLoadedAtText = computed(() => lastLoadedAt.value || '尚未刷新')
-
-const verificationItems = computed(() => [
-  {
-    label: '订单总量',
-    display: Number(data.overview.totalOrders || 0),
-    derived: statusOrderTotal.value,
-    match: Number(data.overview.totalOrders || 0) === statusOrderTotal.value,
-  },
-  {
-    label: '低库存预警',
-    display: Number(data.overview.lowStockBooks || 0),
-    derived: safeLowStockBooks.value.length,
-    match: Number(data.overview.lowStockBooks || 0) === safeLowStockBooks.value.length,
-  },
-  {
-    label: '热销图书条数',
-    display: Math.min(5, safeHotBooks.value.length),
-    derived: safeHotBooks.value.length,
-    match: safeHotBooks.value.length <= 5,
-  },
-  {
-    label: '最近订单条数',
-    display: safeRecentOrders.value.length,
-    derived: safeRecentOrders.value.length,
-    match: true,
-  },
-])
-
-const hasVerificationMismatch = computed(() => verificationItems.value.some((item) => !item.match))
 
 const maxOrderCount = computed(() => Math.max(...safeOrderTrend.value.map((item) => Number(item.orderCount || 0)), 0))
 const weekRevenue = computed(() => safeOrderTrend.value.reduce((sum, item) => sum + Number(item.revenue || 0), 0))
@@ -557,12 +616,41 @@ onMounted(load)
   gap: 14px;
 }
 
+.hero-metric,
+.stat-card,
+.category-row,
+.warning-item,
+.recent-order-item,
+.hot-book-item {
+  width: 100%;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+}
+
 .hero-metric {
   padding: 18px 20px;
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 20px;
   background: rgba(255, 255, 255, 0.08);
   backdrop-filter: blur(10px);
+}
+
+.hero-metric--interactive,
+.stat-card--interactive,
+.panel--interactive,
+.detail-card-button,
+.category-row--interactive,
+.section-tag {
+  transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease, background 0.22s ease;
+}
+
+.hero-metric--interactive:hover,
+.hero-metric--interactive:focus-visible {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 36px rgba(7, 18, 36, 0.24);
+  border-color: rgba(255, 255, 255, 0.26);
 }
 
 .hero-metric span {
@@ -579,6 +667,51 @@ onMounted(load)
   line-height: 1;
 }
 
+.hero-metric em {
+  display: block;
+  margin-top: 8px;
+  color: rgba(243, 247, 251, 0.72);
+  font-style: normal;
+  font-size: 12px;
+}
+
+.screen-filter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 22px;
+  border: 1px solid rgba(40, 112, 255, 0.08);
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.72);
+  box-shadow: 0 12px 28px rgba(23, 50, 77, 0.06);
+}
+
+.filter-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.filter-copy strong {
+  color: var(--text-main);
+  font-size: 16px;
+}
+
+.filter-copy span {
+  color: var(--text-sub);
+  font-size: 13px;
+}
+
+.section-tag {
+  cursor: pointer;
+  user-select: none;
+}
+
+.section-tag:hover {
+  transform: translateY(-2px);
+}
+
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(6, minmax(0, 1fr));
@@ -592,6 +725,13 @@ onMounted(load)
   border-radius: 20px;
   background: var(--panel-bg);
   box-shadow: var(--panel-shadow);
+}
+
+.stat-card--interactive:hover,
+.stat-card--interactive:focus-visible {
+  transform: translateY(-5px);
+  box-shadow: 0 22px 42px rgba(22, 39, 68, 0.13);
+  border-color: rgba(40, 112, 255, 0.18);
 }
 
 .stat-head {
@@ -638,69 +778,14 @@ onMounted(load)
   box-shadow: var(--panel-shadow);
 }
 
-.verify-panel {
-  padding-bottom: 4px;
+.panel--interactive {
+  cursor: pointer;
 }
 
-.verify-grid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 14px;
-  margin-bottom: 18px;
-}
-
-.verify-item {
-  padding: 16px 18px;
-  border: 1px solid rgba(30, 58, 95, 0.08);
-  border-radius: 18px;
-  background: rgba(255, 255, 255, 0.72);
-}
-
-.verify-label {
-  display: block;
-  color: var(--text-sub);
-  font-size: 12px;
-}
-
-.verify-item strong {
-  display: block;
-  margin-top: 8px;
-  color: var(--text-main);
-  font-size: 22px;
-  line-height: 1.2;
-}
-
-.verify-list {
-  display: grid;
-  gap: 12px;
-}
-
-.verify-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 14px 0;
-  border-top: 1px dashed rgba(95, 114, 136, 0.22);
-}
-
-.verify-row:first-child {
-  border-top: none;
-}
-
-.verify-row-label {
-  color: var(--text-main);
-  font-weight: 600;
-}
-
-.verify-row-meta {
-  margin-top: 4px;
-  color: var(--text-sub);
-  font-size: 13px;
-}
-
-.verify-alert {
-  margin-top: 16px;
+.panel--interactive:hover,
+.panel--interactive:focus-within {
+  transform: translateY(-4px);
+  box-shadow: 0 24px 48px rgba(22, 39, 68, 0.12);
 }
 
 .panel :deep(.arco-card-header) {
@@ -842,6 +927,15 @@ onMounted(load)
   padding: 12px 14px;
   border-radius: 16px;
   background: #f7f9fc;
+}
+
+.category-row--interactive:hover,
+.category-row--interactive:focus-visible,
+.detail-card-button:hover,
+.detail-card-button:focus-visible {
+  transform: translateY(-3px);
+  box-shadow: 0 16px 28px rgba(22, 39, 68, 0.08);
+  background: #ffffff;
 }
 
 .category-meta {
@@ -992,6 +1086,11 @@ onMounted(load)
 
   .ring-layout {
     grid-template-columns: 1fr;
+  }
+
+  .screen-filter {
+    flex-direction: column;
+    align-items: flex-start;
   }
 }
 

@@ -7,8 +7,7 @@ on:
   workflow_dispatch:
 
 env:
-  REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
+  REGISTRY: ccr.ccs.tencentyun.com
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
@@ -35,18 +34,18 @@ jobs:
       - name: Test
         run: chmod +x ./mvnw && ./mvnw -B test
 
-      - name: Log in to GHCR
+      - name: Log in to TCR
         uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          username: ${{ secrets.TCR_USERNAME }}
+          password: ${{ secrets.TCR_PASSWORD }}
 
       - name: Extract Docker metadata
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          images: ${{ env.REGISTRY }}/${{ secrets.TCR_NAMESPACE }}/book-mall-backend
           tags: |
             type=raw,value=latest
             type=sha,prefix=
@@ -64,10 +63,16 @@ jobs:
           DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
           DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
           DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          TCR_USERNAME: ${{ secrets.TCR_USERNAME }}
+          TCR_PASSWORD: ${{ secrets.TCR_PASSWORD }}
+          TCR_NAMESPACE: ${{ secrets.TCR_NAMESPACE }}
         run: |
           test -n "$DEPLOY_HOST" || { echo "DEPLOY_HOST is empty"; exit 1; }
           test -n "$DEPLOY_USER" || { echo "DEPLOY_USER is empty"; exit 1; }
           test -n "$DEPLOY_SSH_KEY" || { echo "DEPLOY_SSH_KEY is empty"; exit 1; }
+          test -n "$TCR_USERNAME" || { echo "TCR_USERNAME is empty"; exit 1; }
+          test -n "$TCR_PASSWORD" || { echo "TCR_PASSWORD is empty"; exit 1; }
+          test -n "$TCR_NAMESPACE" || { echo "TCR_NAMESPACE is empty"; exit 1; }
 
       - name: Write SSH key
         shell: bash

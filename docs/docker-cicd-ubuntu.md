@@ -1,12 +1,12 @@
 # Ubuntu Docker 自动发布说明
 
-本文档用于把 `book-mall-backend` 部署到 Ubuntu 服务器，并在每次 push 到 `main` 后自动构建镜像、推送到 `ghcr.io`、重启服务器容器。
+本文档用于把 `book-mall-backend` 部署到 Ubuntu 服务器，并在每次 push 到 `main` 后自动构建镜像、推送到腾讯云 TCR、重启服务器容器。
 
 ## 1. 方案结构
 
 - 代码仓库：GitHub
 - CI/CD：GitHub Actions
-- 镜像仓库：GHCR
+- 镜像仓库：腾讯云 TCR 个人版
 - 服务器：Ubuntu + Docker + Docker Compose
 - 数据库：已有 MySQL
 
@@ -14,7 +14,7 @@
 
 1. 本地提交代码并 push 到 `main`
 2. GitHub Actions 执行 `./mvnw test`
-3. 构建 Docker 镜像并推送到 `ghcr.io/<owner>/<repo>:latest`
+3. 构建 Docker 镜像并推送到 `ccr.ccs.tencentyun.com/<namespace>/book-mall-backend:latest`
 4. Actions 通过 SSH 登录 Ubuntu 服务器并同步部署文件
 5. 服务器执行 `docker compose pull && docker compose up -d`
 
@@ -43,8 +43,9 @@
 - `DEPLOY_PORT`：SSH 端口，默认 `22`
 - `DEPLOY_USER`：服务器登录用户
 - `DEPLOY_SSH_KEY`：对应私钥内容
-
-`GITHUB_TOKEN` 由 GitHub Actions 自动提供，无需手工创建。
+- `TCR_USERNAME`：腾讯云账号 ID
+- `TCR_PASSWORD`：TCR 个人版初始化密码
+- `TCR_NAMESPACE`：TCR 命名空间，例如 `wujiangcai`
 
 ## 4. 首次服务器准备
 
@@ -63,21 +64,26 @@ sudo chown -R $USER:$USER /opt/book-mall
 
 再修改 `/opt/book-mall/.env.prod`，填入真实环境变量，尤其是：
 
-- `IMAGE_NAME=ghcr.io/<你的 GitHub 用户名>/<你的仓库名>:latest`
+- `IMAGE_NAME=ccr.ccs.tencentyun.com/<你的 TCR 命名空间>/book-mall-backend:latest`
 
-## 5. 服务器登录 GHCR
+## 5. 服务器登录腾讯云 TCR
 
-如果仓库是私有的，需要先在服务器登录 GHCR：
+根据腾讯云 TCR 个人版快速入门，个人版通过 Docker CLI 登录的命令格式为：
 
 ```bash
-echo <your-github-pat> | docker login ghcr.io -u <your-github-username> --password-stdin
+docker login ccr.ccs.tencentyun.com --username=<腾讯云账号ID>
 ```
 
-这个 PAT 至少需要：
+其中用户名是腾讯云账号 ID，密码是你在 TCR 控制台初始化的固定密码。
 
-- `read:packages`
+服务器执行：
 
-如果仓库是公开的，通常不需要这一步。
+```bash
+docker login ccr.ccs.tencentyun.com -u <腾讯云账号ID>
+```
+
+参考：
+- 腾讯云 TCR 个人版快速入门：https://cloud.tencent.com/document/product/1141/63910
 
 ## 6. 外部配置文件
 

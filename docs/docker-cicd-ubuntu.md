@@ -18,6 +18,14 @@
 4. Actions 通过 SSH 登录 Ubuntu 服务器并同步部署文件
 5. 服务器执行 `docker compose pull && docker compose up -d`
 
+当前部署模板针对这台 Ubuntu 服务器上的本机 MySQL 做了适配：
+
+- MySQL 监听在 `127.0.0.1:3306`
+- 后端容器使用 `network_mode: host`
+- 因此容器内访问 `localhost:3306` 实际就是宿主机 MySQL
+
+这意味着当前模板适用于 Linux 服务器，不适用于 Docker Desktop 的默认网络模型。
+
 ## 2. 版本策略
 
 不建议每次提交都去修改 `pom.xml` 版本号。

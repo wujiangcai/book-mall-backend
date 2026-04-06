@@ -3,8 +3,7 @@ services:
     image: ${IMAGE_NAME}
     container_name: book-mall-backend
     restart: unless-stopped
-    ports:
-      - "8003:8003"
+    network_mode: host
     environment:
       SPRING_PROFILES_ACTIVE: prod
       APP_CONFIG_DIR: /app/config

@@ -19,6 +19,11 @@ target/
 *.iml
 *.ipr
 
+# Local AI tooling
+.claude/
+.kiro/
+.playwright-mcp/
+
 ### NetBeans ###
 /nbproject/private/
 /nbbuild/

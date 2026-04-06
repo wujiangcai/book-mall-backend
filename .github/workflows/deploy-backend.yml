@@ -59,10 +59,23 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
 
+      - name: Validate deploy secrets
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+        run: |
+          test -n "$DEPLOY_HOST" || { echo "DEPLOY_HOST is empty"; exit 1; }
+          test -n "$DEPLOY_USER" || { echo "DEPLOY_USER is empty"; exit 1; }
+          test -n "$DEPLOY_SSH_KEY" || { echo "DEPLOY_SSH_KEY is empty"; exit 1; }
+
       - name: Write SSH key
+        shell: bash
         run: |
           install -m 700 -d ~/.ssh
-          printf '%s' "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/id_ed25519
+          cat <<'EOF' > ~/.ssh/id_ed25519
+          ${{ secrets.DEPLOY_SSH_KEY }}
+          EOF
           chmod 600 ~/.ssh/id_ed25519
           ssh-keyscan -H "${{ secrets.DEPLOY_HOST }}" >> ~/.ssh/known_hosts
 

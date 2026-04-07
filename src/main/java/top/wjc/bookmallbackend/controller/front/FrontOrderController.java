@@ -39,7 +39,7 @@ public class FrontOrderController {
         return Result.success(orderService.create(Long.valueOf(userId.toString()), request));
     }
 
-    @PostMapping("/{id}/pay")
+    @PostMapping(value = "/{id}/pay", produces = MediaType.TEXT_HTML_VALUE)
     public ResponseEntity<String> pay(@PathVariable Long id, HttpServletRequest httpRequest) {
         Object userId = httpRequest.getAttribute("userId");
         String form = orderService.pay(Long.valueOf(userId.toString()), id);

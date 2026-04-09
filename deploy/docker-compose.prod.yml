@@ -15,11 +15,6 @@ services:
       ALIPAY_RETURN_URL: ${ALIPAY_RETURN_URL}
       ALIPAY_FRONTEND_BASE_URL: ${ALIPAY_FRONTEND_BASE_URL}
       ALIPAY_SELLER_ID: ${ALIPAY_SELLER_ID}
-      COS_SECRET_ID: ${COS_SECRET_ID:-}
-      COS_SECRET_KEY: ${COS_SECRET_KEY:-}
-      COS_REGION: ${COS_REGION:-}
-      COS_BUCKET: ${COS_BUCKET:-}
-      COS_BASE_URL: ${COS_BASE_URL:-}
     volumes:
       - /opt/book-mall/config:/app/config:ro
     healthcheck:

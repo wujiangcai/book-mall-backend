@@ -61,18 +61,24 @@ jobs:
       - name: Validate deploy secrets
         env:
           DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_PORT: ${{ secrets.DEPLOY_PORT }}
           DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
           DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
           TCR_USERNAME: ${{ secrets.TCR_USERNAME }}
           TCR_PASSWORD: ${{ secrets.TCR_PASSWORD }}
           TCR_NAMESPACE: ${{ secrets.TCR_NAMESPACE }}
         run: |
+          DEPLOY_HOST="$(echo "$DEPLOY_HOST" | tr -d '\r' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
+          DEPLOY_PORT="$(echo "${DEPLOY_PORT:-22}" | tr -d '\r[:space:]')"
+
           test -n "$DEPLOY_HOST" || { echo "DEPLOY_HOST is empty"; exit 1; }
           test -n "$DEPLOY_USER" || { echo "DEPLOY_USER is empty"; exit 1; }
           test -n "$DEPLOY_SSH_KEY" || { echo "DEPLOY_SSH_KEY is empty"; exit 1; }
           test -n "$TCR_USERNAME" || { echo "TCR_USERNAME is empty"; exit 1; }
           test -n "$TCR_PASSWORD" || { echo "TCR_PASSWORD is empty"; exit 1; }
           test -n "$TCR_NAMESPACE" || { echo "TCR_NAMESPACE is empty"; exit 1; }
+          [[ "$DEPLOY_PORT" =~ ^[0-9]+$ ]] || { echo "DEPLOY_PORT must be numeric"; exit 1; }
+          (( DEPLOY_PORT >= 1 && DEPLOY_PORT <= 65535 )) || { echo "DEPLOY_PORT out of range (1-65535)"; exit 1; }
 
       - name: Write SSH key
         env:
@@ -81,12 +87,21 @@ jobs:
           DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
         shell: bash
         run: |
+          DEPLOY_HOST="$(echo "$DEPLOY_HOST" | tr -d '\r' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
+          DEPLOY_PORT="$(echo "${DEPLOY_PORT:-22}" | tr -d '\r[:space:]')"
+
           install -m 700 -d ~/.ssh
           printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
           touch ~/.ssh/known_hosts
-          ssh-keyscan -p "${DEPLOY_PORT:-22}" -H "$DEPLOY_HOST" >> ~/.ssh/known_hosts || {
-            echo "ssh-keyscan failed for ${DEPLOY_HOST}:${DEPLOY_PORT:-22}" >&2
+
+          ssh-keyscan -T 15 -p "$DEPLOY_PORT" -H "$DEPLOY_HOST" >> ~/.ssh/known_hosts || {
+            echo "ssh-keyscan failed for ${DEPLOY_HOST}:${DEPLOY_PORT}" >&2
+            if timeout 5 bash -c "</dev/tcp/${DEPLOY_HOST}/${DEPLOY_PORT}" 2>/dev/null; then
+              echo "TCP ${DEPLOY_HOST}:${DEPLOY_PORT} is reachable, but ssh-keyscan could not read host key" >&2
+            else
+              echo "TCP connection to ${DEPLOY_HOST}:${DEPLOY_PORT} failed from runner" >&2
+            fi
             exit 1
           }
 
@@ -96,11 +111,14 @@ jobs:
           DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
           DEPLOY_PORT: ${{ secrets.DEPLOY_PORT }}
         run: |
-          ssh -p "${DEPLOY_PORT:-22}" "${DEPLOY_USER}@${DEPLOY_HOST}" \
+          DEPLOY_HOST="$(echo "$DEPLOY_HOST" | tr -d '\r' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
+          DEPLOY_PORT="$(echo "${DEPLOY_PORT:-22}" | tr -d '\r[:space:]')"
+
+          ssh -p "$DEPLOY_PORT" "${DEPLOY_USER}@${DEPLOY_HOST}" \
             "mkdir -p /opt/book-mall/scripts"
-          scp -P "${DEPLOY_PORT:-22}" deploy/docker-compose.prod.yml \
+          scp -P "$DEPLOY_PORT" deploy/docker-compose.prod.yml \
             "${DEPLOY_USER}@${DEPLOY_HOST}:/opt/book-mall/docker-compose.prod.yml"
-          scp -P "${DEPLOY_PORT:-22}" scripts/deploy-prod.sh \
+          scp -P "$DEPLOY_PORT" scripts/deploy-prod.sh \
             "${DEPLOY_USER}@${DEPLOY_HOST}:/opt/book-mall/scripts/deploy-prod.sh"
 
       - name: Deploy on server
@@ -109,5 +127,8 @@ jobs:
           DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
           DEPLOY_PORT: ${{ secrets.DEPLOY_PORT }}
         run: |
-          ssh -p "${DEPLOY_PORT:-22}" "${DEPLOY_USER}@${DEPLOY_HOST}" \
+          DEPLOY_HOST="$(echo "$DEPLOY_HOST" | tr -d '\r' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
+          DEPLOY_PORT="$(echo "${DEPLOY_PORT:-22}" | tr -d '\r[:space:]')"
+
+          ssh -p "$DEPLOY_PORT" "${DEPLOY_USER}@${DEPLOY_HOST}" \
             "cd /opt/book-mall && chmod +x scripts/deploy-prod.sh && APP_DIR=/opt/book-mall ./scripts/deploy-prod.sh"

@@ -4,6 +4,7 @@
 
     <resultMap id="BaseResultMap" type="top.wjc.bookmallbackend.entity.Book">
         <id property="id" column="id"/>
+        <result property="version" column="version"/>
         <result property="bookName" column="book_name"/>
         <result property="author" column="author"/>
         <result property="publisher" column="publisher"/>
@@ -19,7 +20,7 @@
     </resultMap>
 
     <sql id="Base_Column_List">
-        id, book_name, author, publisher, isbn, category_id, price, stock, cover_image, description, status, create_time, update_time
+        id, version, book_name, author, publisher, isbn, category_id, price, stock, cover_image, description, status, create_time, update_time
     </sql>
 
     <sql id="Front_Filter">
@@ -85,7 +86,7 @@
     </select>
 
     <select id="selectAdminList" resultType="top.wjc.bookmallbackend.vo.BookAdminListItemVO">
-        SELECT b.id, b.book_name, b.author, b.publisher, b.isbn, b.price, b.stock,
+        SELECT b.id, b.version, b.book_name, b.author, b.publisher, b.isbn, b.price, b.stock,
                b.cover_image, b.description, b.category_id, c.category_name, b.status, b.create_time
         FROM book b
         LEFT JOIN category c ON b.category_id = c.id
@@ -109,8 +110,8 @@
     </select>
 
     <insert id="insert" parameterType="top.wjc.bookmallbackend.entity.Book">
-        INSERT INTO book (book_name, author, publisher, isbn, category_id, price, stock, cover_image, description, status)
-        VALUES (#{bookName}, #{author}, #{publisher}, #{isbn}, #{categoryId}, #{price}, #{stock}, #{coverImage}, #{description}, #{status})
+        INSERT INTO book (version, book_name, author, publisher, isbn, category_id, price, stock, cover_image, description, status)
+        VALUES (0, #{bookName}, #{author}, #{publisher}, #{isbn}, #{categoryId}, #{price}, #{stock}, #{coverImage}, #{description}, #{status})
     </insert>
 
     <update id="update" parameterType="top.wjc.bookmallbackend.entity.Book">
@@ -124,16 +125,26 @@
             stock = #{stock},
             cover_image = #{coverImage},
             description = #{description},
-            status = #{status}
+            status = #{status},
+            version = version + 1
         WHERE id = #{id}
+          AND version = #{version}
     </update>
 
     <update id="updateStatus">
-        UPDATE book SET status = #{status} WHERE id = #{id}
+        UPDATE book
+        SET status = #{status},
+            version = version + 1
+        WHERE id = #{id}
+          AND version = #{version}
     </update>
 
     <update id="softDelete">
-        UPDATE book SET status = -1 WHERE id = #{id}
+        UPDATE book
+        SET status = -1,
+            version = version + 1
+        WHERE id = #{id}
+          AND version = #{version}
     </update>
 
     <select id="countByIsbn" resultType="int">
@@ -146,8 +157,11 @@
 
     <update id="decreaseStock">
         UPDATE book
-        SET stock = stock - #{quantity}
-        WHERE id = #{id} AND stock &gt;= #{quantity}
+        SET stock = stock - #{quantity},
+            version = version + 1
+        WHERE id = #{id}
+          AND version = #{version}
+          AND stock &gt;= #{quantity}
     </update>
 
 </mapper>

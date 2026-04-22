@@ -40,13 +40,17 @@ public interface BookMapper {
 
     int update(Book book);
 
-    int updateStatus(@Param("id") Long id, @Param("status") Integer status);
+    int updateStatus(@Param("id") Long id,
+                     @Param("status") Integer status,
+                     @Param("version") Integer version);
 
-    int softDelete(@Param("id") Long id);
+    int softDelete(@Param("id") Long id, @Param("version") Integer version);
 
     int countByIsbn(@Param("isbn") String isbn);
 
     int countByCategoryId(@Param("categoryId") Long categoryId);
 
-    int decreaseStock(@Param("id") Long id, @Param("quantity") Integer quantity);
+    int decreaseStock(@Param("id") Long id,
+                      @Param("quantity") Integer quantity,
+                      @Param("version") Integer version);
 }

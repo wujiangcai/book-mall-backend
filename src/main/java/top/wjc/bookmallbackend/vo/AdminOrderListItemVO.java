@@ -10,6 +10,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class AdminOrderListItemVO {
     private Long id;
+    private Integer version;
     private String orderNo;
     private Long userId;
     private BigDecimal totalAmount;

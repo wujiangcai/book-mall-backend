@@ -56,6 +56,7 @@ CREATE TABLE `category` (
 DROP TABLE IF EXISTS `book`;
 CREATE TABLE `book` (
   `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '图书ID',
+  `version` INT NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
   `book_name` VARCHAR(200) NOT NULL COMMENT '书名',
   `author` VARCHAR(100) DEFAULT NULL COMMENT '作者',
   `publisher` VARCHAR(100) DEFAULT NULL COMMENT '出版社',
@@ -123,6 +124,7 @@ CREATE TABLE `cart` (
 DROP TABLE IF EXISTS `order`;
 CREATE TABLE `order` (
   `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '订单ID',
+  `version` INT NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
   `order_no` VARCHAR(50) NOT NULL COMMENT '订单编号，格式：时间戳+用户ID+随机数',
   `trade_no` VARCHAR(64) DEFAULT NULL COMMENT '支付宝交易号',
   `user_id` BIGINT NOT NULL COMMENT '用户ID',

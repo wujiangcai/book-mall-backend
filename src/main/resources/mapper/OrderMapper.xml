@@ -4,6 +4,7 @@
 
     <resultMap id="BaseResultMap" type="top.wjc.bookmallbackend.entity.Order">
         <id property="id" column="id"/>
+        <result property="version" column="version"/>
         <result property="orderNo" column="order_no"/>
         <result property="tradeNo" column="trade_no"/>
         <result property="userId" column="user_id"/>
@@ -17,7 +18,7 @@
     </resultMap>
 
     <sql id="Base_Column_List">
-        id, order_no, trade_no, user_id, total_amount, status, address_id, create_time, update_time, pay_time, ship_time
+        id, version, order_no, trade_no, user_id, total_amount, status, address_id, create_time, update_time, pay_time, ship_time
     </sql>
 
     <select id="countPendingShipmentByAddressId" resultType="int">
@@ -34,8 +35,8 @@
     </select>
 
     <insert id="insert" parameterType="top.wjc.bookmallbackend.entity.Order" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO `order` (order_no, trade_no, user_id, total_amount, status, address_id)
-        VALUES (#{orderNo}, #{tradeNo}, #{userId}, #{totalAmount}, #{status}, #{addressId})
+        INSERT INTO `order` (version, order_no, trade_no, user_id, total_amount, status, address_id)
+        VALUES (0, #{orderNo}, #{tradeNo}, #{userId}, #{totalAmount}, #{status}, #{addressId})
     </insert>
 
     <select id="selectById" resultMap="BaseResultMap">
@@ -105,32 +106,64 @@
     </select>
 
     <update id="updateStatus">
-        UPDATE `order` SET status = #{status} WHERE id = #{id}
+        UPDATE `order`
+        SET status = #{status},
+            version = version + 1
+        WHERE id = #{id}
+          AND version = #{version}
     </update>
 
     <update id="updatePaymentSuccess">
         UPDATE `order`
         SET status = #{toStatus},
             pay_time = #{payTime},
-            trade_no = #{tradeNo}
+            trade_no = #{tradeNo},
+            version = version + 1
         WHERE id = #{id}
           AND status = #{fromStatus}
+          AND version = #{version}
     </update>
 
     <update id="updatePayTime">
-        UPDATE `order` SET pay_time = #{payTime} WHERE id = #{id}
+        UPDATE `order`
+        SET pay_time = #{payTime},
+            version = version + 1
+        WHERE id = #{id}
+          AND version = #{version}
     </update>
 
     <update id="updateTradeNo">
-        UPDATE `order` SET trade_no = #{tradeNo} WHERE id = #{id}
+        UPDATE `order`
+        SET trade_no = #{tradeNo},
+            version = version + 1
+        WHERE id = #{id}
+          AND version = #{version}
     </update>
 
     <update id="updateShipTime">
-        UPDATE `order` SET ship_time = #{shipTime} WHERE id = #{id}
+        UPDATE `order`
+        SET ship_time = #{shipTime},
+            version = version + 1
+        WHERE id = #{id}
+          AND version = #{version}
     </update>
 
     <update id="updateAddress">
-        UPDATE `order` SET address_id = #{addressId} WHERE id = #{id}
+        UPDATE `order`
+        SET address_id = #{addressId},
+            version = version + 1
+        WHERE id = #{id}
+          AND version = #{version}
+    </update>
+
+    <update id="updateShipment">
+        UPDATE `order`
+        SET status = #{toStatus},
+            ship_time = #{shipTime},
+            version = version + 1
+        WHERE id = #{id}
+          AND status = #{fromStatus}
+          AND version = #{version}
     </update>
 
 </mapper>

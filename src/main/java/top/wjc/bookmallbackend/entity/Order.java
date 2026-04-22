@@ -14,6 +14,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class Order {
     private Long id;
+    private Integer version;
     private String orderNo;
     private String tradeNo;
     private Long userId;

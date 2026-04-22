@@ -31,6 +31,8 @@ public class BookServiceImpl implements BookService {
     private static final int FRONT_DEFAULT_SIZE = 20;
     private static final int ADMIN_DEFAULT_SIZE = 20;
     private static final int MAX_PAGE_SIZE = 100;
+    private static final int OPTIMISTIC_LOCK_CODE = 409;
+    private static final String OPTIMISTIC_LOCK_MESSAGE = "数据已变更，请刷新后重试";
 
     private final BookMapper bookMapper;
     private final CategoryMapper categoryMapper;
@@ -110,6 +112,7 @@ public class BookServiceImpl implements BookService {
         validateIsbnDuplicate(request.getIsbn(), id);
         Book book = Book.builder()
                 .id(id)
+                .version(resolveVersion(request.getVersion(), existing.getVersion()))
                 .bookName(request.getBookName())
                 .author(request.getAuthor())
                 .publisher(request.getPublisher())
@@ -121,7 +124,9 @@ public class BookServiceImpl implements BookService {
                 .description(request.getDescription())
                 .status(request.getStatus())
                 .build();
-        bookMapper.update(book);
+        if (bookMapper.update(book) == 0) {
+            throwOptimisticLockConflict();
+        }
     }
 
     @Override
@@ -131,7 +136,9 @@ public class BookServiceImpl implements BookService {
         if (existing == null || isSoftDeleted(existing.getStatus())) {
             throw new NotFoundException();
         }
-        bookMapper.softDelete(id);
+        if (bookMapper.softDelete(id, existing.getVersion()) == 0) {
+            throwOptimisticLockConflict();
+        }
     }
 
     @Override
@@ -142,7 +149,9 @@ public class BookServiceImpl implements BookService {
             throw new NotFoundException();
         }
         validateBookStatus(request.getStatus());
-        bookMapper.updateStatus(id, request.getStatus());
+        if (bookMapper.updateStatus(id, request.getStatus(), resolveVersion(request.getVersion(), existing.getVersion())) == 0) {
+            throwOptimisticLockConflict();
+        }
     }
 
     private BookListItemVO resolveFrontCover(BookListItemVO book) {
@@ -177,6 +186,7 @@ public class BookServiceImpl implements BookService {
     private BookAdminListItemVO resolveAdminCover(BookAdminListItemVO book) {
         return new BookAdminListItemVO(
                 book.getId(),
+                book.getVersion(),
                 book.getBookName(),
                 book.getAuthor(),
                 book.getPublisher(),
@@ -233,6 +243,14 @@ public class BookServiceImpl implements BookService {
         if (status != BookStatus.ON_SHELF.getCode() && status != BookStatus.OFF_SHELF.getCode()) {
             throw new InvalidStatusException("图书状态不合法");
         }
+    }
+
+    private Integer resolveVersion(Integer requestVersion, Integer currentVersion) {
+        return requestVersion != null ? requestVersion : currentVersion;
+    }
+
+    private void throwOptimisticLockConflict() {
+        throw new BusinessException(OPTIMISTIC_LOCK_CODE, OPTIMISTIC_LOCK_MESSAGE);
     }
 
     private int normalizePage(Integer page) {

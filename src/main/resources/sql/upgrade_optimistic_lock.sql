@@ -1,0 +1,5 @@
+ALTER TABLE `book`
+    ADD COLUMN `version` INT NOT NULL DEFAULT 0 COMMENT '乐观锁版本号' AFTER `id`;
+
+ALTER TABLE `order`
+    ADD COLUMN `version` INT NOT NULL DEFAULT 0 COMMENT '乐观锁版本号' AFTER `id`;

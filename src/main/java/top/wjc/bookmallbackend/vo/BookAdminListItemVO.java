@@ -10,6 +10,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class BookAdminListItemVO {
     private Long id;
+    private Integer version;
     private String bookName;
     private String author;
     private String publisher;

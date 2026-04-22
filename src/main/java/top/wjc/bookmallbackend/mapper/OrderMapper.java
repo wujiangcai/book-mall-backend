@@ -35,21 +35,38 @@ public interface OrderMapper {
                         @Param("orderNo") String orderNo,
                         @Param("userId") Long userId);
 
-    int updateStatus(@Param("id") Long id, @Param("status") Integer status);
+    int updateStatus(@Param("id") Long id,
+                     @Param("status") Integer status,
+                     @Param("version") Integer version);
 
     int updatePaymentSuccess(@Param("id") Long id,
                              @Param("fromStatus") Integer fromStatus,
                              @Param("toStatus") Integer toStatus,
                              @Param("payTime") LocalDateTime payTime,
-                             @Param("tradeNo") String tradeNo);
+                             @Param("tradeNo") String tradeNo,
+                             @Param("version") Integer version);
 
-    int updatePayTime(@Param("id") Long id, @Param("payTime") LocalDateTime payTime);
+    int updatePayTime(@Param("id") Long id,
+                      @Param("payTime") LocalDateTime payTime,
+                      @Param("version") Integer version);
 
-    int updateTradeNo(@Param("id") Long id, @Param("tradeNo") String tradeNo);
+    int updateTradeNo(@Param("id") Long id,
+                      @Param("tradeNo") String tradeNo,
+                      @Param("version") Integer version);
 
-    int updateShipTime(@Param("id") Long id, @Param("shipTime") LocalDateTime shipTime);
+    int updateShipTime(@Param("id") Long id,
+                       @Param("shipTime") LocalDateTime shipTime,
+                       @Param("version") Integer version);
 
-    int updateAddress(@Param("id") Long id, @Param("addressId") Long addressId);
+    int updateAddress(@Param("id") Long id,
+                      @Param("addressId") Long addressId,
+                      @Param("version") Integer version);
+
+    int updateShipment(@Param("id") Long id,
+                       @Param("fromStatus") Integer fromStatus,
+                       @Param("toStatus") Integer toStatus,
+                       @Param("shipTime") LocalDateTime shipTime,
+                       @Param("version") Integer version);
 
     int countByAddressId(@Param("addressId") Long addressId);
 }

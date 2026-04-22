@@ -11,6 +11,7 @@ import java.util.List;
 @AllArgsConstructor
 public class AdminOrderDetailVO {
     private Long id;
+    private Integer version;
     private String orderNo;
     private Long userId;
     private BigDecimal totalAmount;

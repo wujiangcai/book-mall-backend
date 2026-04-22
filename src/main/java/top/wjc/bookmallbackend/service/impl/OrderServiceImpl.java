@@ -53,6 +53,9 @@ public class OrderServiceImpl implements OrderService {
 
     private static final int DEFAULT_PAGE_SIZE = 20;
     private static final int MAX_PAGE_SIZE = 100;
+    private static final int OPTIMISTIC_LOCK_CODE = 409;
+    private static final String OPTIMISTIC_LOCK_MESSAGE = "数据已变更，请刷新后重试";
+    private static final int OPTIMISTIC_LOCK_RETRY_TIMES = 3;
 
     private final OrderMapper orderMapper;
     private final OrderItemMapper orderItemMapper;
@@ -222,20 +225,17 @@ public class OrderServiceImpl implements OrderService {
         if (order.getStatus() == null || order.getStatus() != OrderStatus.UNPAID.getCode()) {
             return false;
         }
-        int updated = orderMapper.updatePaymentSuccess(order.getId(), OrderStatus.UNPAID.getCode(),
-                OrderStatus.PENDING_SHIP.getCode(), LocalDateTime.now(), normalizeTradeNo(params.get("trade_no")));
-        if (updated == 0) {
-            Order latestOrder = orderMapper.selectById(order.getId());
-            return latestOrder != null && isPaymentHandled(latestOrder);
+        LocalDateTime payTime = LocalDateTime.now();
+        String tradeNo = normalizeTradeNo(params.get("trade_no"));
+        if (!markPaymentSuccess(order, payTime, tradeNo)) {
+            return false;
         }
         List<OrderItemVO> items = orderItemMapper.selectByOrderId(order.getId());
         if (items == null || items.isEmpty()) {
             throw new BusinessException(500, "订单商品不存在");
         }
         for (OrderItemVO item : items) {
-            if (bookMapper.decreaseStock(item.getBookId(), item.getQuantity()) == 0) {
-                throw new InsufficientStockException();
-            }
+            decreaseStock(item);
         }
         return true;
     }
@@ -370,7 +370,9 @@ public class OrderServiceImpl implements OrderService {
         if (order.getStatus() == null || order.getStatus() != OrderStatus.UNPAID.getCode()) {
             throw new InvalidOrderStatusException();
         }
-        orderMapper.updateStatus(orderId, OrderStatus.CANCELLED.getCode());
+        if (orderMapper.updateStatus(orderId, OrderStatus.CANCELLED.getCode(), order.getVersion()) == 0) {
+            throwOptimisticLockConflict();
+        }
     }
 
     @Override
@@ -411,7 +413,7 @@ public class OrderServiceImpl implements OrderService {
         long total = orderMapper.countAdminList(status, orderNo, userId);
         List<Order> orders = orderMapper.selectAdminList(offset, size, status, orderNo, userId);
         List<AdminOrderListItemVO> list = orders.stream()
-                .map(order -> new AdminOrderListItemVO(order.getId(), order.getOrderNo(), order.getUserId(),
+                .map(order -> new AdminOrderListItemVO(order.getId(), order.getVersion(), order.getOrderNo(), order.getUserId(),
                         order.getTotalAmount(), order.getStatus(), order.getCreateTime()))
                 .collect(Collectors.toList());
         return new PageResult<>(total, list, currentPage, size);
@@ -476,6 +478,7 @@ public class OrderServiceImpl implements OrderService {
         if (request.getAddressId() == null && request.getStatus() == null) {
             throw new BusinessException(400, "至少修改一项订单信息");
         }
+        int expectedVersion = resolveVersion(request.getVersion(), order.getVersion());
         if (request.getAddressId() != null && !request.getAddressId().equals(order.getAddressId())) {
             Address address = addressMapper.selectById(request.getAddressId());
             if (address == null || !address.getUserId().equals(order.getUserId())) {
@@ -484,13 +487,23 @@ public class OrderServiceImpl implements OrderService {
             if (!canUpdateAddress(order.getStatus())) {
                 throw new InvalidOrderStatusException();
             }
-            orderMapper.updateAddress(orderId, request.getAddressId());
+            if (orderMapper.updateAddress(orderId, request.getAddressId(), expectedVersion) == 0) {
+                throwOptimisticLockConflict();
+            }
+            expectedVersion++;
+            order.setVersion(expectedVersion);
+            order.setAddressId(request.getAddressId());
         }
         if (request.getStatus() != null && !request.getStatus().equals(order.getStatus())) {
             if (!canAdminUpdateStatus(order.getStatus(), request.getStatus())) {
                 throw new InvalidOrderStatusException();
             }
-            orderMapper.updateStatus(orderId, request.getStatus());
+            if (orderMapper.updateStatus(orderId, request.getStatus(), expectedVersion) == 0) {
+                throwOptimisticLockConflict();
+            }
+            expectedVersion++;
+            order.setVersion(expectedVersion);
+            order.setStatus(request.getStatus());
         }
     }
 
@@ -504,7 +517,9 @@ public class OrderServiceImpl implements OrderService {
         if (!canCancel(order.getStatus())) {
             throw new InvalidOrderStatusException();
         }
-        orderMapper.updateStatus(orderId, OrderStatus.CANCELLED.getCode());
+        if (orderMapper.updateStatus(orderId, OrderStatus.CANCELLED.getCode(), order.getVersion()) == 0) {
+            throwOptimisticLockConflict();
+        }
     }
 
     @Override
@@ -519,8 +534,9 @@ public class OrderServiceImpl implements OrderService {
             throw new NotFoundException();
         }
         AddressSnapshotVO snapshot = buildAddressSnapshot(address);
-        return new AdminOrderDetailVO(order.getId(), order.getOrderNo(), order.getUserId(), order.getTotalAmount(),
-                order.getStatus(), order.getAddressId(), order.getCreateTime(), order.getPayTime(), order.getShipTime(), snapshot, items);
+        return new AdminOrderDetailVO(order.getId(), order.getVersion(), order.getOrderNo(), order.getUserId(),
+                order.getTotalAmount(), order.getStatus(), order.getAddressId(), order.getCreateTime(),
+                order.getPayTime(), order.getShipTime(), snapshot, items);
     }
 
     @Override
@@ -533,8 +549,53 @@ public class OrderServiceImpl implements OrderService {
         if (order.getStatus() == null || order.getStatus() != OrderStatus.PENDING_SHIP.getCode()) {
             throw new InvalidOrderStatusException();
         }
-        orderMapper.updateStatus(orderId, OrderStatus.SHIPPED.getCode());
-        orderMapper.updateShipTime(orderId, LocalDateTime.now());
+        if (orderMapper.updateShipment(orderId, OrderStatus.PENDING_SHIP.getCode(),
+                OrderStatus.SHIPPED.getCode(), LocalDateTime.now(), order.getVersion()) == 0) {
+            throwOptimisticLockConflict();
+        }
+    }
+
+    private boolean markPaymentSuccess(Order order, LocalDateTime payTime, String tradeNo) {
+        Order currentOrder = order;
+        for (int attempt = 0; attempt < OPTIMISTIC_LOCK_RETRY_TIMES; attempt++) {
+            int updated = orderMapper.updatePaymentSuccess(currentOrder.getId(), OrderStatus.UNPAID.getCode(),
+                    OrderStatus.PENDING_SHIP.getCode(), payTime, tradeNo, currentOrder.getVersion());
+            if (updated == 1) {
+                return true;
+            }
+            Order latestOrder = orderMapper.selectById(currentOrder.getId());
+            if (latestOrder == null) {
+                return false;
+            }
+            if (isPaymentHandled(latestOrder)) {
+                return true;
+            }
+            if (latestOrder.getStatus() == null || latestOrder.getStatus() != OrderStatus.UNPAID.getCode()) {
+                return false;
+            }
+            currentOrder = latestOrder;
+        }
+        throwOptimisticLockConflict();
+        return false;
+    }
+
+    private void decreaseStock(OrderItemVO item) {
+        for (int attempt = 0; attempt < OPTIMISTIC_LOCK_RETRY_TIMES; attempt++) {
+            Book book = bookMapper.selectById(item.getBookId());
+            if (book == null || isSoftDeleted(book.getStatus())) {
+                throw new NotFoundException();
+            }
+            if (book.getStatus() == null || book.getStatus() != BookStatus.ON_SHELF.getCode()) {
+                throw new BookOffShelfException();
+            }
+            if (book.getStock() == null || item.getQuantity() > book.getStock()) {
+                throw new InsufficientStockException();
+            }
+            if (bookMapper.decreaseStock(item.getBookId(), item.getQuantity(), book.getVersion()) == 1) {
+                return;
+            }
+        }
+        throwOptimisticLockConflict();
     }
 
     private String buildItemSummary(Long orderId) {
@@ -568,6 +629,14 @@ public class OrderServiceImpl implements OrderService {
 
     private boolean isSoftDeleted(Integer status) {
         return status != null && status == -1;
+    }
+
+    private int resolveVersion(Integer requestVersion, Integer currentVersion) {
+        return requestVersion != null ? requestVersion : currentVersion;
+    }
+
+    private void throwOptimisticLockConflict() {
+        throw new BusinessException(OPTIMISTIC_LOCK_CODE, OPTIMISTIC_LOCK_MESSAGE);
     }
 
     private int normalizePage(Integer page) {

@@ -12,6 +12,9 @@ import java.math.BigDecimal;
 @Data
 public class BookUpdateRequest {
 
+    @Min(value = 0, message = "版本号不能为负数")
+    private Integer version;
+
     @NotBlank(message = "书名不能为空")
     private String bookName;
 

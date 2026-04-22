@@ -75,14 +75,20 @@ jobs:
           test -n "$TCR_NAMESPACE" || { echo "TCR_NAMESPACE is empty"; exit 1; }
 
       - name: Write SSH key
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_PORT: ${{ secrets.DEPLOY_PORT }}
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
         shell: bash
         run: |
           install -m 700 -d ~/.ssh
-          cat <<'EOF' > ~/.ssh/id_ed25519
-          ${{ secrets.DEPLOY_SSH_KEY }}
-          EOF
+          printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
-          ssh-keyscan -H "${{ secrets.DEPLOY_HOST }}" >> ~/.ssh/known_hosts
+          touch ~/.ssh/known_hosts
+          ssh-keyscan -p "${DEPLOY_PORT:-22}" -H "$DEPLOY_HOST" >> ~/.ssh/known_hosts || {
+            echo "ssh-keyscan failed for ${DEPLOY_HOST}:${DEPLOY_PORT:-22}" >&2
+            exit 1
+          }
 
       - name: Sync deployment files
         env:

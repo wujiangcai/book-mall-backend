@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 import top.wjc.bookmallbackend.common.PageResult;
 import top.wjc.bookmallbackend.common.Result;
 import top.wjc.bookmallbackend.dto.OrderCreateRequest;
+import top.wjc.bookmallbackend.exception.UnauthorizedException;
 import top.wjc.bookmallbackend.service.OrderService;
 import top.wjc.bookmallbackend.vo.OrderCreateVO;
 import top.wjc.bookmallbackend.vo.OrderDetailVO;
@@ -35,23 +36,23 @@ public class FrontOrderController {
 
     @PostMapping
     public Result<OrderCreateVO> create(@Valid @RequestBody OrderCreateRequest request, HttpServletRequest httpRequest) {
-        Object userId = httpRequest.getAttribute("userId");
-        return Result.success(orderService.create(Long.valueOf(userId.toString()), request));
+        Long userId = extractUserId(httpRequest);
+        return Result.success(orderService.create(userId, request));
     }
 
     @PostMapping(value = "/{id}/pay", produces = MediaType.TEXT_HTML_VALUE)
-    public ResponseEntity<String> pay(@PathVariable Long id, HttpServletRequest httpRequest) {
-        Object userId = httpRequest.getAttribute("userId");
-        String form = orderService.pay(Long.valueOf(userId.toString()), id);
+    public ResponseEntity<String> pay(@PathVariable @Min(value = 1, message = "订单ID必须大于0") Long id, HttpServletRequest httpRequest) {
+        Long userId = extractUserId(httpRequest);
+        String form = orderService.pay(userId, id);
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_HTML_VALUE + ";charset=UTF-8")
                 .body(form);
     }
 
     @PostMapping("/{id}/cancel")
-    public Result<Void> cancel(@PathVariable Long id, HttpServletRequest httpRequest) {
-        Object userId = httpRequest.getAttribute("userId");
-        orderService.cancel(Long.valueOf(userId.toString()), id);
+    public Result<Void> cancel(@PathVariable @Min(value = 1, message = "订单ID必须大于0") Long id, HttpServletRequest httpRequest) {
+        Long userId = extractUserId(httpRequest);
+        orderService.cancel(userId, id);
         return Result.success();
     }
 
@@ -59,13 +60,21 @@ public class FrontOrderController {
     public Result<PageResult<OrderListItemVO>> list(@RequestParam(required = false) @Min(value = 1, message = "page必须大于0") Integer page,
                                                     @RequestParam(required = false) @Min(value = 1, message = "pageSize必须大于0") Integer pageSize,
                                                     HttpServletRequest httpRequest) {
-        Object userId = httpRequest.getAttribute("userId");
-        return Result.success(orderService.list(Long.valueOf(userId.toString()), page, pageSize));
+        Long userId = extractUserId(httpRequest);
+        return Result.success(orderService.list(userId, page, pageSize));
     }
 
     @GetMapping("/{id}")
-    public Result<OrderDetailVO> detail(@PathVariable Long id, HttpServletRequest httpRequest) {
+    public Result<OrderDetailVO> detail(@PathVariable @Min(value = 1, message = "订单ID必须大于0") Long id, HttpServletRequest httpRequest) {
+        Long userId = extractUserId(httpRequest);
+        return Result.success(orderService.detail(userId, id));
+    }
+
+    private Long extractUserId(HttpServletRequest httpRequest) {
         Object userId = httpRequest.getAttribute("userId");
-        return Result.success(orderService.detail(Long.valueOf(userId.toString()), id));
+        if (userId == null) {
+            throw new UnauthorizedException();
+        }
+        return Long.valueOf(userId.toString());
     }
 }

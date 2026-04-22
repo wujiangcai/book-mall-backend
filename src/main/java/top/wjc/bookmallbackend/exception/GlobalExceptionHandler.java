@@ -1,13 +1,16 @@
 package top.wjc.bookmallbackend.exception;
 
+import jakarta.validation.ConstraintViolationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import top.wjc.bookmallbackend.common.Result;
 
 import java.util.regex.Pattern;
@@ -20,8 +23,11 @@ public class GlobalExceptionHandler {
     private static final Pattern SENSITIVE_PATTERN = Pattern.compile("(?i)(\"?(token|password)\"?\\s*[:=]\\s*)(\".*?\"|\\S+)");
 
     @ExceptionHandler(BusinessException.class)
-    public Result<Void> handleBusinessException(BusinessException exception) {
-        return Result.fail(exception.getCode(), exception.getMessage());
+    public ResponseEntity<Result<Void>> handleBusinessException(BusinessException exception) {
+        int code = exception.getCode();
+        int httpStatus = code >= 1000 ? HttpStatus.UNPROCESSABLE_ENTITY.value() : code;
+        return ResponseEntity.status(httpStatus)
+                .body(Result.fail(code, exception.getMessage()));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -40,6 +46,21 @@ public class GlobalExceptionHandler {
                 .map(error -> error.getField() + ": " + error.getDefaultMessage())
                 .collect(Collectors.joining("; "));
         return Result.fail(HttpStatus.BAD_REQUEST.value(), message);
+    }
+
+    @ExceptionHandler(ConstraintViolationException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public Result<String> handleConstraintViolation(ConstraintViolationException exception) {
+        String message = exception.getConstraintViolations().stream()
+                .map(v -> v.getPropertyPath() + ": " + v.getMessage())
+                .collect(Collectors.joining("; "));
+        return Result.fail(HttpStatus.BAD_REQUEST.value(), message);
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public Result<Void> handleTypeMismatch(MethodArgumentTypeMismatchException exception) {
+        return Result.fail(HttpStatus.BAD_REQUEST.value(), "参数类型错误: " + exception.getName());
     }
 
     @ExceptionHandler(UnauthorizedException.class)

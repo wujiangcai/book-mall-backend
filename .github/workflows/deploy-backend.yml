@@ -34,35 +34,6 @@ jobs:
       - name: Test
         run: chmod +x ./mvnw && ./mvnw -B test
 
-      - name: Diagnose deploy connectivity
-        env:
-          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
-          DEPLOY_PORT: ${{ secrets.DEPLOY_PORT }}
-          DEPLOY_HOST_KEY: ${{ secrets.DEPLOY_HOST_KEY }}
-        shell: bash
-        run: |
-          DEPLOY_HOST="$(echo "$DEPLOY_HOST" | tr -d '\r' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
-          DEPLOY_PORT="$(echo "${DEPLOY_PORT:-22}" | tr -d '\r[:space:]')"
-          DEPLOY_HOST_KEY="$(printf '%s' "$DEPLOY_HOST_KEY" | tr -d '\r')"
-
-          test -n "$DEPLOY_HOST" || { echo "DEPLOY_HOST is empty"; exit 1; }
-          [[ "$DEPLOY_PORT" =~ ^[0-9]+$ ]] || { echo "DEPLOY_PORT must be numeric"; exit 1; }
-
-          echo "Checking SSH connectivity to ${DEPLOY_HOST}:${DEPLOY_PORT}"
-          if [ -n "$DEPLOY_HOST_KEY" ]; then
-            echo "DEPLOY_HOST_KEY is configured; workflow will use pinned host key verification"
-          else
-            echo "DEPLOY_HOST_KEY is not configured; workflow will fall back to ssh-keyscan"
-          fi
-
-          if timeout 5 bash -c "</dev/tcp/${DEPLOY_HOST}/${DEPLOY_PORT}" 2>/dev/null; then
-            echo "TCP ${DEPLOY_HOST}:${DEPLOY_PORT} is reachable from runner"
-          else
-            echo "TCP connection to ${DEPLOY_HOST}:${DEPLOY_PORT} failed from runner" >&2
-            echo "Check DEPLOY_HOST/DEPLOY_PORT, cloud security groups, host firewall, and sshd listen port" >&2
-            exit 1
-          fi
-
       - name: Log in to TCR
         uses: docker/login-action@v3
         with:
@@ -90,67 +61,48 @@ jobs:
       - name: Validate deploy secrets
         env:
           DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
-          DEPLOY_PORT: ${{ secrets.DEPLOY_PORT }}
           DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
           DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
-          DEPLOY_HOST_KEY: ${{ secrets.DEPLOY_HOST_KEY }}
           TCR_USERNAME: ${{ secrets.TCR_USERNAME }}
           TCR_PASSWORD: ${{ secrets.TCR_PASSWORD }}
           TCR_NAMESPACE: ${{ secrets.TCR_NAMESPACE }}
         run: |
-          DEPLOY_HOST="$(echo "$DEPLOY_HOST" | tr -d '\r' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
-          DEPLOY_PORT="$(echo "${DEPLOY_PORT:-22}" | tr -d '\r[:space:]')"
-          DEPLOY_HOST_KEY="$(printf '%s' "$DEPLOY_HOST_KEY" | tr -d '\r')"
-
           test -n "$DEPLOY_HOST" || { echo "DEPLOY_HOST is empty"; exit 1; }
           test -n "$DEPLOY_USER" || { echo "DEPLOY_USER is empty"; exit 1; }
           test -n "$DEPLOY_SSH_KEY" || { echo "DEPLOY_SSH_KEY is empty"; exit 1; }
           test -n "$TCR_USERNAME" || { echo "TCR_USERNAME is empty"; exit 1; }
           test -n "$TCR_PASSWORD" || { echo "TCR_PASSWORD is empty"; exit 1; }
           test -n "$TCR_NAMESPACE" || { echo "TCR_NAMESPACE is empty"; exit 1; }
-          [[ "$DEPLOY_PORT" =~ ^[0-9]+$ ]] || { echo "DEPLOY_PORT must be numeric"; exit 1; }
-          (( DEPLOY_PORT >= 1 && DEPLOY_PORT <= 65535 )) || { echo "DEPLOY_PORT out of range (1-65535)"; exit 1; }
-
-          if [ -n "$DEPLOY_HOST_KEY" ]; then
-            echo "DEPLOY_HOST_KEY is configured"
-          else
-            echo "DEPLOY_HOST_KEY is not configured; workflow will use ssh-keyscan fallback"
-          fi
 
       - name: Write SSH key
+        shell: bash
         env:
           DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
           DEPLOY_PORT: ${{ secrets.DEPLOY_PORT }}
-          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
           DEPLOY_HOST_KEY: ${{ secrets.DEPLOY_HOST_KEY }}
-        shell: bash
         run: |
           DEPLOY_HOST="$(echo "$DEPLOY_HOST" | tr -d '\r' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
           DEPLOY_PORT="$(echo "${DEPLOY_PORT:-22}" | tr -d '\r[:space:]')"
-          DEPLOY_HOST_KEY="$(printf '%s' "$DEPLOY_HOST_KEY" | tr -d '\r')"
 
           install -m 700 -d ~/.ssh
-          printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/id_ed25519
+          cat <<'EOF' > ~/.ssh/id_ed25519
+          ${{ secrets.DEPLOY_SSH_KEY }}
+          EOF
           chmod 600 ~/.ssh/id_ed25519
-          : > ~/.ssh/known_hosts
+          touch ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
+
+          ssh-keygen -R "$DEPLOY_HOST" -f ~/.ssh/known_hosts >/dev/null 2>&1 || true
+          ssh-keygen -R "[$DEPLOY_HOST]:$DEPLOY_PORT" -f ~/.ssh/known_hosts >/dev/null 2>&1 || true
 
           if [ -n "$DEPLOY_HOST_KEY" ]; then
             printf '%s\n' "$DEPLOY_HOST_KEY" >> ~/.ssh/known_hosts
           else
-            ssh-keyscan -T 15 -p "$DEPLOY_PORT" -H "$DEPLOY_HOST" >> ~/.ssh/known_hosts || {
-              echo "ssh-keyscan failed for ${DEPLOY_HOST}:${DEPLOY_PORT}" >&2
-              if timeout 5 bash -c "</dev/tcp/${DEPLOY_HOST}/${DEPLOY_PORT}" 2>/dev/null; then
-                echo "TCP ${DEPLOY_HOST}:${DEPLOY_PORT} is reachable, but ssh-keyscan could not read host key" >&2
-                echo "Configure DEPLOY_HOST_KEY to pin the server host key and avoid live keyscan dependency" >&2
-              else
-                echo "TCP connection to ${DEPLOY_HOST}:${DEPLOY_PORT} failed from runner" >&2
-                echo "Check DEPLOY_HOST/DEPLOY_PORT, cloud security groups, host firewall, and sshd listen port" >&2
-              fi
-              exit 1
-            }
+            ssh-keyscan -p "$DEPLOY_PORT" -H "$DEPLOY_HOST" >> ~/.ssh/known_hosts
           fi
 
-      - name: Verify SSH login
+      - name: Test SSH connection
+        shell: bash
         env:
           DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
           DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
@@ -172,11 +124,11 @@ jobs:
           DEPLOY_PORT="$(echo "${DEPLOY_PORT:-22}" | tr -d '\r[:space:]')"
           SSH_OPTS="-i ~/.ssh/id_ed25519 -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile=~/.ssh/known_hosts -o ConnectTimeout=10"
 
-          ssh $SSH_OPTS -p "$DEPLOY_PORT" "${DEPLOY_USER}@${DEPLOY_HOST}" \
+          ssh $SSH_OPTS -p "${DEPLOY_PORT}" "${DEPLOY_USER}@${DEPLOY_HOST}" \
             "mkdir -p /opt/book-mall/scripts"
-          scp $SSH_OPTS -P "$DEPLOY_PORT" deploy/docker-compose.prod.yml \
+          scp $SSH_OPTS -P "${DEPLOY_PORT}" deploy/docker-compose.prod.yml \
             "${DEPLOY_USER}@${DEPLOY_HOST}:/opt/book-mall/docker-compose.prod.yml"
-          scp $SSH_OPTS -P "$DEPLOY_PORT" scripts/deploy-prod.sh \
+          scp $SSH_OPTS -P "${DEPLOY_PORT}" scripts/deploy-prod.sh \
             "${DEPLOY_USER}@${DEPLOY_HOST}:/opt/book-mall/scripts/deploy-prod.sh"
 
       - name: Deploy on server
@@ -189,5 +141,5 @@ jobs:
           DEPLOY_PORT="$(echo "${DEPLOY_PORT:-22}" | tr -d '\r[:space:]')"
           SSH_OPTS="-i ~/.ssh/id_ed25519 -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile=~/.ssh/known_hosts -o ConnectTimeout=10"
 
-          ssh $SSH_OPTS -p "$DEPLOY_PORT" "${DEPLOY_USER}@${DEPLOY_HOST}" \
+          ssh $SSH_OPTS -p "${DEPLOY_PORT}" "${DEPLOY_USER}@${DEPLOY_HOST}" \
             "cd /opt/book-mall && chmod +x scripts/deploy-prod.sh && APP_DIR=/opt/book-mall ./scripts/deploy-prod.sh"

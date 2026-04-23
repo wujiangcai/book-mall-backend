@@ -13,6 +13,7 @@ public class AdminOrderListItemVO {
     private Integer version;
     private String orderNo;
     private Long userId;
+    private String username;
     private BigDecimal totalAmount;
     private Integer status;
     private LocalDateTime createTime;

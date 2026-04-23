@@ -3,6 +3,7 @@ package top.wjc.bookmallbackend.mapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import top.wjc.bookmallbackend.entity.Order;
+import top.wjc.bookmallbackend.vo.AdminOrderListItemVO;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -25,11 +26,11 @@ public interface OrderMapper {
 
     long countByUserId(@Param("userId") Long userId);
 
-    List<Order> selectAdminList(@Param("offset") int offset,
-                                @Param("pageSize") int pageSize,
-                                @Param("status") Integer status,
-                                @Param("orderNo") String orderNo,
-                                @Param("userId") Long userId);
+    List<AdminOrderListItemVO> selectAdminList(@Param("offset") int offset,
+                                               @Param("pageSize") int pageSize,
+                                               @Param("status") Integer status,
+                                               @Param("orderNo") String orderNo,
+                                               @Param("userId") Long userId);
 
     long countAdminList(@Param("status") Integer status,
                         @Param("orderNo") String orderNo,

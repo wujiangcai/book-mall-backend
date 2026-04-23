@@ -11,6 +11,7 @@ public class CategoryAdminVO {
     private Long id;
     private String categoryName;
     private Long parentId;
+    private String parentName;
     private Integer sortOrder;
     private Integer status;
     private LocalDateTime createTime;

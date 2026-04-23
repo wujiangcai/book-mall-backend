@@ -27,15 +27,9 @@
         </template>
       </a-table>
 
-      <a-space style="margin-top: 16px">
-        <template v-if="detail?.status === OrderStatus.UNPAID">
-          <a-button type="primary" @click="pay">支付</a-button>
-          <a-button status="danger" @click="cancel">取消</a-button>
-        </template>
-        <template v-else>
-          <a-button @click="viewLogistics">查看物流</a-button>
-          <a-button @click="applyAfterSales">申请售后</a-button>
-        </template>
+      <a-space v-if="detail?.status === OrderStatus.UNPAID" style="margin-top: 16px">
+        <a-button type="primary" @click="pay">支付</a-button>
+        <a-button status="danger" @click="cancel">取消</a-button>
       </a-space>
     </template>
     <a-empty v-else description="暂无订单详情" />
@@ -85,14 +79,6 @@ const statusText = (status: number) => {
 const load = async () => {
   const id = route.params.id as string
   detail.value = (await frontOrderApi.detail(id)) as any
-}
-
-const viewLogistics = () => {
-  Message.info('物流功能暂未开放')
-}
-
-const applyAfterSales = () => {
-  Message.info('售后功能暂未开放')
 }
 
 const pay = async () => {

@@ -194,6 +194,18 @@ export type AdminOrderDetail = {
   items?: OrderItem[]
 }
 
+export type AdminAddress = {
+  id: number
+  receiverName: string
+  phone: string
+  province?: string
+  city?: string
+  district?: string
+  detailAddress: string
+  isDefault: number
+  fullAddress: string
+}
+
 export type AdminBookListItem = {
   id: number
   bookName: string
@@ -283,6 +295,7 @@ export type CategoryAdminItem = {
   id: number
   categoryName: string
   parentId: number
+  parentName?: string
   sortOrder: number
   status: number
   createTime?: string

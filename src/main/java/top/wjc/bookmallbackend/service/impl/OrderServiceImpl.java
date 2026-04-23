@@ -204,10 +204,6 @@ public class OrderServiceImpl implements OrderService {
         if (!verifyAlipaySign(params)) {
             return false;
         }
-        String tradeStatus = params.get("trade_status");
-        if (!ALIPAY_TRADE_SUCCESS.equals(tradeStatus) && !ALIPAY_TRADE_FINISHED.equals(tradeStatus)) {
-            return false;
-        }
         String outTradeNo = params.get("out_trade_no");
         if (outTradeNo == null || outTradeNo.isBlank()) {
             return false;
@@ -216,31 +212,11 @@ public class OrderServiceImpl implements OrderService {
         if (order == null) {
             return false;
         }
-        if (isPaymentHandled(order)) {
-            return true;
-        }
-        if (!isValidAlipayApp(params) || !isValidAlipaySeller(params) || !isValidAlipayAmount(order, params.get("total_amount"))) {
-            return false;
-        }
-        if (order.getStatus() == null || order.getStatus() != OrderStatus.UNPAID.getCode()) {
-            return false;
-        }
-        LocalDateTime payTime = LocalDateTime.now();
-        String tradeNo = normalizeTradeNo(params.get("trade_no"));
-        if (!markPaymentSuccess(order, payTime, tradeNo)) {
-            return false;
-        }
-        List<OrderItemVO> items = orderItemMapper.selectByOrderId(order.getId());
-        if (items == null || items.isEmpty()) {
-            throw new BusinessException(500, "订单商品不存在");
-        }
-        for (OrderItemVO item : items) {
-            decreaseStock(item);
-        }
-        return true;
+        return processAlipayPayment(order, params, true);
     }
 
     @Override
+    @Transactional
     public Long handleAlipayReturn(Map<String, String> params) {
         if (!verifyAlipaySign(params)) {
             return null;
@@ -251,6 +227,9 @@ public class OrderServiceImpl implements OrderService {
         }
         Order order = orderMapper.selectByOrderNo(outTradeNo);
         if (order == null) {
+            return null;
+        }
+        if (!processAlipayPayment(order, params, false)) {
             return null;
         }
         return order.getId();
@@ -324,6 +303,40 @@ public class OrderServiceImpl implements OrderService {
         return order.getStatus() != null
                 && order.getStatus() == OrderStatus.PENDING_SHIP.getCode()
                 && order.getPayTime() != null;
+    }
+
+    private boolean processAlipayPayment(Order order, Map<String, String> params, boolean requireTradeSuccess) {
+        if (order == null) {
+            return false;
+        }
+        if (isPaymentHandled(order)) {
+            return true;
+        }
+        if (requireTradeSuccess) {
+            String tradeStatus = params.get("trade_status");
+            if (!ALIPAY_TRADE_SUCCESS.equals(tradeStatus) && !ALIPAY_TRADE_FINISHED.equals(tradeStatus)) {
+                return false;
+            }
+        }
+        if (!isValidAlipayApp(params) || !isValidAlipaySeller(params) || !isValidAlipayAmount(order, params.get("total_amount"))) {
+            return false;
+        }
+        if (order.getStatus() == null || order.getStatus() != OrderStatus.UNPAID.getCode()) {
+            return false;
+        }
+        LocalDateTime payTime = LocalDateTime.now();
+        String tradeNo = normalizeTradeNo(params.get("trade_no"));
+        if (!markPaymentSuccess(order, payTime, tradeNo)) {
+            return false;
+        }
+        List<OrderItemVO> items = orderItemMapper.selectByOrderId(order.getId());
+        if (items == null || items.isEmpty()) {
+            throw new BusinessException(500, "订单商品不存在");
+        }
+        for (OrderItemVO item : items) {
+            decreaseStock(item);
+        }
+        return true;
     }
 
     private String normalizeTradeNo(String tradeNo) {
@@ -411,11 +424,7 @@ public class OrderServiceImpl implements OrderService {
         int size = normalizeSize(pageSize);
         int offset = (currentPage - 1) * size;
         long total = orderMapper.countAdminList(status, orderNo, userId);
-        List<Order> orders = orderMapper.selectAdminList(offset, size, status, orderNo, userId);
-        List<AdminOrderListItemVO> list = orders.stream()
-                .map(order -> new AdminOrderListItemVO(order.getId(), order.getVersion(), order.getOrderNo(), order.getUserId(),
-                        order.getTotalAmount(), order.getStatus(), order.getCreateTime()))
-                .collect(Collectors.toList());
+        List<AdminOrderListItemVO> list = orderMapper.selectAdminList(offset, size, status, orderNo, userId);
         return new PageResult<>(total, list, currentPage, size);
     }
 

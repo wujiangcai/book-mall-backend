@@ -10,8 +10,11 @@ import top.wjc.bookmallbackend.dto.UpdateUserRequest;
 import top.wjc.bookmallbackend.dto.UserStatusRequest;
 import top.wjc.bookmallbackend.vo.AdminUserDetailVO;
 import top.wjc.bookmallbackend.vo.AdminUserListItemVO;
+import top.wjc.bookmallbackend.vo.AdminAddressVO;
 import top.wjc.bookmallbackend.vo.AuthResponse;
 import top.wjc.bookmallbackend.vo.UserInfoResponse;
+
+import java.util.List;
 
 public interface UserService {
     AuthResponse register(RegisterRequest request);
@@ -27,6 +30,8 @@ public interface UserService {
     PageResult<AdminUserListItemVO> listAdmin(Integer page, Integer pageSize, String keyword);
 
     AdminUserDetailVO detailAdmin(Long userId);
+
+    List<AdminAddressVO> listAddressesAdmin(Long userId);
 
     void createAdmin(AdminUserCreateRequest request);
 

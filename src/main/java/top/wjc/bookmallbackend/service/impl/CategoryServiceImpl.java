@@ -128,11 +128,16 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     private List<CategoryAdminVO> toAdminVOs(List<Category> categories) {
+        Map<Long, String> categoryNameMap = categoryMapper.selectAdminList().stream()
+                .collect(Collectors.toMap(Category::getId, Category::getCategoryName));
         return categories.stream()
                 .map(category -> new CategoryAdminVO(
                         category.getId(),
                         category.getCategoryName(),
                         category.getParentId(),
+                        category.getParentId() == null || category.getParentId() == 0
+                                ? null
+                                : categoryNameMap.get(category.getParentId()),
                         category.getSortOrder(),
                         category.getStatus(),
                         category.getCreateTime()

@@ -19,26 +19,31 @@ import top.wjc.bookmallbackend.exception.ForbiddenException;
 import top.wjc.bookmallbackend.exception.InvalidStatusException;
 import top.wjc.bookmallbackend.exception.NotFoundException;
 import top.wjc.bookmallbackend.exception.UnauthorizedException;
+import top.wjc.bookmallbackend.mapper.AddressMapper;
 import top.wjc.bookmallbackend.mapper.UserMapper;
 import top.wjc.bookmallbackend.service.UserService;
 import top.wjc.bookmallbackend.util.JwtUtil;
+import top.wjc.bookmallbackend.vo.AdminAddressVO;
 import top.wjc.bookmallbackend.vo.AdminUserDetailVO;
 import top.wjc.bookmallbackend.vo.AdminUserListItemVO;
 import top.wjc.bookmallbackend.vo.AuthResponse;
 import top.wjc.bookmallbackend.vo.UserInfoResponse;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Service
 public class UserServiceImpl implements UserService {
 
     private final UserMapper userMapper;
+    private final AddressMapper addressMapper;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
 
-    public UserServiceImpl(UserMapper userMapper, PasswordEncoder passwordEncoder, JwtUtil jwtUtil) {
+    public UserServiceImpl(UserMapper userMapper, AddressMapper addressMapper, PasswordEncoder passwordEncoder, JwtUtil jwtUtil) {
         this.userMapper = userMapper;
+        this.addressMapper = addressMapper;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtil = jwtUtil;
     }
@@ -133,6 +138,27 @@ public class UserServiceImpl implements UserService {
             throw new NotFoundException();
         }
         return detail;
+    }
+
+    @Override
+    public List<AdminAddressVO> listAddressesAdmin(Long userId) {
+        User user = userMapper.findById(userId);
+        if (user == null) {
+            throw new NotFoundException();
+        }
+        return addressMapper.selectByUserId(userId).stream()
+                .map(address -> new AdminAddressVO(
+                        address.getId(),
+                        address.getReceiverName(),
+                        address.getPhone(),
+                        address.getProvince(),
+                        address.getCity(),
+                        address.getDistrict(),
+                        address.getDetailAddress(),
+                        address.getIsDefault(),
+                        joinAddress(address.getProvince(), address.getCity(), address.getDistrict(), address.getDetailAddress())
+                ))
+                .toList();
     }
 
     @Override
@@ -244,5 +270,21 @@ public class UserServiceImpl implements UserService {
         claims.put("role", user.getRole());
         String token = jwtUtil.generateToken(claims);
         return new AuthResponse(token, user.getId(), user.getUsername(), user.getRole());
+    }
+
+    private String joinAddress(String province, String city, String district, String detailAddress) {
+        StringBuilder sb = new StringBuilder();
+        appendIfPresent(sb, province);
+        appendIfPresent(sb, city);
+        appendIfPresent(sb, district);
+        appendIfPresent(sb, detailAddress);
+        return sb.toString();
+    }
+
+    private void appendIfPresent(StringBuilder sb, String value) {
+        if (value == null || value.isBlank()) {
+            return;
+        }
+        sb.append(value);
     }
 }

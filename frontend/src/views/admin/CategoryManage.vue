@@ -24,7 +24,7 @@
         <template #columns>
           <a-table-column title="分类名" data-index="categoryName" />
           <a-table-column title="父级" :width="120">
-            <template #cell="{ record }">{{ record.parentId || '-' }}</template>
+            <template #cell="{ record }">{{ record.parentName || '顶级分类' }}</template>
           </a-table-column>
           <a-table-column title="排序" data-index="sortOrder" :width="120" />
           <a-table-column title="状态" :width="120">
@@ -68,8 +68,17 @@
         <a-form-item label="分类名">
           <a-input v-model="form.categoryName" />
         </a-form-item>
-        <a-form-item label="父级ID">
-          <a-input-number v-model="form.parentId" :min="0" />
+        <a-form-item label="父级分类">
+          <a-select v-model="form.parentId" placeholder="请选择父级分类" allow-clear>
+            <a-option :value="0">顶级分类</a-option>
+            <a-option
+              v-for="category in parentOptions"
+              :key="category.id"
+              :value="category.id"
+            >
+              {{ category.categoryName }}
+            </a-option>
+          </a-select>
         </a-form-item>
         <a-form-item label="排序">
           <a-input-number v-model="form.sortOrder" :min="0" />
@@ -80,12 +89,13 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
 import { Message } from '@arco-design/web-vue'
 import adminCategoryApi from '../../api/admin/category'
 import type { CategoryAdminItem } from '../../types/api'
 
 const list = ref<CategoryAdminItem[]>([])
+const allCategories = ref<CategoryAdminItem[]>([])
 const total = ref(0)
 const visible = ref(false)
 const editing = ref(false)
@@ -107,6 +117,12 @@ const load = async () => {
   const data = (await adminCategoryApi.list({ page: query.page, pageSize: query.pageSize }).catch(() => null)) as any
   list.value = data?.list || []
   total.value = data?.total || 0
+  await loadAllCategories()
+}
+
+const loadAllCategories = async () => {
+  const data = (await adminCategoryApi.list({ page: 1, pageSize: 100 }).catch(() => null)) as any
+  allCategories.value = data?.list || []
 }
 
 const handlePageChange = (page: number) => {
@@ -185,6 +201,7 @@ const batchRemove = async () => {
 }
 
 const selectedIds = selectedRowKeys
+const parentOptions = computed(() => allCategories.value.filter((category) => category.id !== editingId.value))
 
 onMounted(load)
 </script>

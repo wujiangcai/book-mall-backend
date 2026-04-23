@@ -15,13 +15,7 @@
         </a-form-item>
         <a-button type="primary" html-type="submit" :loading="loading" long>登录</a-button>
       </a-form>
-      <a-space direction="vertical" fill class="social-block">
-        <a-divider>社交登录</a-divider>
-        <a-space>
-          <a-button>微信</a-button>
-          <a-button>QQ</a-button>
-          <a-button>微博</a-button>
-        </a-space>
+      <a-space direction="vertical" fill class="register-block">
         <a-link @click="goRegister">没有账号？去注册</a-link>
       </a-space>
       <a-alert v-if="error" type="error" :title="error" class="error" />
@@ -125,7 +119,7 @@ const handleLogin = async () => {
   width: 100%;
 }
 
-.social-block {
+.register-block {
   margin-top: 16px;
 }
 

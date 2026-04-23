@@ -23,6 +23,7 @@ target/
 .claude/
 .kiro/
 .playwright-mcp/
+tools/ngrok/
 
 ### NetBeans ###
 /nbproject/private/

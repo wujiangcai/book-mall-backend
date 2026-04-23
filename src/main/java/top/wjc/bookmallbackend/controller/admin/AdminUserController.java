@@ -19,8 +19,11 @@ import top.wjc.bookmallbackend.dto.AdminUserUpdateRequest;
 import top.wjc.bookmallbackend.dto.ChangePasswordRequest;
 import top.wjc.bookmallbackend.dto.UserStatusRequest;
 import top.wjc.bookmallbackend.service.UserService;
+import top.wjc.bookmallbackend.vo.AdminAddressVO;
 import top.wjc.bookmallbackend.vo.AdminUserDetailVO;
 import top.wjc.bookmallbackend.vo.AdminUserListItemVO;
+
+import java.util.List;
 
 @Validated
 @RestController
@@ -43,6 +46,11 @@ public class AdminUserController {
     @GetMapping("/{id}")
     public Result<AdminUserDetailVO> detail(@PathVariable Long id) {
         return Result.success(userService.detailAdmin(id));
+    }
+
+    @GetMapping("/{id}/addresses")
+    public Result<List<AdminAddressVO>> addresses(@PathVariable Long id) {
+        return Result.success(userService.listAddressesAdmin(id));
     }
 
     @PostMapping

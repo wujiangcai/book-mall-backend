@@ -18,10 +18,6 @@
                 <a-button size="mini" type="primary" @click="pay(record.orderId)">支付</a-button>
                 <a-button size="mini" status="danger" @click="cancel(record.orderId)">取消</a-button>
               </template>
-              <template v-else>
-                <a-button size="mini" @click="viewLogistics">查看物流</a-button>
-                <a-button size="mini" @click="applyAfterSales">申请售后</a-button>
-              </template>
             </a-space>
           </template>
         </a-table-column>
@@ -101,14 +97,6 @@ const handlePageSizeChange = (pageSize: number) => {
 
 const goDetail = (id: number) => {
   router.push(`/order/${id}`)
-}
-
-const viewLogistics = () => {
-  Message.info('物流功能暂未开放')
-}
-
-const applyAfterSales = () => {
-  Message.info('售后功能暂未开放')
 }
 
 const pay = async (id: number) => {

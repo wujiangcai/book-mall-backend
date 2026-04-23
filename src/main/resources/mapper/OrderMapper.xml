@@ -71,21 +71,30 @@
         WHERE user_id = #{userId}
     </select>
 
-    <select id="selectAdminList" resultMap="BaseResultMap">
-        SELECT <include refid="Base_Column_List"/>
-        FROM `order`
+    <select id="selectAdminList" resultType="top.wjc.bookmallbackend.vo.AdminOrderListItemVO">
+        SELECT
+            o.id,
+            o.version,
+            o.order_no,
+            o.user_id,
+            u.username,
+            o.total_amount,
+            o.status,
+            o.create_time
+        FROM `order` o
+        LEFT JOIN user u ON u.id = o.user_id
         <where>
             <if test="status != null">
-                status = #{status}
+                o.status = #{status}
             </if>
             <if test="orderNo != null and orderNo != ''">
-                AND order_no LIKE CONCAT('%', #{orderNo}, '%')
+                AND o.order_no LIKE CONCAT('%', #{orderNo}, '%')
             </if>
             <if test="userId != null">
-                AND user_id = #{userId}
+                AND o.user_id = #{userId}
             </if>
         </where>
-        ORDER BY create_time DESC
+        ORDER BY o.create_time DESC
         LIMIT #{offset}, #{pageSize}
     </select>
 

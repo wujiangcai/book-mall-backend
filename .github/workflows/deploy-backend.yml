@@ -83,6 +83,7 @@ jobs:
         run: |
           DEPLOY_HOST="$(echo "$DEPLOY_HOST" | tr -d '\r' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
           DEPLOY_PORT="$(echo "${DEPLOY_PORT:-22}" | tr -d '\r[:space:]')"
+          DEPLOY_HOST_KEY="$(printf '%s' "${DEPLOY_HOST_KEY:-}" | tr -d '\r' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
 
           install -m 700 -d ~/.ssh
           cat <<'EOF' > ~/.ssh/id_ed25519
@@ -97,9 +98,14 @@ jobs:
 
           if [ -n "$DEPLOY_HOST_KEY" ]; then
             printf '%s\n' "$DEPLOY_HOST_KEY" >> ~/.ssh/known_hosts
-          else
-            ssh-keyscan -p "$DEPLOY_PORT" -H "$DEPLOY_HOST" >> ~/.ssh/known_hosts
           fi
+
+          KEYSCAN_OUTPUT="$(ssh-keyscan -p "$DEPLOY_PORT" -T 10 -t ed25519 -H "$DEPLOY_HOST" 2>/dev/null)"
+          test -n "$KEYSCAN_OUTPUT" || { echo "ssh-keyscan did not return an ED25519 host key"; exit 1; }
+          printf '%s\n' "$KEYSCAN_OUTPUT" >> ~/.ssh/known_hosts
+
+          ssh-keygen -F "[$DEPLOY_HOST]:$DEPLOY_PORT" -f ~/.ssh/known_hosts >/dev/null \
+            || { echo "known_hosts entry for [$DEPLOY_HOST]:$DEPLOY_PORT was not written"; exit 1; }
 
       - name: Test SSH connection
         shell: bash

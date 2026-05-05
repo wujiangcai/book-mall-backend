@@ -7,6 +7,9 @@ import jakarta.validation.constraints.Pattern;
 import lombok.Data;
 
 @Data
+/**
+ * 新增地址请求对象。
+ */
 public class AddressCreateRequest {
 
     @NotBlank(message = "收货人姓名不能为空")

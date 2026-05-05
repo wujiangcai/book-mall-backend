@@ -18,6 +18,11 @@ import top.wjc.bookmallbackend.vo.AddressVO;
 
 import java.util.List;
 
+/**
+ * 前台收货地址控制器。
+ *
+ * <p>一个用户可以维护多条地址记录，并设置默认地址供下单时使用。
+ */
 @RestController
 @RequestMapping("/api/front/user/addresses")
 public class FrontAddressController {
@@ -29,12 +34,18 @@ public class FrontAddressController {
     }
 
     @GetMapping
+    /**
+     * 查询当前用户地址列表。
+     */
     public Result<List<AddressVO>> list(HttpServletRequest request) {
         Object userId = request.getAttribute("userId");
         return Result.success(addressService.list(Long.valueOf(userId.toString())));
     }
 
     @PostMapping
+    /**
+     * 新增收货地址。
+     */
     public Result<Void> create(@Valid @RequestBody AddressCreateRequest request, HttpServletRequest httpRequest) {
         Object userId = httpRequest.getAttribute("userId");
         addressService.create(Long.valueOf(userId.toString()), request);
@@ -42,6 +53,9 @@ public class FrontAddressController {
     }
 
     @PutMapping("/{id}")
+    /**
+     * 修改收货地址。
+     */
     public Result<Void> update(@PathVariable Long id,
                                @Valid @RequestBody AddressUpdateRequest request,
                                HttpServletRequest httpRequest) {
@@ -51,6 +65,9 @@ public class FrontAddressController {
     }
 
     @DeleteMapping("/{id}")
+    /**
+     * 删除收货地址。
+     */
     public Result<Void> delete(@PathVariable Long id, HttpServletRequest httpRequest) {
         Object userId = httpRequest.getAttribute("userId");
         addressService.delete(Long.valueOf(userId.toString()), id);
@@ -58,6 +75,9 @@ public class FrontAddressController {
     }
 
     @PutMapping("/{id}/default")
+    /**
+     * 设为默认地址。
+     */
     public Result<Void> setDefault(@PathVariable Long id, HttpServletRequest httpRequest) {
         Object userId = httpRequest.getAttribute("userId");
         addressService.setDefault(Long.valueOf(userId.toString()), id);

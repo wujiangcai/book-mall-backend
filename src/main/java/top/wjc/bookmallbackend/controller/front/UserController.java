@@ -13,6 +13,11 @@ import top.wjc.bookmallbackend.dto.UpdateUserRequest;
 import top.wjc.bookmallbackend.service.UserService;
 import top.wjc.bookmallbackend.vo.UserInfoResponse;
 
+/**
+ * 前台用户中心控制器。
+ *
+ * <p>负责“我的信息”和“修改密码”这类与当前登录用户直接相关的操作。
+ */
 @RestController
 @RequestMapping("/api/front/user")
 public class UserController {
@@ -24,12 +29,18 @@ public class UserController {
     }
 
     @GetMapping("/info")
+    /**
+     * 查询当前登录用户资料。
+     */
     public Result<UserInfoResponse> info(HttpServletRequest request) {
         Object userId = request.getAttribute("userId");
         return Result.success(userService.getUserInfo(Long.valueOf(userId.toString())));
     }
 
     @PutMapping("/info")
+    /**
+     * 修改当前登录用户资料。
+     */
     public Result<Void> update(@Valid @RequestBody UpdateUserRequest request, HttpServletRequest httpRequest) {
         Object userId = httpRequest.getAttribute("userId");
         userService.updateUserInfo(Long.valueOf(userId.toString()), request);
@@ -37,6 +48,9 @@ public class UserController {
     }
 
     @PutMapping("/password")
+    /**
+     * 修改当前登录用户密码。
+     */
     public Result<Void> changePassword(@Valid @RequestBody ChangePasswordRequest request, HttpServletRequest httpRequest) {
         Object userId = httpRequest.getAttribute("userId");
         userService.changePassword(Long.valueOf(userId.toString()), request);

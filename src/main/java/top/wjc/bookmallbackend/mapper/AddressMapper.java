@@ -6,6 +6,11 @@ import top.wjc.bookmallbackend.entity.Address;
 
 import java.util.List;
 
+/**
+ * 地址数据访问接口。
+ *
+ * <p>负责用户地址的增删改查，以及默认地址相关操作。
+ */
 @Mapper
 public interface AddressMapper {
 

@@ -9,6 +9,11 @@ import top.wjc.bookmallbackend.vo.CategoryTreeVO;
 
 import java.util.List;
 
+/**
+ * 前台分类控制器。
+ *
+ * <p>返回前台可用的分类树结构，方便页面直接渲染导航或筛选栏。
+ */
 @RestController
 @RequestMapping("/api/front/categories")
 public class FrontCategoryController {
@@ -20,6 +25,9 @@ public class FrontCategoryController {
     }
 
     @GetMapping
+    /**
+     * 查询前台分类树。
+     */
     public Result<List<CategoryTreeVO>> list() {
         return Result.success(categoryService.getFrontTree());
     }

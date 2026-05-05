@@ -7,6 +7,9 @@ import java.math.BigDecimal;
 
 @Data
 @AllArgsConstructor
+/**
+ * 购物车项展示对象。
+ */
 public class CartItemVO {
     private Long id;
     private Long bookId;

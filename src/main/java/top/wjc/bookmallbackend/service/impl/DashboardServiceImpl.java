@@ -20,6 +20,11 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
+/**
+ * 后台数据看板服务实现。
+ *
+ * <p>看板不对应单一数据表，而是把订单、图书、分类等多维数据做聚合后一次性返回给后台首页。
+ */
 public class DashboardServiceImpl implements DashboardService {
 
     private static final int LOW_STOCK_THRESHOLD = 10;
@@ -38,6 +43,9 @@ public class DashboardServiceImpl implements DashboardService {
     }
 
     @Override
+    /**
+     * 组装后台首页所需的全部统计数据。
+     */
     public AdminDashboardVO getAdminDashboard() {
         LocalDate today = LocalDate.now();
         LocalDateTime todayStart = today.atStartOfDay();
@@ -69,6 +77,7 @@ public class DashboardServiceImpl implements DashboardService {
     }
 
     private List<AdminDashboardTrendPointVO> fillMissingTrendDays(List<AdminDashboardTrendPointVO> rawTrend, LocalDate endDay) {
+        // SQL 只会返回有数据的日期，这里把空白日期补成 0，便于前端图表连续展示。
         Map<String, AdminDashboardTrendPointVO> trendMap = rawTrend.stream()
                 .collect(Collectors.toMap(AdminDashboardTrendPointVO::getDay, Function.identity(), (left, right) -> left));
         List<AdminDashboardTrendPointVO> filled = new ArrayList<>();

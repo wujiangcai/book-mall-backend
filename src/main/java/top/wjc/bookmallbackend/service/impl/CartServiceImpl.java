@@ -20,6 +20,12 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+/**
+ * 购物车服务实现。
+ *
+ * <p>职责很明确：查询购物车、加入购物车、修改数量、删除购物车项。
+ * 真正提交为订单之前，先在这里完成基础库存校验。
+ */
 public class CartServiceImpl implements CartService {
 
     private final CartMapper cartMapper;
@@ -33,6 +39,9 @@ public class CartServiceImpl implements CartService {
     }
 
     @Override
+    /**
+     * 查询当前用户购物车，并把封面图片地址补全成可直接访问的 URL。
+     */
     public List<CartItemVO> list(Long userId) {
         return cartMapper.selectByUserId(userId).stream()
                 .map(item -> new CartItemVO(
@@ -50,6 +59,12 @@ public class CartServiceImpl implements CartService {
 
     @Override
     @Transactional
+    /**
+     * 加入购物车。
+     *
+     * <p>核心校验：图书必须存在、未软删除、处于上架状态，并且库存足够。
+     * 如果购物车里已经存在同一本书，则做数量累加而不是重复插入。
+     */
     public void add(Long userId, CartAddRequest request) {
         Book book = bookMapper.selectById(request.getBookId());
         if (book == null || isSoftDeleted(book.getStatus())) {
@@ -80,6 +95,9 @@ public class CartServiceImpl implements CartService {
 
     @Override
     @Transactional
+    /**
+     * 修改购物车中某一项的购买数量。
+     */
     public void updateQuantity(Long userId, Long cartId, CartUpdateRequest request) {
         Cart cart = cartMapper.selectById(cartId);
         if (cart == null || !cart.getUserId().equals(userId)) {
@@ -100,6 +118,9 @@ public class CartServiceImpl implements CartService {
 
     @Override
     @Transactional
+    /**
+     * 删除购物车项。
+     */
     public void delete(Long userId, Long cartId) {
         Cart cart = cartMapper.selectById(cartId);
         if (cart == null || !cart.getUserId().equals(userId)) {

@@ -34,6 +34,11 @@ import java.util.List;
 import java.util.Map;
 
 @Service
+/**
+ * 用户服务实现。
+ *
+ * <p>负责前台用户注册/登录/个人信息维护，以及后台管理员对用户的分页管理、状态管理、重置密码等操作。
+ */
 public class UserServiceImpl implements UserService {
 
     private final UserMapper userMapper;
@@ -50,6 +55,11 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
+    /**
+     * 用户注册。
+     *
+     * <p>流程：校验用户名和手机号是否重复 -> 加密密码 -> 写入数据库 -> 自动签发 JWT 返回前端。
+     */
     public AuthResponse register(RegisterRequest request) {
         if (userMapper.countByUsername(request.getUsername()) > 0) {
             throw new BusinessException(400, "用户名已存在");
@@ -71,6 +81,11 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    /**
+     * 用户登录。
+     *
+     * <p>adminOnly = true 表示本次登录用于后台，除了账号密码正确之外，还必须具备管理员角色。
+     */
     public AuthResponse login(LoginRequest request, boolean adminOnly) {
         User user = userMapper.findByUsername(request.getUsername());
         if (user == null) {
@@ -89,6 +104,9 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    /**
+     * 查询当前登录用户信息。
+     */
     public UserInfoResponse getUserInfo(Long userId) {
         User user = userMapper.findById(userId);
         if (user == null) {
@@ -98,6 +116,9 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    /**
+     * 更新当前登录用户的昵称、手机号、邮箱等基本资料。
+     */
     public void updateUserInfo(Long userId, UpdateUserRequest request) {
         User user = userMapper.findById(userId);
         if (user == null) {
@@ -111,6 +132,11 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
+    /**
+     * 修改密码。
+     *
+     * <p>这里会先校验旧密码，保证只有本人知道原密码时才能修改。
+     */
     public void changePassword(Long userId, ChangePasswordRequest request) {
         User user = userMapper.findById(userId);
         if (user == null) {
@@ -265,6 +291,7 @@ public class UserServiceImpl implements UserService {
     }
 
     private AuthResponse buildAuthResponse(User user) {
+        // Token 中只放最关键的身份信息，既能减少体积，也方便后续鉴权。
         Map<String, Object> claims = new HashMap<>();
         claims.put("userId", user.getId());
         claims.put("role", user.getRole());

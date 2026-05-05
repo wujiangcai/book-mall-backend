@@ -9,6 +9,11 @@ import top.wjc.bookmallbackend.vo.BookListItemVO;
 
 import java.util.List;
 
+/**
+ * 图书数据访问接口。
+ *
+ * <p>负责前后台图书查询、图书维护、库存扣减以及乐观锁更新。
+ */
 @Mapper
 public interface BookMapper {
 

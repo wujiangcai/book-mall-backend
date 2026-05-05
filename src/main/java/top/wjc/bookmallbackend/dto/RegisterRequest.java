@@ -6,6 +6,11 @@ import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 @Data
+/**
+ * 用户注册请求对象。
+ *
+ * <p>包含注册时必须提交的用户名、密码、手机号，以及可选的昵称和邮箱。
+ */
 public class RegisterRequest {
 
     @NotBlank(message = "用户名不能为空")

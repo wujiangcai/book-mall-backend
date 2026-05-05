@@ -18,6 +18,11 @@ import top.wjc.bookmallbackend.vo.CartItemVO;
 
 import java.util.List;
 
+/**
+ * 前台购物车控制器。
+ *
+ * <p>这里的接口都要求先登录，当前用户身份由拦截器提前解析后写入 request。
+ */
 @RestController
 @RequestMapping("/api/front/cart")
 public class FrontCartController {
@@ -29,12 +34,18 @@ public class FrontCartController {
     }
 
     @GetMapping
+    /**
+     * 查询当前用户购物车。
+     */
     public Result<List<CartItemVO>> list(HttpServletRequest request) {
         Object userId = request.getAttribute("userId");
         return Result.success(cartService.list(Long.valueOf(userId.toString())));
     }
 
     @PostMapping
+    /**
+     * 加入购物车。
+     */
     public Result<Void> add(@Valid @RequestBody CartAddRequest request, HttpServletRequest httpRequest) {
         Object userId = httpRequest.getAttribute("userId");
         cartService.add(Long.valueOf(userId.toString()), request);
@@ -42,6 +53,9 @@ public class FrontCartController {
     }
 
     @PutMapping("/{id}")
+    /**
+     * 修改购物车项数量。
+     */
     public Result<Void> update(@PathVariable Long id,
                                @Valid @RequestBody CartUpdateRequest request,
                                HttpServletRequest httpRequest) {
@@ -51,6 +65,9 @@ public class FrontCartController {
     }
 
     @DeleteMapping("/{id}")
+    /**
+     * 删除购物车项。
+     */
     public Result<Void> delete(@PathVariable Long id, HttpServletRequest httpRequest) {
         Object userId = httpRequest.getAttribute("userId");
         cartService.delete(Long.valueOf(userId.toString()), id);

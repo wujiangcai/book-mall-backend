@@ -7,6 +7,11 @@ import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 @Data
+/**
+ * 后台新增用户请求对象。
+ *
+ * <p>管理员可以通过该对象创建普通用户或管理员账号。
+ */
 public class AdminUserCreateRequest {
 
     @NotBlank(message = "用户名不能为空")

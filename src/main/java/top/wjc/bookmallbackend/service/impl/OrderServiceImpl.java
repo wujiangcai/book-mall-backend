@@ -49,6 +49,15 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 
 @Service
+/**
+ * 订单服务实现。
+ *
+ * <p>这是整个项目业务最复杂的服务，串起了：
+ * <p>购物车 -> 创建订单 -> 发起支付 -> 支付回调 -> 扣减库存 -> 后台发货 -> 订单查询。
+ *
+ * <p>项目在订单和图书表中都使用了 version 字段进行乐观锁控制，
+ * 用来降低并发下的超卖、重复支付回调、状态覆盖等问题。
+ */
 public class OrderServiceImpl implements OrderService {
 
     private static final int DEFAULT_PAGE_SIZE = 20;
@@ -102,6 +111,18 @@ public class OrderServiceImpl implements OrderService {
         this.alipayClient = alipayClientProvider.getIfAvailable();
     }
 
+    /**
+     * 前台创建订单。
+     *
+     * <p>主要步骤：
+     * <p>1. 校验地址属于当前用户；
+     * <p>2. 根据 cartIds 读取购物车项；
+     * <p>3. 生成订单主表与订单明细；
+     * <p>4. 计算订单总金额；
+     * <p>5. 删除已下单的购物车项。
+     *
+     * <p>注意：项目选择在“支付成功回调”时再真正扣库存，而不是在创建订单时扣库存。
+     */
     @Override
     @Transactional
     public OrderCreateVO create(Long userId, OrderCreateRequest request) {
@@ -165,6 +186,11 @@ public class OrderServiceImpl implements OrderService {
                 order.getCreateTime() == null ? now : order.getCreateTime(), snapshot, itemVOs);
     }
 
+    /**
+     * 发起支付宝支付。
+     *
+     * <p>这里会生成一个 HTML form，前端拿到后直接渲染/跳转到支付宝页面。
+     */
     @Override
     @Transactional
     public String pay(Long userId, Long orderId) {
@@ -198,6 +224,12 @@ public class OrderServiceImpl implements OrderService {
         return buildAlipayPage(order);
     }
 
+    /**
+     * 处理支付宝异步通知。
+     *
+     * <p>这是支付链路里最关键的一步。只有异步通知校验通过后，系统才会：
+     * 更新订单状态为“待发货”并扣减库存。
+     */
     @Override
     @Transactional
     public boolean handleAlipayNotify(Map<String, String> params) {
@@ -215,6 +247,12 @@ public class OrderServiceImpl implements OrderService {
         return processAlipayPayment(order, params, true);
     }
 
+    /**
+     * 处理支付宝同步跳转。
+     *
+     * <p>用户支付完成后浏览器会回到系统前端页面。这里主要用于辅助确认支付结果，
+     * 但真正可靠的入账依据仍然是异步通知。
+     */
     @Override
     @Transactional
     public Long handleAlipayReturn(Map<String, String> params) {
@@ -236,6 +274,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     private String buildAlipayPage(Order order) {
+        // 把订单信息组装成支付宝要求的支付表单 HTML，由前端直接提交。
         if (alipayClient == null) {
             throw new BusinessException(500, "支付宝未配置");
         }
@@ -306,6 +345,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     private boolean processAlipayPayment(Order order, Map<String, String> params, boolean requireTradeSuccess) {
+        // 统一封装同步回跳和异步通知的支付处理逻辑，避免两套代码分叉。
         if (order == null) {
             return false;
         }
@@ -373,6 +413,9 @@ public class OrderServiceImpl implements OrderService {
                 && status != OrderStatus.CANCELLED.getCode();
     }
 
+    /**
+     * 前台取消订单。
+     */
     @Override
     @Transactional
     public void cancel(Long userId, Long orderId) {
@@ -388,6 +431,9 @@ public class OrderServiceImpl implements OrderService {
         }
     }
 
+    /**
+     * 前台订单分页查询。
+     */
     @Override
     public PageResult<OrderListItemVO> list(Long userId, Integer page, Integer pageSize) {
         int currentPage = normalizePage(page);
@@ -402,6 +448,9 @@ public class OrderServiceImpl implements OrderService {
         return new PageResult<>(total, list, currentPage, size);
     }
 
+    /**
+     * 前台订单详情查询。
+     */
     @Override
     public OrderDetailVO detail(Long userId, Long orderId) {
         Order order = orderMapper.selectByIdAndUserId(orderId, userId);
@@ -418,6 +467,9 @@ public class OrderServiceImpl implements OrderService {
                 order.getCreateTime(), order.getPayTime(), snapshot, items);
     }
 
+    /**
+     * 后台订单分页查询。
+     */
     @Override
     public PageResult<AdminOrderListItemVO> listAdmin(Integer page, Integer pageSize, Integer status, String orderNo, Long userId) {
         int currentPage = normalizePage(page);
@@ -428,6 +480,9 @@ public class OrderServiceImpl implements OrderService {
         return new PageResult<>(total, list, currentPage, size);
     }
 
+    /**
+     * 后台代客创建订单。
+     */
     @Override
     @Transactional
     public void createAdmin(AdminOrderCreateRequest request) {
@@ -477,6 +532,11 @@ public class OrderServiceImpl implements OrderService {
         orderItemMapper.batchInsert(items);
     }
 
+    /**
+     * 后台修改订单。
+     *
+     * <p>管理员不能随意跨状态跳转，必须符合既定状态机规则。
+     */
     @Override
     @Transactional
     public void updateAdmin(Long orderId, AdminOrderUpdateRequest request) {
@@ -516,6 +576,9 @@ public class OrderServiceImpl implements OrderService {
         }
     }
 
+    /**
+     * 后台取消订单。
+     */
     @Override
     @Transactional
     public void cancelAdmin(Long orderId) {
@@ -531,6 +594,9 @@ public class OrderServiceImpl implements OrderService {
         }
     }
 
+    /**
+     * 后台订单详情查询。
+     */
     @Override
     public AdminOrderDetailVO detailAdmin(Long orderId) {
         Order order = orderMapper.selectById(orderId);
@@ -548,6 +614,11 @@ public class OrderServiceImpl implements OrderService {
                 order.getPayTime(), order.getShipTime(), snapshot, items);
     }
 
+    /**
+     * 后台发货。
+     *
+     * <p>只有“待发货”状态允许变为“已发货”。
+     */
     @Override
     @Transactional
     public void ship(Long orderId) {
@@ -565,6 +636,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     private boolean markPaymentSuccess(Order order, LocalDateTime payTime, String tradeNo) {
+        // 支付回调可能因为网络重试而重复触发，这里用乐观锁 + 重试保证幂等性。
         Order currentOrder = order;
         for (int attempt = 0; attempt < OPTIMISTIC_LOCK_RETRY_TIMES; attempt++) {
             int updated = orderMapper.updatePaymentSuccess(currentOrder.getId(), OrderStatus.UNPAID.getCode(),
@@ -589,6 +661,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     private void decreaseStock(OrderItemVO item) {
+        // 库存扣减同样通过 version 保证并发安全，避免多用户同时购买导致超卖。
         for (int attempt = 0; attempt < OPTIMISTIC_LOCK_RETRY_TIMES; attempt++) {
             Book book = bookMapper.selectById(item.getBookId());
             if (book == null || isSoftDeleted(book.getStatus())) {
@@ -645,6 +718,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     private void throwOptimisticLockConflict() {
+        // 前端看到这类错误时，通常应该提示用户刷新页面后重试。
         throw new BusinessException(OPTIMISTIC_LOCK_CODE, OPTIMISTIC_LOCK_MESSAGE);
     }
 

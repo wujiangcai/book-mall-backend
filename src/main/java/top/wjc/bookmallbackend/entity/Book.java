@@ -12,6 +12,11 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+/**
+ * 图书实体。
+ *
+ * <p>对应数据库中的 `book` 表，保存图书基础信息、库存、价格以及乐观锁版本号。
+ */
 public class Book {
     private Long id;
     private Integer version;

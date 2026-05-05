@@ -8,6 +8,11 @@ import top.wjc.bookmallbackend.vo.AdminOrderListItemVO;
 import java.time.LocalDateTime;
 import java.util.List;
 
+/**
+ * 订单主表数据访问接口。
+ *
+ * <p>负责订单查询、状态更新、支付成功回写、发货以及乐观锁相关更新操作。
+ */
 @Mapper
 public interface OrderMapper {
     int countPendingShipmentByAddressId(@Param("addressId") Long addressId);

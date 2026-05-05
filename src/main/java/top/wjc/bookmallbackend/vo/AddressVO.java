@@ -5,6 +5,9 @@ import lombok.Data;
 
 @Data
 @AllArgsConstructor
+/**
+ * 前台地址展示对象。
+ */
 public class AddressVO {
     private Long id;
     private String receiverName;

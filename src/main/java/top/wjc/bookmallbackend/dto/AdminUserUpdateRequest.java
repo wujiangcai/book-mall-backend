@@ -6,6 +6,9 @@ import jakarta.validation.constraints.Pattern;
 import lombok.Data;
 
 @Data
+/**
+ * 后台修改用户请求对象。
+ */
 public class AdminUserUpdateRequest {
 
     @NotBlank(message = "用户名不能为空")

@@ -11,6 +11,11 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+/**
+ * 收货地址实体。
+ *
+ * <p>对应数据库中的 `address` 表，一个用户通常可以维护多条地址。
+ */
 public class Address {
     private Long id;
     private Long userId;

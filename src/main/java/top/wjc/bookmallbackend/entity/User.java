@@ -11,6 +11,11 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+/**
+ * 用户实体。
+ *
+ * <p>对应数据库中的 `user` 表，同时承载普通用户与管理员两种账号数据。
+ */
 public class User {
     private Long id;
     private String username;

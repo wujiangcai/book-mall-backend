@@ -16,6 +16,12 @@ import java.net.URI;
 import java.util.UUID;
 
 @Service
+/**
+ * 文件上传服务实现。
+ *
+ * <p>项目中的图片统一上传到腾讯云 COS，对外只暴露两类业务能力：
+ * 上传轮播图、上传图书封面。
+ */
 public class UploadServiceImpl implements UploadService {
 
     private static final long MAX_SIZE = 2 * 1024 * 1024;
@@ -33,11 +39,17 @@ public class UploadServiceImpl implements UploadService {
     }
 
     @Override
+    /**
+     * 上传轮播图图片。
+     */
     public String uploadBanner(MultipartFile file) {
         return uploadImage(file, "banners/");
     }
 
     @Override
+    /**
+     * 上传图书封面图片。
+     */
     public String uploadBookCover(MultipartFile file) {
         return uploadImage(file, "books/");
     }
@@ -53,6 +65,7 @@ public class UploadServiceImpl implements UploadService {
     }
 
     private String uploadImage(MultipartFile file, String directory) {
+        // 统一处理图片上传校验，避免不同业务入口重复写大小与类型检查。
         if (file == null || file.isEmpty()) {
             throw new BusinessException(400, "文件不能为空");
         }
@@ -80,6 +93,7 @@ public class UploadServiceImpl implements UploadService {
     }
 
     private String resolveImageUrl(String imageUrl) {
+        // 数据库存的是图片地址或 key，这里统一归一化成前端可直接访问的 URL。
         if (imageUrl == null || imageUrl.isBlank() || cosClient == null || bucket == null || bucket.isBlank()) {
             return imageUrl;
         }

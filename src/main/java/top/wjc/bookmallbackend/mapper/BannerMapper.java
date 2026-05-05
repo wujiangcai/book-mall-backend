@@ -6,6 +6,11 @@ import top.wjc.bookmallbackend.entity.Banner;
 
 import java.util.List;
 
+/**
+ * 轮播图数据访问接口。
+ *
+ * <p>负责轮播图的前台查询、后台分页查询和维护操作。
+ */
 @Mapper
 public interface BannerMapper {
 

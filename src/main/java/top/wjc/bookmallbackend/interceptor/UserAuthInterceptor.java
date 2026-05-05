@@ -10,6 +10,12 @@ import top.wjc.bookmallbackend.exception.UnauthorizedException;
 import top.wjc.bookmallbackend.util.JwtUtil;
 
 @Component
+/**
+ * 前台用户鉴权拦截器。
+ *
+ * <p>作用：从请求头 Authorization 中读取 JWT，解析出 userId 与 role，
+ * 再塞回 request attribute，供 Controller 直接使用。
+ */
 public class UserAuthInterceptor implements HandlerInterceptor {
 
     private final JwtUtil jwtUtil;
@@ -20,6 +26,7 @@ public class UserAuthInterceptor implements HandlerInterceptor {
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
+        // 预检请求直接放行，避免跨域场景下 OPTIONS 被误拦截。
         if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
             return true;
         }
@@ -29,6 +36,7 @@ public class UserAuthInterceptor implements HandlerInterceptor {
         }
         try {
             Claims claims = jwtUtil.parseToken(token);
+            // 解析后的用户信息挂到 request 上，避免每个控制器重复解 token。
             request.setAttribute("userId", claims.get("userId"));
             request.setAttribute("role", claims.get("role"));
             return true;

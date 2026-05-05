@@ -14,6 +14,12 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @RestControllerAdvice
+/**
+ * 全局异常处理器。
+ *
+ * <p>Controller 或 Service 抛出的异常统一在这里转换成 Result，
+ * 这样前端始终能收到结构一致的错误响应，而不是杂乱的默认报错页面。
+ */
 public class GlobalExceptionHandler {
 
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
@@ -63,6 +69,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public Result<Void> handleException(Exception exception) {
+        // 记录日志时对 token、password 等敏感字段做脱敏，避免泄露。
         log.error("Unhandled exception", sanitize(exception));
         return Result.fail(HttpStatus.INTERNAL_SERVER_ERROR.value(), "服务器内部错误");
     }

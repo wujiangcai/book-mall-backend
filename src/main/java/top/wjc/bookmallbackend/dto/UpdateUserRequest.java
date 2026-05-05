@@ -4,6 +4,9 @@ import jakarta.validation.constraints.Pattern;
 import lombok.Data;
 
 @Data
+/**
+ * 修改个人资料请求对象。
+ */
 public class UpdateUserRequest {
 
     private String nickname;

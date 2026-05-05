@@ -12,6 +12,11 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+/**
+ * 订单主表实体。
+ *
+ * <p>对应数据库中的 `order` 表，保存订单号、金额、状态、地址、支付时间等主信息。
+ */
 public class Order {
     private Long id;
     private Integer version;

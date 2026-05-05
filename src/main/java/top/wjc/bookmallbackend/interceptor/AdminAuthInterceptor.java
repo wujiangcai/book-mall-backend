@@ -12,6 +12,12 @@ import top.wjc.bookmallbackend.exception.UnauthorizedException;
 import top.wjc.bookmallbackend.util.JwtUtil;
 
 @Component
+/**
+ * 后台管理员鉴权拦截器。
+ *
+ * <p>与前台拦截器相比，这里多做一步角色校验：
+ * 只有 role = ADMIN 的 Token 才允许访问后台接口。
+ */
 public class AdminAuthInterceptor implements HandlerInterceptor {
 
     private final JwtUtil jwtUtil;
@@ -32,6 +38,7 @@ public class AdminAuthInterceptor implements HandlerInterceptor {
         try {
             Claims claims = jwtUtil.parseToken(token);
             Object role = claims.get("role");
+            // 管理后台必须是管理员角色，普通用户即使已登录也不能访问。
             if (role == null || Integer.parseInt(role.toString()) != UserRole.ADMIN.getCode()) {
                 throw new ForbiddenException();
             }

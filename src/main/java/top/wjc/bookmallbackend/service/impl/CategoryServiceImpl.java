@@ -23,6 +23,12 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
+/**
+ * 分类服务实现。
+ *
+ * <p>负责把分类同时服务于两个场景：
+ * 前台需要分类树，后台需要分页管理与状态维护。
+ */
 public class CategoryServiceImpl implements CategoryService {
 
     private final CategoryMapper categoryMapper;
@@ -34,12 +40,18 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
+    /**
+     * 查询前台分类树。
+     */
     public List<CategoryTreeVO> getFrontTree() {
         List<Category> categories = categoryMapper.selectAllEnabled();
         return buildTree(categories);
     }
 
     @Override
+    /**
+     * 后台分页查询分类。
+     */
     public PageResult<CategoryAdminVO> listAdmin(Integer page, Integer pageSize) {
         int currentPage = normalizePage(page);
         int size = normalizeSize(pageSize);
@@ -56,6 +68,9 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     @Transactional
+    /**
+     * 新增分类。
+     */
     public void create(CategoryCreateRequest request) {
         if (categoryMapper.countByName(request.getCategoryName()) > 0) {
             throw new BusinessException(400, "分类名称已存在");
@@ -72,6 +87,9 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     @Transactional
+    /**
+     * 修改分类。
+     */
     public void update(Long id, CategoryUpdateRequest request) {
         Category existing = categoryMapper.selectById(id);
         if (existing == null || isSoftDeleted(existing.getStatus())) {
@@ -93,6 +111,11 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     @Transactional
+    /**
+     * 删除分类。
+     *
+     * <p>分类下仍有关联图书时，不允许删除，避免出现脏数据。
+     */
     public void delete(Long id) {
         Category existing = categoryMapper.selectById(id);
         if (existing == null || isSoftDeleted(existing.getStatus())) {
@@ -106,6 +129,9 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     @Transactional
+    /**
+     * 修改分类状态。
+     */
     public void updateStatus(Long id, CategoryStatusRequest request) {
         Category existing = categoryMapper.selectById(id);
         if (existing == null || isSoftDeleted(existing.getStatus())) {
@@ -173,6 +199,7 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     private List<CategoryTreeVO> buildTree(List<Category> categories) {
+        // 先按 parentId 分组，再递归构建树结构，供前台直接渲染。
         Map<Long, List<Category>> grouped = categories.stream()
                 .collect(Collectors.groupingBy(category -> category.getParentId() == null ? 0L : category.getParentId()));
         List<CategoryTreeVO> roots = new ArrayList<>();

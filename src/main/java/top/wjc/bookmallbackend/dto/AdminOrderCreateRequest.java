@@ -7,6 +7,11 @@ import lombok.Data;
 import java.util.List;
 
 @Data
+/**
+ * 后台代客创建订单请求对象。
+ *
+ * <p>管理员可以直接指定用户、地址以及商品明细来创建订单。
+ */
 public class AdminOrderCreateRequest {
 
     @NotNull(message = "用户不能为空")
@@ -19,6 +24,9 @@ public class AdminOrderCreateRequest {
     private List<AdminOrderItemRequest> items;
 
     @Data
+    /**
+     * 后台创建订单时的单个商品项。
+     */
     public static class AdminOrderItemRequest {
         @NotNull(message = "图书不能为空")
         private Long bookId;

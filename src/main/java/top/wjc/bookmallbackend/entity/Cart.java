@@ -11,6 +11,11 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+/**
+ * 购物车实体。
+ *
+ * <p>对应数据库中的 `cart` 表，用来暂存用户待购买的图书和数量。
+ */
 public class Cart {
     private Long id;
     private Long userId;

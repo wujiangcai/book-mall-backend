@@ -7,6 +7,11 @@ import top.wjc.bookmallbackend.vo.CartItemVO;
 
 import java.util.List;
 
+/**
+ * 购物车数据访问接口。
+ *
+ * <p>负责购物车项的查询、插入、更新数量和删除。
+ */
 @Mapper
 public interface CartMapper {
 

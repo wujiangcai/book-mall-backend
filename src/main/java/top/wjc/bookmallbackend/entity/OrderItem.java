@@ -11,6 +11,11 @@ import java.math.BigDecimal;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+/**
+ * 订单明细实体。
+ *
+ * <p>对应数据库中的 `order_item` 表，一张订单通常对应多条订单明细记录。
+ */
 public class OrderItem {
     private Long id;
     private Long orderId;

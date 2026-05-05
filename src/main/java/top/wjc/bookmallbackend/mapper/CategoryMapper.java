@@ -6,6 +6,11 @@ import top.wjc.bookmallbackend.entity.Category;
 
 import java.util.List;
 
+/**
+ * 分类数据访问接口。
+ *
+ * <p>负责分类的树形查询、后台列表查询与分类维护操作。
+ */
 @Mapper
 public interface CategoryMapper {
 

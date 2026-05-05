@@ -13,6 +13,11 @@ import top.wjc.bookmallbackend.vo.AdminDashboardTrendPointVO;
 import java.time.LocalDateTime;
 import java.util.List;
 
+/**
+ * 数据看板数据访问接口。
+ *
+ * <p>这里聚合订单、图书、分类等多表统计查询，为后台首页提供数据来源。
+ */
 @Mapper
 public interface DashboardMapper {
     AdminDashboardOverviewVO selectOverview(@Param("todayStart") LocalDateTime todayStart,

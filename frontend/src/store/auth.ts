@@ -23,6 +23,7 @@ export type UserInfo = {
   role?: RoleValue
 }
 
+// Pinia 登录态仓库：统一管理 token、角色、用户信息，避免组件各自维护一份状态。
 export const useAuthStore = defineStore('auth', {
   state: () => ({
     token: getToken() as string | null,
@@ -56,6 +57,7 @@ export const useAuthStore = defineStore('auth', {
       }
     },
     clear() {
+      // 主动退出登录或登录过期时，清空内存态和本地缓存。
       this.token = null
       this.role = null
       this.userId = null
@@ -64,6 +66,7 @@ export const useAuthStore = defineStore('auth', {
       clearAuth()
     },
     async fetchUserInfo() {
+      // 刷新页面后，前端会根据本地 token 重新请求一次用户资料，恢复登录态展示。
       this.loading = true
       try {
         const data = (await frontUserApi.getInfo()) as any

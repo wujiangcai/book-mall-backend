@@ -8,6 +8,12 @@ import org.springframework.stereotype.Component;
 
 @Slf4j
 @Component
+/**
+ * 启动时执行的轻量兼容性迁移。
+ *
+ * <p>项目后期引入了乐观锁字段 version。为了兼容旧数据库结构，
+ * 启动时会检查 book 与 order 表是否已经包含 version 列；若没有，则自动补齐。
+ */
 public class SchemaMigrationRunner implements ApplicationRunner {
 
     private final JdbcTemplate jdbcTemplate;
@@ -22,6 +28,9 @@ public class SchemaMigrationRunner implements ApplicationRunner {
         ensureVersionColumn("order");
     }
 
+    /**
+     * 检查指定数据表是否存在 version 字段，不存在则自动执行 ALTER TABLE。
+     */
     private void ensureVersionColumn(String tableName) {
         String databaseName = jdbcTemplate.queryForObject("SELECT DATABASE()", String.class);
         if (databaseName == null || databaseName.isBlank()) {

@@ -8,6 +8,11 @@ import top.wjc.bookmallbackend.vo.AdminUserListItemVO;
 
 import java.util.List;
 
+/**
+ * 用户数据访问接口。
+ *
+ * <p>负责用户登录、注册、资料修改以及后台用户管理相关的数据库操作。
+ */
 @Mapper
 public interface UserMapper {
 

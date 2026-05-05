@@ -12,6 +12,15 @@ import java.util.Date;
 import java.util.Map;
 
 @Component
+/**
+ * JWT 工具类。
+ *
+ * <p>负责两件事：
+ * <p>1. 登录成功后生成 Token；
+ * <p>2. 请求进入时解析 Token。
+ *
+ * <p>项目把 userId 与 role 放进 claims 中，后续鉴权和数据隔离都依赖这两个字段。
+ */
 public class JwtUtil {
 
     private final byte[] secretBytes;

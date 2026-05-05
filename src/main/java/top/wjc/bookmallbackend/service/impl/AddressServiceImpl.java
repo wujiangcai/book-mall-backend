@@ -16,6 +16,12 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+/**
+ * 地址服务实现。
+ *
+ * <p>负责当前用户的地址维护，并保证默认地址规则始终成立：
+ * 一般情况下每个用户最多只有一条默认地址。
+ */
 public class AddressServiceImpl implements AddressService {
 
     private final AddressMapper addressMapper;
@@ -27,6 +33,9 @@ public class AddressServiceImpl implements AddressService {
     }
 
     @Override
+    /**
+     * 查询用户地址列表。
+     */
     public List<AddressVO> list(Long userId) {
         return addressMapper.selectByUserId(userId).stream()
                 .map(address -> new AddressVO(
@@ -44,6 +53,11 @@ public class AddressServiceImpl implements AddressService {
 
     @Override
     @Transactional
+    /**
+     * 新增地址。
+     *
+     * <p>如果用户还没有默认地址，则第一条地址会自动设为默认地址。
+     */
     public void create(Long userId, AddressCreateRequest request) {
         boolean shouldDefault = request.getIsDefault() != null && request.getIsDefault() == 1;
         if (addressMapper.countDefaultByUserId(userId) == 0) {
@@ -67,6 +81,9 @@ public class AddressServiceImpl implements AddressService {
 
     @Override
     @Transactional
+    /**
+     * 修改地址。
+     */
     public void update(Long userId, Long addressId, AddressUpdateRequest request) {
         Address existing = addressMapper.selectById(addressId);
         if (existing == null || !existing.getUserId().equals(userId)) {
@@ -88,6 +105,11 @@ public class AddressServiceImpl implements AddressService {
 
     @Override
     @Transactional
+    /**
+     * 删除地址。
+     *
+     * <p>如果该地址已经被订单使用，则不允许删除，避免历史订单失去关联地址。
+     */
     public void delete(Long userId, Long addressId) {
         Address existing = addressMapper.selectById(addressId);
         if (existing == null || !existing.getUserId().equals(userId)) {
@@ -111,6 +133,9 @@ public class AddressServiceImpl implements AddressService {
 
     @Override
     @Transactional
+    /**
+     * 设置默认地址。
+     */
     public void setDefault(Long userId, Long addressId) {
         Address existing = addressMapper.selectById(addressId);
         if (existing == null || !existing.getUserId().equals(userId)) {

@@ -9,6 +9,9 @@ import java.util.List;
 
 @Data
 @AllArgsConstructor
+/**
+ * 前台订单详情对象。
+ */
 public class OrderDetailVO {
     private Long orderId;
     private String orderNo;

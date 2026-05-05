@@ -5,6 +5,9 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 @Data
+/**
+ * 加入购物车请求对象。
+ */
 public class CartAddRequest {
 
     @NotNull(message = "图书ID不能为空")

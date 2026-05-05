@@ -19,6 +19,11 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+/**
+ * 轮播图服务实现。
+ *
+ * <p>后台负责维护轮播图内容，前台只读取已启用的轮播图并按排序展示。
+ */
 public class BannerServiceImpl implements BannerService {
 
     private final BannerMapper bannerMapper;
@@ -30,6 +35,9 @@ public class BannerServiceImpl implements BannerService {
     }
 
     @Override
+    /**
+     * 后台分页查询轮播图。
+     */
     public PageResult<BannerVO> listAdmin(Integer page, Integer pageSize) {
         int currentPage = normalizePage(page);
         int size = normalizeSize(pageSize);
@@ -46,6 +54,9 @@ public class BannerServiceImpl implements BannerService {
 
     @Override
     @Transactional
+    /**
+     * 新增轮播图。
+     */
     public void create(BannerCreateRequest request) {
         validateStatus(request.getStatus());
         Banner banner = Banner.builder()
@@ -59,6 +70,9 @@ public class BannerServiceImpl implements BannerService {
 
     @Override
     @Transactional
+    /**
+     * 修改轮播图。
+     */
     public void update(Long id, BannerUpdateRequest request) {
         Banner existing = bannerMapper.selectById(id);
         if (existing == null || isSoftDeleted(existing.getStatus())) {
@@ -77,6 +91,9 @@ public class BannerServiceImpl implements BannerService {
 
     @Override
     @Transactional
+    /**
+     * 删除轮播图。
+     */
     public void delete(Long id) {
         Banner existing = bannerMapper.selectById(id);
         if (existing == null || isSoftDeleted(existing.getStatus())) {
@@ -87,6 +104,9 @@ public class BannerServiceImpl implements BannerService {
 
     @Override
     @Transactional
+    /**
+     * 修改轮播图排序。
+     */
     public void updateSort(Long id, BannerSortRequest request) {
         Banner existing = bannerMapper.selectById(id);
         if (existing == null || isSoftDeleted(existing.getStatus())) {
@@ -96,6 +116,9 @@ public class BannerServiceImpl implements BannerService {
     }
 
     @Override
+    /**
+     * 查询前台轮播图列表。
+     */
     public List<BannerVO> listFront() {
         return bannerMapper.selectFrontList().stream()
                 .map(banner -> new BannerVO(

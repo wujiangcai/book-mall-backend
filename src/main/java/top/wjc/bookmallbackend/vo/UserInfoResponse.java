@@ -5,6 +5,9 @@ import lombok.Data;
 
 @Data
 @AllArgsConstructor
+/**
+ * 当前登录用户信息响应对象。
+ */
 public class UserInfoResponse {
     private Long id;
     private String username;

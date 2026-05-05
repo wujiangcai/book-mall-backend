@@ -5,6 +5,11 @@ import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 @Data
+/**
+ * 修改密码请求对象。
+ *
+ * <p>通常包含旧密码和新密码，用于当前登录用户主动改密。
+ */
 public class ChangePasswordRequest {
 
     @NotBlank(message = "旧密码不能为空")

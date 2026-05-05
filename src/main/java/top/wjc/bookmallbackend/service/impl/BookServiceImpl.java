@@ -26,6 +26,15 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+/**
+ * 图书服务实现。
+ *
+ * <p>覆盖两类场景：
+ * <p>1. 前台图书浏览、筛选、查看详情；
+ * <p>2. 后台图书管理、上下架、软删除。
+ *
+ * <p>这里还实现了基于 version 字段的乐观锁，避免多人同时修改图书时把数据覆盖掉。
+ */
 public class BookServiceImpl implements BookService {
 
     private static final int FRONT_DEFAULT_SIZE = 20;
@@ -45,6 +54,9 @@ public class BookServiceImpl implements BookService {
     }
 
     @Override
+    /**
+     * 前台图书分页查询，支持分类、关键词、价格区间筛选。
+     */
     public PageResult<BookListItemVO> listFront(Integer page, Integer pageSize, Long categoryId, String keyword, BigDecimal minPrice, BigDecimal maxPrice) {
         int currentPage = normalizePage(page);
         int size = normalizeSize(pageSize, FRONT_DEFAULT_SIZE);
@@ -58,6 +70,9 @@ public class BookServiceImpl implements BookService {
     }
 
     @Override
+    /**
+     * 前台图书详情查询。
+     */
     public BookDetailVO getFrontDetail(Long id) {
         BookDetailVO detail = bookMapper.selectFrontDetail(id);
         if (detail == null) {
@@ -67,6 +82,9 @@ public class BookServiceImpl implements BookService {
     }
 
     @Override
+    /**
+     * 后台图书分页查询。
+     */
     public PageResult<BookAdminListItemVO> listAdmin(Integer page, Integer pageSize, Long categoryId, String keyword) {
         int currentPage = normalizePage(page);
         int size = normalizeSize(pageSize, ADMIN_DEFAULT_SIZE);
@@ -81,6 +99,9 @@ public class BookServiceImpl implements BookService {
 
     @Override
     @Transactional
+    /**
+     * 新增图书。
+     */
     public void create(BookCreateRequest request) {
         validateCategory(request.getCategoryId());
         validateBookStatus(request.getStatus());
@@ -102,6 +123,11 @@ public class BookServiceImpl implements BookService {
 
     @Override
     @Transactional
+    /**
+     * 修改图书信息。
+     *
+     * <p>更新时会校验分类是否合法、ISBN 是否重复，并通过 version 做并发保护。
+     */
     public void update(Long id, BookUpdateRequest request) {
         Book existing = bookMapper.selectById(id);
         if (existing == null || isSoftDeleted(existing.getStatus())) {
@@ -131,6 +157,11 @@ public class BookServiceImpl implements BookService {
 
     @Override
     @Transactional
+    /**
+     * 软删除图书。
+     *
+     * <p>项目没有真的 DELETE 数据，而是把 status 置为 -1，便于数据追溯和后台兼容。
+     */
     public void delete(Long id) {
         Book existing = bookMapper.selectById(id);
         if (existing == null || isSoftDeleted(existing.getStatus())) {
@@ -143,6 +174,9 @@ public class BookServiceImpl implements BookService {
 
     @Override
     @Transactional
+    /**
+     * 更新图书上架状态。
+     */
     public void updateStatus(Long id, BookStatusRequest request) {
         Book existing = bookMapper.selectById(id);
         if (existing == null || isSoftDeleted(existing.getStatus())) {
@@ -250,6 +284,7 @@ public class BookServiceImpl implements BookService {
     }
 
     private void throwOptimisticLockConflict() {
+        // 统一抛出 409 风格的业务错误，提示前端“数据已被别人改过，请刷新后再试”。
         throw new BusinessException(OPTIMISTIC_LOCK_CODE, OPTIMISTIC_LOCK_MESSAGE);
     }
 

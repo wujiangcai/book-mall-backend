@@ -7,6 +7,9 @@ import java.math.BigDecimal;
 
 @Data
 @AllArgsConstructor
+/**
+ * 前台图书列表项对象。
+ */
 public class BookListItemVO {
     private Long id;
     private String bookName;

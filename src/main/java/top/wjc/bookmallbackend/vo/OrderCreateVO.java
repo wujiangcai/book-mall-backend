@@ -9,6 +9,11 @@ import java.util.List;
 
 @Data
 @AllArgsConstructor
+/**
+ * 创建订单成功后的返回对象。
+ *
+ * <p>前端通常拿它来展示下单成功页或直接进入支付流程。
+ */
 public class OrderCreateVO {
     private Long orderId;
     private String orderNo;

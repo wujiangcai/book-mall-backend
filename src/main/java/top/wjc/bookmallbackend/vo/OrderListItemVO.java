@@ -8,6 +8,9 @@ import java.time.LocalDateTime;
 
 @Data
 @AllArgsConstructor
+/**
+ * 前台订单列表项对象。
+ */
 public class OrderListItemVO {
     private Long orderId;
     private String orderNo;

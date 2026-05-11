@@ -55,6 +55,13 @@ public class FrontOrderController {
         return Result.success();
     }
 
+    @PostMapping("/{id}/confirm-receipt")
+    public Result<Void> confirmReceipt(@PathVariable Long id, HttpServletRequest httpRequest) {
+        Object userId = httpRequest.getAttribute("userId");
+        orderService.confirmReceipt(Long.valueOf(userId.toString()), id);
+        return Result.success();
+    }
+
     @GetMapping
     public Result<PageResult<OrderListItemVO>> list(@RequestParam(required = false) @Min(value = 1, message = "page必须大于0") Integer page,
                                                     @RequestParam(required = false) @Min(value = 1, message = "pageSize必须大于0") Integer pageSize,

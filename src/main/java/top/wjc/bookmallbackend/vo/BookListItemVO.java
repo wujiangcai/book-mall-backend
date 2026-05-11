@@ -15,7 +15,9 @@ public class BookListItemVO {
     private String bookName;
     private String author;
     private String publisher;
-    private BigDecimal price;
-    private String coverImage;
+    private Long categoryId;
     private String categoryName;
+    private BigDecimal price;
+    private Integer stock;
+    private String coverImage;
 }

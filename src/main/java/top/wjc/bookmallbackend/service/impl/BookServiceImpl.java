@@ -194,9 +194,11 @@ public class BookServiceImpl implements BookService {
                 book.getBookName(),
                 book.getAuthor(),
                 book.getPublisher(),
+                book.getCategoryId(),
+                book.getCategoryName(),
                 book.getPrice(),
-                uploadService.resolveBookCoverUrl(book.getCoverImage()),
-                book.getCategoryName()
+                book.getStock(),
+                uploadService.resolveBookCoverUrl(book.getCoverImage())
         );
     }
 

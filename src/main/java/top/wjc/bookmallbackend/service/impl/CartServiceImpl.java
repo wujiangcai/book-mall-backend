@@ -13,6 +13,7 @@ import top.wjc.bookmallbackend.exception.NotFoundException;
 import top.wjc.bookmallbackend.mapper.BookMapper;
 import top.wjc.bookmallbackend.mapper.CartMapper;
 import top.wjc.bookmallbackend.service.CartService;
+import top.wjc.bookmallbackend.service.RecommendationService;
 import top.wjc.bookmallbackend.service.UploadService;
 import top.wjc.bookmallbackend.vo.CartItemVO;
 
@@ -31,11 +32,16 @@ public class CartServiceImpl implements CartService {
     private final CartMapper cartMapper;
     private final BookMapper bookMapper;
     private final UploadService uploadService;
+    private final RecommendationService recommendationService;
 
-    public CartServiceImpl(CartMapper cartMapper, BookMapper bookMapper, UploadService uploadService) {
+    public CartServiceImpl(CartMapper cartMapper,
+                           BookMapper bookMapper,
+                           UploadService uploadService,
+                           RecommendationService recommendationService) {
         this.cartMapper = cartMapper;
         this.bookMapper = bookMapper;
         this.uploadService = uploadService;
+        this.recommendationService = recommendationService;
     }
 
     @Override
@@ -88,9 +94,11 @@ public class CartServiceImpl implements CartService {
                     .quantity(request.getQuantity())
                     .build();
             cartMapper.insert(cart);
+            recommendationService.recordBehavior(userId, request.getBookId(), "cart");
             return;
         }
         cartMapper.updateQuantity(existing.getId(), totalQuantity);
+        recommendationService.recordBehavior(userId, request.getBookId(), "cart");
     }
 
     @Override

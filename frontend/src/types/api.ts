@@ -42,6 +42,12 @@ export type BookListItem = {
   coverImage?: string
 }
 
+export type RecommendationBook = BookListItem & {
+  score: number
+  strategy: string
+  reason: string
+}
+
 export type BookDetail = {
   id: number
   bookName: string
@@ -289,6 +295,39 @@ export type AdminDashboard = {
   hotBooks: AdminDashboardHotBook[]
   lowStockBooks: AdminDashboardLowStockBook[]
   recentOrders: AdminDashboardRecentOrder[]
+}
+
+export type AdminAiMetric = {
+  label: string
+  value: string
+  trend: string
+  hint: string
+}
+
+export type AdminAiInsight = {
+  type: string
+  level: 'success' | 'warning' | 'info' | string
+  title: string
+  content: string
+  action: string
+}
+
+export type AdminAiForecast = {
+  nextWeekOrders: number
+  nextWeekRevenue: number
+  confidence: string
+  basis: string
+}
+
+export type AdminAiAnalysis = {
+  summary: string
+  metrics: AdminAiMetric[]
+  forecast: AdminAiForecast
+  insights: AdminAiInsight[]
+  focusBooks: AdminDashboardHotBook[]
+  source?: 'model' | 'rule' | 'timeout' | string
+  sourceLabel?: string
+  generatedAt?: string
 }
 
 export type CategoryAdminItem = {

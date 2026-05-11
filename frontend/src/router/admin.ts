@@ -9,6 +9,7 @@ export const adminRoutes: RouteRecordRaw[] = [
     meta: { requiresAdmin: true },
     children: [
       { path: 'dashboard', name: 'AdminDashboard', component: () => import('../views/admin/Dashboard.vue'), meta: { requiresAdmin: true } },
+      { path: 'ai-analysis', name: 'AdminAiAnalysis', component: () => import('../views/admin/AiAnalysis.vue'), meta: { requiresAdmin: true } },
       { path: 'books', name: 'BookManage', component: () => import('../views/admin/BookManage.vue'), meta: { requiresAdmin: true } },
       { path: 'categories', name: 'CategoryManage', component: () => import('../views/admin/CategoryManage.vue'), meta: { requiresAdmin: true } },
       { path: 'orders', name: 'OrderManage', component: () => import('../views/admin/OrderManage.vue'), meta: { requiresAdmin: true } },

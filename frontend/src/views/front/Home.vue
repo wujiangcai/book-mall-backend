@@ -46,11 +46,18 @@
     </a-card>
 
     <a-card class="card-glass" :bordered="false">
-      <div class="section-title">推荐图书</div>
+      <div class="section-heading">
+        <div>
+          <div class="section-title">智能推荐图书</div>
+          <div class="section-subtitle">混合推荐算法：协同过滤 + 内容相似 + AI智能重排 + 热门趋势</div>
+        </div>
+        <a-tag v-if="recommendationMode" color="green">个性化推荐</a-tag>
+        <a-tag v-else color="gray">热门兜底</a-tag>
+      </div>
       <a-skeleton v-if="loading" :animation="true" :rows="3" />
       <template v-else>
         <a-grid :cols="4" :col-gap="16" :row-gap="16" style="margin-top: 16px">
-          <a-grid-item v-for="book in books" :key="book.id">
+          <a-grid-item v-for="book in recommendBooks" :key="book.id">
               <a-card hoverable class="book-card" @click="goDetail(book.id)">
                 <template #cover>
                   <img v-if="book.coverImage" :src="book.coverImage" alt="cover" class="book-cover" @error="handleBookCoverError(book)" />
@@ -60,17 +67,19 @@
                 <div class="book-meta">作者：{{ book.author || '佚名' }}</div>
                 <div class="book-meta">¥{{ book.price }}</div>
                 <div class="book-rating">评分：{{ getRating(book.id) }}</div>
+                <div v-if="book.strategy" class="book-strategy">{{ book.strategy }}</div>
+                <div v-if="book.reason" class="book-reason">{{ book.reason }}</div>
             </a-card>
           </a-grid-item>
         </a-grid>
-        <a-empty v-if="books.length === 0" description="暂无推荐图书" />
+        <a-empty v-if="recommendBooks.length === 0" description="暂无推荐图书" />
       </template>
     </a-card>
 
     <a-card class="card-glass" :bordered="false">
       <div class="section-title">畅销榜</div>
       <div class="best-seller">
-        <div v-for="book in books" :key="`hot-${book.id}`" class="best-item" @click="goDetail(book.id)">
+        <div v-for="book in hotBooks" :key="`hot-${book.id}`" class="best-item" @click="goDetail(book.id)">
           <img v-if="book.coverImage" :src="book.coverImage" alt="cover" @error="handleBookCoverError(book)" />
           <div v-else class="best-item-placeholder">暂无封面</div>
           <div>
@@ -89,14 +98,17 @@ import { useRouter } from 'vue-router'
 import frontBannerApi from '../../api/front/banner'
 import frontBookApi from '../../api/front/book'
 import frontCategoryApi from '../../api/front/category'
-import type { Banner, BookListItem, CategoryTreeItem } from '../../types/api'
+import frontRecommendationApi from '../../api/front/recommendation'
+import type { Banner, BookListItem, CategoryTreeItem, RecommendationBook } from '../../types/api'
 
 const router = useRouter()
 const banners = ref<Banner[]>([])
-const books = ref<BookListItem[]>([])
+const recommendBooks = ref<RecommendationBook[]>([])
+const hotBooks = ref<BookListItem[]>([])
 const categories = ref<CategoryTreeItem[]>([])
 const loading = ref(false)
 const activeBannerIndex = ref(0)
+const recommendationMode = ref(false)
 let bannerTimer: number | null = null
 
 const goDetail = (id: number) => {
@@ -116,7 +128,7 @@ const getRating = (id: number) => {
   return (4 + (id % 10) / 10).toFixed(1)
 }
 
-const handleBookCoverError = (book: BookListItem) => {
+const handleBookCoverError = (book: BookListItem | RecommendationBook) => {
   book.coverImage = undefined
 }
 
@@ -135,17 +147,25 @@ const startBannerTimer = () => {
 
 const load = async () => {
   loading.value = true
-  const [bannerData, bookData, categoryData] = await Promise.all([
-    frontBannerApi.list().catch(() => []),
-    frontBookApi.list({ page: 1, pageSize: 8 }).catch(() => ({ list: [] } as any)),
-    frontCategoryApi.list().catch(() => []),
-  ])
-  banners.value = (bannerData as any) || []
-  activeBannerIndex.value = 0
-  startBannerTimer()
-  books.value = (bookData as any)?.list || []
-  categories.value = (categoryData as any) || []
-  loading.value = false
+  try {
+    const [bannerData, recommendationData, bookData, categoryData] = await Promise.all([
+      frontBannerApi.list().catch(() => []),
+      frontRecommendationApi.list({ limit: 8 }).catch(() => []),
+      frontBookApi.list({ page: 1, pageSize: 8 }).catch(() => ({ list: [] } as any)),
+      frontCategoryApi.list().catch(() => []),
+    ])
+    banners.value = (bannerData as any) || []
+    activeBannerIndex.value = 0
+    startBannerTimer()
+    const recommendations = ((recommendationData as any) || []) as RecommendationBook[]
+    const fallbackBooks = (((bookData as any)?.list || []) as BookListItem[])
+    recommendationMode.value = recommendations.some((book) => book.strategy && !book.strategy.includes('热门趋势'))
+    recommendBooks.value = recommendations.length > 0 ? recommendations : (fallbackBooks as RecommendationBook[])
+    hotBooks.value = fallbackBooks
+    categories.value = (categoryData as any) || []
+  } finally {
+    loading.value = false
+  }
 }
 
 onMounted(() => {
@@ -268,6 +288,19 @@ onBeforeUnmount(() => {
   cursor: pointer;
 }
 
+.section-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.section-subtitle {
+  margin-top: 6px;
+  color: var(--brand-muted);
+  font-size: 13px;
+}
+
 .book-card {
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
@@ -307,6 +340,28 @@ onBeforeUnmount(() => {
   margin-top: 6px;
   color: var(--brand-accent);
   font-weight: 600;
+}
+
+.book-strategy {
+  display: inline-flex;
+  margin-top: 8px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  color: #2563eb;
+  background: rgba(37, 99, 235, 0.08);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.book-reason {
+  margin-top: 8px;
+  color: var(--brand-muted);
+  font-size: 12px;
+  line-height: 1.5;
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
 }
 
 .best-seller {

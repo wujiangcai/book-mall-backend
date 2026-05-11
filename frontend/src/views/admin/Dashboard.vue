@@ -10,6 +10,7 @@
         </p>
         <div class="hero-actions">
           <a-button type="primary" size="large" @click="load">刷新数据</a-button>
+          <a-button type="primary" status="success" size="large" @click="go('/admin/ai-analysis')">AI 分析</a-button>
           <a-button size="large" @click="go('/admin/orders')">查看订单</a-button>
         </div>
       </div>

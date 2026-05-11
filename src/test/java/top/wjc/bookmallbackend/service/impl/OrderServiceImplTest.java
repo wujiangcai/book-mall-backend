@@ -21,6 +21,7 @@ import top.wjc.bookmallbackend.mapper.BookMapper;
 import top.wjc.bookmallbackend.mapper.CartMapper;
 import top.wjc.bookmallbackend.mapper.OrderItemMapper;
 import top.wjc.bookmallbackend.mapper.OrderMapper;
+import top.wjc.bookmallbackend.service.RecommendationService;
 import top.wjc.bookmallbackend.vo.OrderItemVO;
 
 import java.math.BigDecimal;
@@ -56,13 +57,15 @@ class OrderServiceImplTest {
     private AlipayClient alipayClient;
     @Mock
     private ObjectProvider<AlipayClient> alipayClientProvider;
+    @Mock
+    private RecommendationService recommendationService;
 
     private OrderServiceImpl orderService;
 
     @BeforeEach
     void setUp() {
         when(alipayClientProvider.getIfAvailable()).thenReturn(alipayClient);
-        orderService = new OrderServiceImpl(orderMapper, orderItemMapper, cartMapper, bookMapper, addressMapper, alipayClientProvider);
+        orderService = new OrderServiceImpl(orderMapper, orderItemMapper, cartMapper, bookMapper, addressMapper, alipayClientProvider, recommendationService);
         ReflectionTestUtils.setField(orderService, "alipayAppId", "test-app-id");
         ReflectionTestUtils.setField(orderService, "alipaySellerId", "test-seller-id");
         ReflectionTestUtils.setField(orderService, "alipayPublicKey", "configured-public-key");
@@ -101,6 +104,7 @@ class OrderServiceImplTest {
 
         assertThrows(RuntimeException.class, () -> orderService.pay(userId, orderId));
         verify(bookMapper, never()).decreaseStock(any(), any(), any());
+        verify(recommendationService, never()).recordPurchase(any(), any());
     }
 
     @Test
@@ -129,6 +133,7 @@ class OrderServiceImplTest {
         assertFalse(result);
         verify(orderMapper, never()).updatePaymentSuccess(any(), any(), any(), any(), any(), any());
         verify(bookMapper, never()).decreaseStock(any(), any(), any());
+        verify(recommendationService, never()).recordPurchase(any(), any());
     }
 
     @Test
@@ -196,6 +201,7 @@ class OrderServiceImplTest {
                 .version(0)
                 .orderNo("ORDER-14")
                 .status(OrderStatus.UNPAID.getCode())
+                .userId(14L)
                 .totalAmount(new BigDecimal("58.00"))
                 .build();
         OrderItemVO item = new OrderItemVO(101L, "Book", new BigDecimal("29.00"), 2, new BigDecimal("58.00"));
@@ -228,6 +234,7 @@ class OrderServiceImplTest {
         assertTrue(result);
         verify(orderMapper).updatePaymentSuccess(eq(14L), eq(OrderStatus.UNPAID.getCode()), eq(OrderStatus.PENDING_SHIP.getCode()), any(LocalDateTime.class), eq("TRADE-14"), eq(0));
         verify(bookMapper).decreaseStock(101L, 2, 0);
+        verify(recommendationService).recordPurchase(eq(14L), any());
     }
 
     @Test
@@ -362,6 +369,87 @@ class OrderServiceImplTest {
         assertTrue(result);
         verify(bookMapper).decreaseStock(104L, 1, 0);
         verify(bookMapper).decreaseStock(104L, 1, 1);
+    }
+
+
+    @Test
+    void create_shouldNotRecordPurchaseBeforePaymentSuccess() {
+        Long userId = 1L;
+        Long addressId = 2L;
+        Long bookId = 3L;
+        Long cartId = 4L;
+
+        top.wjc.bookmallbackend.dto.OrderCreateRequest request = new top.wjc.bookmallbackend.dto.OrderCreateRequest();
+        request.setAddressId(addressId);
+        request.setCartIds(List.of(cartId));
+
+        top.wjc.bookmallbackend.entity.Address address = top.wjc.bookmallbackend.entity.Address.builder()
+                .id(addressId)
+                .userId(userId)
+                .receiverName("A")
+                .phone("13800138000")
+                .detailAddress("addr")
+                .build();
+        top.wjc.bookmallbackend.entity.Cart cart = top.wjc.bookmallbackend.entity.Cart.builder()
+                .id(cartId)
+                .userId(userId)
+                .bookId(bookId)
+                .quantity(1)
+                .build();
+        Book book = Book.builder()
+                .id(bookId)
+                .bookName("Book")
+                .price(new BigDecimal("20.00"))
+                .status(BookStatus.ON_SHELF.getCode())
+                .stock(10)
+                .build();
+
+        when(addressMapper.selectById(addressId)).thenReturn(address);
+        when(cartMapper.selectByIdsAndUserId(List.of(cartId), userId)).thenReturn(List.of(cart));
+        when(bookMapper.selectById(bookId)).thenReturn(book);
+
+        assertDoesNotThrow(() -> orderService.create(userId, request));
+        verify(recommendationService, never()).recordPurchase(any(), any());
+    }
+
+    @Test
+    void handleAlipayReturn_shouldRecordPurchaseAfterPaymentSuccess() {
+        Order order = Order.builder()
+                .id(21L)
+                .version(0)
+                .orderNo("ORDER-21")
+                .userId(9L)
+                .status(OrderStatus.UNPAID.getCode())
+                .totalAmount(new BigDecimal("35.00"))
+                .build();
+        OrderItemVO item = new OrderItemVO(105L, "Book", new BigDecimal("35.00"), 1, new BigDecimal("35.00"));
+        Book book = Book.builder()
+                .id(105L)
+                .version(0)
+                .status(BookStatus.ON_SHELF.getCode())
+                .stock(3)
+                .build();
+
+        when(orderMapper.selectByOrderNo("ORDER-21")).thenReturn(order);
+        when(orderMapper.updatePaymentSuccess(eq(21L), eq(OrderStatus.UNPAID.getCode()), eq(OrderStatus.PENDING_SHIP.getCode()), any(LocalDateTime.class), eq("TRADE-21"), eq(0)))
+                .thenReturn(1);
+        when(orderItemMapper.selectByOrderId(21L)).thenReturn(List.of(item));
+        when(bookMapper.selectById(105L)).thenReturn(book);
+        when(bookMapper.decreaseStock(105L, 1, 0)).thenReturn(1);
+
+        Long result;
+        try (org.mockito.MockedStatic<AlipaySignature> ignored = mockAlipaySignSuccess()) {
+            result = orderService.handleAlipayReturn(Map.of(
+                    "out_trade_no", "ORDER-21",
+                    "total_amount", "35.00",
+                    "app_id", "test-app-id",
+                    "seller_id", "test-seller-id",
+                    "trade_no", "TRADE-21"
+            ));
+        }
+
+        assertTrue(result.equals(21L));
+        verify(recommendationService).recordPurchase(eq(9L), any());
     }
 
     @Test

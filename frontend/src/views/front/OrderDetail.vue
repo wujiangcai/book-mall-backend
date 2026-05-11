@@ -27,9 +27,20 @@
         </template>
       </a-table>
 
-      <a-space v-if="detail?.status === OrderStatus.UNPAID" style="margin-top: 16px">
-        <a-button type="primary" @click="pay">支付</a-button>
-        <a-button status="danger" @click="cancel">取消</a-button>
+      <a-space v-if="detail?.status === OrderStatus.UNPAID || detail?.status === OrderStatus.SHIPPED" style="margin-top: 16px">
+        <template v-if="detail?.status === OrderStatus.UNPAID">
+          <a-button type="primary" @click="pay">支付</a-button>
+          <a-button status="danger" @click="cancel">取消</a-button>
+        </template>
+        <a-button
+          v-if="detail?.status === OrderStatus.SHIPPED"
+          type="primary"
+          status="success"
+          :loading="receiving"
+          @click="confirmReceipt"
+        >
+          确认收货
+        </a-button>
       </a-space>
     </template>
     <a-empty v-else description="暂无订单详情" />
@@ -39,7 +50,7 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { Message } from '@arco-design/web-vue'
+import { Message, Modal } from '@arco-design/web-vue'
 import frontOrderApi from '../../api/front/order'
 import { OrderStatus } from '../../types/enums'
 import type { OrderDetail } from '../../types/api'
@@ -47,6 +58,7 @@ import type { OrderDetail } from '../../types/api'
 const route = useRoute()
 const router = useRouter()
 const detail = ref<OrderDetail | null>(null)
+const receiving = ref(false)
 
 const goBack = () => {
   router.push('/orders')
@@ -99,6 +111,27 @@ const cancel = async () => {
   await frontOrderApi.cancel(detail.value.orderId)
   Message.success('订单已取消')
   await load()
+}
+
+const confirmReceipt = () => {
+  if (!detail.value) return
+  Modal.confirm({
+    title: '确认收货',
+    content: '确认已收到商品？确认后订单将变为已完成。',
+    okText: '确认收货',
+    cancelText: '取消',
+    async onOk() {
+      if (!detail.value) return
+      receiving.value = true
+      try {
+        await frontOrderApi.confirmReceipt(detail.value.orderId)
+        Message.success('确认收货成功')
+        await load()
+      } finally {
+        receiving.value = false
+      }
+    },
+  })
 }
 
 onMounted(load)

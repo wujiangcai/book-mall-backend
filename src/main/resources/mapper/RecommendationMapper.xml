@@ -1,0 +1,261 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="top.wjc.bookmallbackend.mapper.RecommendationMapper">
+
+    <resultMap id="RecommendationBookMap" type="top.wjc.bookmallbackend.vo.RecommendationBookVO">
+        <id property="id" column="id"/>
+        <result property="bookName" column="book_name"/>
+        <result property="author" column="author"/>
+        <result property="publisher" column="publisher"/>
+        <result property="categoryId" column="category_id"/>
+        <result property="stock" column="stock"/>
+        <result property="price" column="price"/>
+        <result property="coverImage" column="cover_image"/>
+        <result property="categoryName" column="category_name"/>
+        <result property="score" column="score"/>
+    </resultMap>
+
+    <sql id="User_Book_Ids">
+        SELECT DISTINCT ub.book_id
+        FROM user_behavior ub
+        WHERE ub.user_id = #{userId}
+        UNION
+        SELECT DISTINCT c.book_id
+        FROM cart c
+        WHERE c.user_id = #{userId}
+        UNION
+        SELECT DISTINCT oi.book_id
+        FROM order_item oi
+        INNER JOIN `order` o ON o.id = oi.order_id
+        WHERE o.user_id = #{userId}
+          AND o.status IN (2, 3, 4)
+        <if test="sceneBookId != null">
+            UNION
+            SELECT #{sceneBookId} AS book_id
+        </if>
+    </sql>
+
+    <sql id="Exclude_User_Books">
+        AND NOT EXISTS (
+            SELECT 1
+            FROM user_behavior ub
+            WHERE ub.user_id = #{userId}
+              AND ub.book_id = b.id
+        )
+        AND NOT EXISTS (
+            SELECT 1
+            FROM cart c2
+            WHERE c2.user_id = #{userId}
+              AND c2.book_id = b.id
+        )
+        AND NOT EXISTS (
+            SELECT 1
+            FROM order_item oi3
+            INNER JOIN `order` o3 ON o3.id = oi3.order_id
+            WHERE o3.user_id = #{userId}
+              AND o3.status IN (2, 3, 4)
+              AND oi3.book_id = b.id
+        )
+        <if test="sceneBookId != null">
+            AND b.id &lt;&gt; #{sceneBookId}
+        </if>
+    </sql>
+
+    <insert id="insertBehavior">
+        INSERT INTO user_behavior (user_id, book_id, behavior_type, score)
+        VALUES (#{userId}, #{bookId}, #{behaviorType}, #{score})
+    </insert>
+
+    <select id="selectCollaborativeCandidates" resultMap="RecommendationBookMap">
+        SELECT
+            b.id,
+            b.book_name,
+            b.author,
+            b.publisher,
+            b.category_id,
+            b.stock,
+            b.price,
+            b.cover_image,
+            c.category_name,
+            (SUM(oi2.quantity) * 5 + COUNT(DISTINCT o2.user_id) * 3) AS score
+        FROM (
+            <include refid="User_Book_Ids"/>
+        ) my_books
+        INNER JOIN order_item oi1 ON oi1.book_id = my_books.book_id
+        INNER JOIN `order` o1 ON o1.id = oi1.order_id AND o1.status IN (2, 3, 4)
+        INNER JOIN `order` o2 ON o2.user_id = o1.user_id AND o2.status IN (2, 3, 4)
+        INNER JOIN order_item oi2 ON oi2.order_id = o2.id AND oi2.book_id &lt;&gt; my_books.book_id
+        INNER JOIN book b ON b.id = oi2.book_id
+        INNER JOIN category c ON c.id = b.category_id
+        WHERE o1.user_id &lt;&gt; #{userId}
+          AND b.status = 1
+          AND c.status = 1
+        <include refid="Exclude_User_Books"/>
+        GROUP BY b.id, b.book_name, b.author, b.publisher, b.category_id, b.stock, b.price, b.cover_image, c.category_name, b.create_time
+        ORDER BY score DESC, b.create_time DESC
+        LIMIT #{limit}
+    </select>
+
+    <select id="selectContentCandidates" resultMap="RecommendationBookMap">
+        SELECT
+            b.id,
+            b.book_name,
+            b.author,
+            b.publisher,
+            b.category_id,
+            b.stock,
+            b.price,
+            b.cover_image,
+            c.category_name,
+            SUM(
+                CASE WHEN b.category_id = pref.category_id THEN 8 ELSE 0 END
+                + CASE WHEN b.author IS NOT NULL AND pref.author IS NOT NULL AND b.author = pref.author THEN 5 ELSE 0 END
+                + CASE WHEN b.publisher IS NOT NULL AND pref.publisher IS NOT NULL AND b.publisher = pref.publisher THEN 3 ELSE 0 END
+            ) + CASE WHEN b.create_time &gt;= DATE_SUB(NOW(), INTERVAL 30 DAY) THEN 2 ELSE 0 END AS score
+        FROM book b
+        INNER JOIN category c ON c.id = b.category_id
+        INNER JOIN (
+            SELECT DISTINCT pb.category_id, pb.author, pb.publisher
+            FROM book pb
+            INNER JOIN (
+                <include refid="User_Book_Ids"/>
+            ) user_books ON user_books.book_id = pb.id
+        ) pref ON b.category_id = pref.category_id
+            OR (b.author IS NOT NULL AND pref.author IS NOT NULL AND b.author = pref.author)
+            OR (b.publisher IS NOT NULL AND pref.publisher IS NOT NULL AND b.publisher = pref.publisher)
+        WHERE b.status = 1
+          AND c.status = 1
+        <include refid="Exclude_User_Books"/>
+        GROUP BY b.id, b.book_name, b.author, b.publisher, b.category_id, b.stock, b.price, b.cover_image, c.category_name, b.create_time
+        HAVING score &gt; 0
+        ORDER BY score DESC, b.create_time DESC
+        LIMIT #{limit}
+    </select>
+
+    <select id="selectAiCandidates" resultMap="RecommendationBookMap">
+        SELECT
+            b.id,
+            b.book_name,
+            b.author,
+            b.publisher,
+            b.category_id,
+            b.stock,
+            b.price,
+            b.cover_image,
+            c.category_name,
+            SUM(
+                (CASE WHEN b.category_id = pref.category_id THEN 12 ELSE 0 END
+                + CASE WHEN b.author IS NOT NULL AND pref.author IS NOT NULL AND b.author = pref.author THEN 6 ELSE 0 END
+                + CASE WHEN b.publisher IS NOT NULL AND pref.publisher IS NOT NULL AND b.publisher = pref.publisher THEN 4 ELSE 0 END
+                + CASE WHEN b.price BETWEEN pref.price * 0.75 AND pref.price * 1.35 THEN 3 ELSE 0 END)
+                * pref.preference_score
+            )
+            + COALESCE(hot.hot_score, 0) * 0.25
+            + CASE WHEN b.stock &gt;= 10 THEN 3 WHEN b.stock &gt; 0 THEN 1 ELSE 0 END
+            + CASE WHEN b.create_time &gt;= DATE_SUB(NOW(), INTERVAL 14 DAY) THEN 2 ELSE 0 END AS score
+        FROM book b
+        INNER JOIN category c ON c.id = b.category_id
+        INNER JOIN (
+            SELECT
+                pb.category_id,
+                pb.author,
+                pb.publisher,
+                pb.price,
+                SUM(user_signal.signal_score) AS preference_score
+            FROM book pb
+            INNER JOIN (
+                SELECT ub.book_id, SUM(ub.score * CASE
+                    WHEN ub.create_time &gt;= DATE_SUB(NOW(), INTERVAL 7 DAY) THEN 1.5
+                    WHEN ub.create_time &gt;= DATE_SUB(NOW(), INTERVAL 30 DAY) THEN 1.0
+                    ELSE 0.5
+                END) AS signal_score
+                FROM user_behavior ub
+                WHERE ub.user_id = #{userId}
+                GROUP BY ub.book_id
+                UNION ALL
+                SELECT c2.book_id, SUM(c2.quantity * 5) AS signal_score
+                FROM cart c2
+                WHERE c2.user_id = #{userId}
+                GROUP BY c2.book_id
+                UNION ALL
+                SELECT oi.book_id, SUM(oi.quantity * 10) AS signal_score
+                FROM order_item oi
+                INNER JOIN `order` o ON o.id = oi.order_id
+                WHERE o.user_id = #{userId}
+                  AND o.status IN (2, 3, 4)
+                GROUP BY oi.book_id
+                <if test="sceneBookId != null">
+                    UNION ALL
+                    SELECT #{sceneBookId} AS book_id, 8 AS signal_score
+                </if>
+            ) user_signal ON user_signal.book_id = pb.id
+            WHERE pb.status = 1
+            GROUP BY pb.category_id, pb.author, pb.publisher, pb.price
+        ) pref ON b.category_id = pref.category_id
+            OR (b.author IS NOT NULL AND pref.author IS NOT NULL AND b.author = pref.author)
+            OR (b.publisher IS NOT NULL AND pref.publisher IS NOT NULL AND b.publisher = pref.publisher)
+        LEFT JOIN (
+            SELECT book_id, SUM(score) AS hot_score
+            FROM user_behavior
+            WHERE create_time &gt;= DATE_SUB(NOW(), INTERVAL 14 DAY)
+            GROUP BY book_id
+        ) hot ON hot.book_id = b.id
+        WHERE b.status = 1
+          AND c.status = 1
+        <include refid="Exclude_User_Books"/>
+        GROUP BY b.id, b.book_name, b.author, b.publisher, b.category_id, b.stock, b.price, b.cover_image, c.category_name, b.create_time
+        HAVING score &gt; 0
+        ORDER BY score DESC, b.create_time DESC
+        LIMIT #{limit}
+    </select>
+
+    <select id="selectPopularCandidates" resultMap="RecommendationBookMap">
+        SELECT
+            b.id,
+            b.book_name,
+            b.author,
+            b.publisher,
+            b.category_id,
+            b.stock,
+            b.price,
+            b.cover_image,
+            c.category_name,
+            COALESCE(sales.sales_score, 0) + COALESCE(behavior.behavior_score, 0) * 0.3
+                + CASE WHEN b.stock &gt; 0 THEN 2 ELSE 0 END AS score
+        FROM book b
+        INNER JOIN category c ON c.id = b.category_id
+        LEFT JOIN (
+            SELECT
+                oi.book_id,
+                SUM(oi.quantity) * 5 + COUNT(DISTINCT oi.order_id) * 2 AS sales_score
+            FROM order_item oi
+            INNER JOIN `order` o ON o.id = oi.order_id
+            WHERE o.status IN (2, 3, 4)
+            GROUP BY oi.book_id
+        ) sales ON sales.book_id = b.id
+        LEFT JOIN (
+            SELECT book_id, SUM(score) AS behavior_score
+            FROM user_behavior
+            WHERE create_time &gt;= DATE_SUB(NOW(), INTERVAL 30 DAY)
+            GROUP BY book_id
+        ) behavior ON behavior.book_id = b.id
+        WHERE b.status = 1
+          AND c.status = 1
+        <if test="sceneBookId != null">
+            AND b.id &lt;&gt; #{sceneBookId}
+        </if>
+        <if test="userId != null">
+            AND NOT EXISTS (
+                SELECT 1
+                FROM order_item oi2
+                INNER JOIN `order` o2 ON o2.id = oi2.order_id
+                WHERE o2.user_id = #{userId}
+                  AND o2.status IN (2, 3, 4)
+                  AND oi2.book_id = b.id
+            )
+        </if>
+        ORDER BY score DESC, b.create_time DESC
+        LIMIT #{limit}
+    </select>
+
+</mapper>

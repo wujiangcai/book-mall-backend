@@ -71,3 +71,23 @@
 - **GET /api/front/banners**
   - 响应: `BannerVO[]`（`vo/BannerVO.java`）
   - 规则：仅启用状态，最多 5 条，按 `sort_order` 升序
+
+## 9) 前台推荐（获取推荐可匿名，行为上报需登录）
+
+- **GET /api/front/recommendations**
+  - Query: `sceneBookId` `limit`
+  - 说明：
+    - 该接口允许匿名访问。
+    - 已登录用户会自动叠加个性化信号。
+    - `sceneBookId` 用于图书详情页“AI 看了又看”场景。
+  - 响应: `RecommendationBookVO[]`（`vo/RecommendationBookVO.java`）
+  - 返回字段补充：
+    - `score`：混合推荐融合分
+    - `strategy`：命中的推荐策略，如“协同过滤 + AI智能推荐”
+    - `reason`：推荐理由，用于前端解释推荐结果
+- **POST /api/front/recommendations/behaviors**
+  - DTO: `RecommendationBehaviorRequest`（`dto/RecommendationBehaviorRequest.java`）
+  - 说明：
+    - 该接口要求登录。
+    - `behaviorType` 仅支持 `view`、`cart`、`purchase`。
+    - 用于实时采集用户行为，支撑推荐算法持续更新。

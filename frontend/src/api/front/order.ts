@@ -16,6 +16,7 @@ export const frontOrderApi = {
   pay: (id: number | string) =>
     request.post<any>(`/api/front/orders/${id}/pay`, undefined, { responseType: 'text' as any }),
   cancel: (id: number | string) => request.post<void>(`/api/front/orders/${id}/cancel`),
+  confirmReceipt: (id: number | string) => request.post<void>(`/api/front/orders/${id}/confirm-receipt`),
   list: (params?: OrderListParams) => request.get<PageResult<OrderListItem>>('/api/front/orders', { params }),
   detail: (id: number | string) => request.get<OrderDetail>(`/api/front/orders/${id}`),
 }

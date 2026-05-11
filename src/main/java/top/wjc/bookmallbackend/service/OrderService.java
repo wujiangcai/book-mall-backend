@@ -23,6 +23,8 @@ public interface OrderService {
 
     void cancel(Long userId, Long orderId);
 
+    void confirmReceipt(Long userId, Long orderId);
+
     PageResult<OrderListItemVO> list(Long userId, Integer page, Integer pageSize);
 
     OrderDetailVO detail(Long userId, Long orderId);

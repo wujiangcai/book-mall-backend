@@ -60,7 +60,7 @@
     </sql>
 
     <select id="selectFrontList" resultType="top.wjc.bookmallbackend.vo.BookListItemVO">
-        SELECT b.id, b.book_name, b.author, b.publisher, b.price, b.cover_image, c.category_name
+        SELECT b.id, b.book_name, b.author, b.publisher, b.category_id, c.category_name, b.price, b.stock, b.cover_image
         FROM book b
         LEFT JOIN category c ON b.category_id = c.id
         WHERE <include refid="Front_Filter"/>

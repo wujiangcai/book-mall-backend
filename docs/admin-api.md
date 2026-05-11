@@ -65,3 +65,20 @@
 - **DELETE /api/admin/banners/{id}**
 - **PUT /api/admin/banners/{id}/sort**
   - DTO: `BannerSortRequest`（`dto/BannerSortRequest.java`）
+
+## 7) 后台 AI 数据分析
+
+- **GET /api/admin/ai-analysis**
+  - 响应: `AdminAiAnalysisVO`（`vo/AdminAiAnalysisVO.java`）
+  - 说明：
+    - 后端先聚合后台看板数据，再尝试调用大模型生成结构化分析。
+    - 若未配置模型、模型超时、返回结构不合法，则自动回退到本地规则分析结果。
+  - 返回字段补充：
+    - `summary`：经营摘要
+    - `metrics`：关键指标数组，每项含 `label`、`value`、`trend`、`hint`
+    - `forecast`：下周订单和营收预测
+    - `insights`：运营建议数组
+    - `focusBooks`：重点运营图书
+    - `source`：结果来源，可能为 `model`、`rule`、`timeout`
+    - `sourceLabel`：来源说明文字
+    - `generatedAt`：生成时间

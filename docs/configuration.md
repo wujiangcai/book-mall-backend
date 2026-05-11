@@ -298,3 +298,47 @@ git diff
 - `config/alipay.example.yml`
 - `config/cos.example.yml`
 - `docs/deployment-payment-test.md`
+
+## 6. AI 大模型配置
+
+后台 `GET /api/admin/ai-analysis` 支持调用 OpenAI Chat Completions 兼容接口，适配 ChatGPT 和通义千问/阿里云百炼。真实 Key 不要提交到 Git，可复制示例文件：
+
+```powershell
+Copy-Item config/ai.example.yml config/ai.yml
+```
+
+OpenAI 示例：
+
+```yaml
+ai:
+  model:
+    enabled: true
+    provider: openai
+    base-url: https://api.openai.com/v1
+    api-key: sk-your-openai-api-key
+    model: gpt-4o-mini
+```
+
+通义千问示例：
+
+```yaml
+ai:
+  model:
+    enabled: true
+    provider: dashscope
+    base-url: https://dashscope.aliyuncs.com/compatible-mode/v1
+    api-key: sk-your-dashscope-api-key
+    model: qwen-plus
+```
+
+也可以用环境变量覆盖：
+
+```powershell
+$env:AI_MODEL_ENABLED="true"
+$env:AI_MODEL_PROVIDER="dashscope"
+$env:AI_MODEL_BASE_URL="https://dashscope.aliyuncs.com/compatible-mode/v1"
+$env:AI_MODEL_API_KEY="sk-your-api-key"
+$env:AI_MODEL_NAME="qwen-plus"
+```
+
+未开启或调用失败时，系统自动回退到本地规则分析，保证后台页面稳定可用。

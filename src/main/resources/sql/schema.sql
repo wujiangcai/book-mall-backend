@@ -165,7 +165,26 @@ CREATE TABLE `order_item` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='订单详情表';
 
 -- =============================================
--- 8. 轮播图表 (banner)
+-- 8. 用户行为表 (user_behavior)
+-- =============================================
+DROP TABLE IF EXISTS `user_behavior`;
+CREATE TABLE `user_behavior` (
+  `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '行为ID',
+  `user_id` BIGINT NOT NULL COMMENT '用户ID',
+  `book_id` BIGINT NOT NULL COMMENT '图书ID',
+  `behavior_type` VARCHAR(20) NOT NULL COMMENT '行为类型：view/cart/purchase',
+  `score` INT NOT NULL DEFAULT 1 COMMENT '行为权重分',
+  `create_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  PRIMARY KEY (`id`),
+  KEY `idx_user_book` (`user_id`, `book_id`),
+  KEY `idx_book_type` (`book_id`, `behavior_type`),
+  KEY `idx_create_time` (`create_time`),
+  CONSTRAINT `fk_behavior_user` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `fk_behavior_book` FOREIGN KEY (`book_id`) REFERENCES `book` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用户行为表';
+
+-- =============================================
+-- 9. 轮播图表 (banner)
 -- =============================================
 DROP TABLE IF EXISTS `banner`;
 CREATE TABLE `banner` (

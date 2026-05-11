@@ -1,0 +1,28 @@
+# AI 大模型配置示例。复制为 config/ai.yml 后填写真实 API Key。
+# 当前后端使用 OpenAI Chat Completions 兼容协议。
+
+ai:
+  model:
+    enabled: false
+
+    # ChatGPT / OpenAI 示例
+    provider: openai
+    base-url: https://api.openai.com/v1
+    api-key: sk-your-openai-api-key
+    model: gpt-5.4
+
+    # 中转站示例：如果请求路径是完整 /chat/completions，直接填完整路径也可以
+    # provider: openai-proxy
+    # base-url: https://your-proxy.example.com/v1
+    # api-key: sk-your-proxy-api-key
+    # model: gpt-5.4
+
+    # 通义千问 / 阿里云百炼示例
+    # provider: dashscope
+    # base-url: https://dashscope.aliyuncs.com/compatible-mode/v1
+    # api-key: sk-your-dashscope-api-key
+    # model: qwen-plus
+
+    temperature: 0.2
+    max-tokens: 900
+    timeout-seconds: 60

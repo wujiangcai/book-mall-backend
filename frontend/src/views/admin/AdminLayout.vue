@@ -23,6 +23,12 @@
           </template>
           数据大屏
         </a-menu-item>
+        <a-menu-item key="/admin/ai-analysis">
+          <template #icon>
+            <icon-robot />
+          </template>
+          AI 数据分析
+        </a-menu-item>
         <a-sub-menu key="books">
           <template #title>
             <icon-book />
@@ -77,6 +83,12 @@
             <icon-apps />
           </template>
           数据大屏
+        </a-menu-item>
+        <a-menu-item key="/admin/ai-analysis">
+          <template #icon>
+            <icon-robot />
+          </template>
+          AI 数据分析
         </a-menu-item>
         <a-sub-menu key="books">
           <template #title>
@@ -158,6 +170,7 @@ import {
   IconFile,
   IconUser,
   IconNotification,
+  IconRobot,
   IconMenuFold,
   IconMenuUnfold,
   IconMenu,
@@ -211,6 +224,7 @@ watch(
 const breadcrumb = computed(() => {
   const map: Record<string, string> = {
     '/admin/dashboard': '数据大屏',
+    '/admin/ai-analysis': 'AI 数据分析',
     '/admin/books': '图书列表',
     '/admin/categories': '分类管理',
     '/admin/orders': '订单列表',

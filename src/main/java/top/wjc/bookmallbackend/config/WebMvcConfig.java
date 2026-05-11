@@ -29,7 +29,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
         // 前台接口：除登录注册、图书浏览、分类、轮播图、支付回调外，都要求携带用户 Token。
         registry.addInterceptor(userAuthInterceptor)
                 .addPathPatterns("/api/front/**")
-                .excludePathPatterns("/api/front/auth/**", "/api/front/books/**", "/api/front/categories", "/api/front/banners", "/api/front/pay/**");
+                .excludePathPatterns("/api/front/auth/**", "/api/front/books/**", "/api/front/categories", "/api/front/banners", "/api/front/recommendations", "/api/front/pay/**");
 
         // 后台接口：除管理员登录外，全部要求管理员 Token。
         registry.addInterceptor(adminAuthInterceptor)

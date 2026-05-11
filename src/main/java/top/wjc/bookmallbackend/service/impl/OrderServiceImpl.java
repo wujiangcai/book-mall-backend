@@ -31,6 +31,7 @@ import top.wjc.bookmallbackend.mapper.CartMapper;
 import top.wjc.bookmallbackend.mapper.OrderItemMapper;
 import top.wjc.bookmallbackend.mapper.OrderMapper;
 import top.wjc.bookmallbackend.service.OrderService;
+import top.wjc.bookmallbackend.service.RecommendationService;
 import top.wjc.bookmallbackend.vo.AddressSnapshotVO;
 import top.wjc.bookmallbackend.vo.AdminOrderDetailVO;
 import top.wjc.bookmallbackend.vo.AdminOrderListItemVO;
@@ -72,6 +73,7 @@ public class OrderServiceImpl implements OrderService {
     private final BookMapper bookMapper;
     private final AddressMapper addressMapper;
     private final AlipayClient alipayClient;
+    private final RecommendationService recommendationService;
 
     private static final String ALIPAY_TRADE_SUCCESS = "TRADE_SUCCESS";
     private static final String ALIPAY_TRADE_FINISHED = "TRADE_FINISHED";
@@ -102,13 +104,15 @@ public class OrderServiceImpl implements OrderService {
                             CartMapper cartMapper,
                             BookMapper bookMapper,
                             AddressMapper addressMapper,
-                            ObjectProvider<AlipayClient> alipayClientProvider) {
+                            ObjectProvider<AlipayClient> alipayClientProvider,
+                            RecommendationService recommendationService) {
         this.orderMapper = orderMapper;
         this.orderItemMapper = orderItemMapper;
         this.cartMapper = cartMapper;
         this.bookMapper = bookMapper;
         this.addressMapper = addressMapper;
         this.alipayClient = alipayClientProvider.getIfAvailable();
+        this.recommendationService = recommendationService;
     }
 
     /**
@@ -366,8 +370,12 @@ public class OrderServiceImpl implements OrderService {
         }
         LocalDateTime payTime = LocalDateTime.now();
         String tradeNo = normalizeTradeNo(params.get("trade_no"));
-        if (!markPaymentSuccess(order, payTime, tradeNo)) {
+        PaymentMarkResult paymentMarkResult = markPaymentSuccess(order, payTime, tradeNo);
+        if (paymentMarkResult == PaymentMarkResult.FAILED) {
             return false;
+        }
+        if (paymentMarkResult == PaymentMarkResult.ALREADY_HANDLED) {
+            return true;
         }
         List<OrderItemVO> items = orderItemMapper.selectByOrderId(order.getId());
         if (items == null || items.isEmpty()) {
@@ -376,6 +384,7 @@ public class OrderServiceImpl implements OrderService {
         for (OrderItemVO item : items) {
             decreaseStock(item);
         }
+        recommendationService.recordPurchase(order.getUserId(), toOrderItems(items, order.getId()));
         return true;
     }
 
@@ -427,6 +436,26 @@ public class OrderServiceImpl implements OrderService {
             throw new InvalidOrderStatusException();
         }
         if (orderMapper.updateStatus(orderId, OrderStatus.CANCELLED.getCode(), order.getVersion()) == 0) {
+            throwOptimisticLockConflict();
+        }
+    }
+
+    /**
+     * 前台确认收货。
+     *
+     * <p>只有订单归属当前用户，且状态为“已发货”时，才允许用户确认收货并流转为“已完成”。
+     */
+    @Override
+    @Transactional
+    public void confirmReceipt(Long userId, Long orderId) {
+        Order order = orderMapper.selectByIdAndUserId(orderId, userId);
+        if (order == null) {
+            throw new NotFoundException();
+        }
+        if (order.getStatus() == null || order.getStatus() != OrderStatus.SHIPPED.getCode()) {
+            throw new InvalidOrderStatusException();
+        }
+        if (orderMapper.updateStatus(orderId, OrderStatus.COMPLETED.getCode(), order.getVersion()) == 0) {
             throwOptimisticLockConflict();
         }
     }
@@ -635,29 +664,29 @@ public class OrderServiceImpl implements OrderService {
         }
     }
 
-    private boolean markPaymentSuccess(Order order, LocalDateTime payTime, String tradeNo) {
+    private PaymentMarkResult markPaymentSuccess(Order order, LocalDateTime payTime, String tradeNo) {
         // 支付回调可能因为网络重试而重复触发，这里用乐观锁 + 重试保证幂等性。
         Order currentOrder = order;
         for (int attempt = 0; attempt < OPTIMISTIC_LOCK_RETRY_TIMES; attempt++) {
             int updated = orderMapper.updatePaymentSuccess(currentOrder.getId(), OrderStatus.UNPAID.getCode(),
                     OrderStatus.PENDING_SHIP.getCode(), payTime, tradeNo, currentOrder.getVersion());
             if (updated == 1) {
-                return true;
+                return PaymentMarkResult.UPDATED;
             }
             Order latestOrder = orderMapper.selectById(currentOrder.getId());
             if (latestOrder == null) {
-                return false;
+                return PaymentMarkResult.FAILED;
             }
             if (isPaymentHandled(latestOrder)) {
-                return true;
+                return PaymentMarkResult.ALREADY_HANDLED;
             }
             if (latestOrder.getStatus() == null || latestOrder.getStatus() != OrderStatus.UNPAID.getCode()) {
-                return false;
+                return PaymentMarkResult.FAILED;
             }
             currentOrder = latestOrder;
         }
         throwOptimisticLockConflict();
-        return false;
+        return PaymentMarkResult.FAILED;
     }
 
     private void decreaseStock(OrderItemVO item) {
@@ -678,6 +707,19 @@ public class OrderServiceImpl implements OrderService {
             }
         }
         throwOptimisticLockConflict();
+    }
+
+    private List<OrderItem> toOrderItems(List<OrderItemVO> items, Long orderId) {
+        return items.stream()
+                .map(item -> OrderItem.builder()
+                        .orderId(orderId)
+                        .bookId(item.getBookId())
+                        .bookName(item.getBookName())
+                        .price(item.getPrice())
+                        .quantity(item.getQuantity())
+                        .totalPrice(item.getTotalPrice())
+                        .build())
+                .collect(Collectors.toList());
     }
 
     private String buildItemSummary(Long orderId) {
@@ -724,6 +766,12 @@ public class OrderServiceImpl implements OrderService {
 
     private int normalizePage(Integer page) {
         return page == null || page < 1 ? 1 : page;
+    }
+
+    private enum PaymentMarkResult {
+        UPDATED,
+        ALREADY_HANDLED,
+        FAILED
     }
 
     private int normalizeSize(Integer pageSize) {
